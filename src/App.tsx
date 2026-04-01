@@ -12,6 +12,7 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Gallery from "@/pages/Gallery";
 import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 import Referral from "@/pages/Referral";
 import NotFound from "@/pages/NotFound";
 
