@@ -1,9 +1,18 @@
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, Mail, MapPin, Clock } from "lucide-react";
-import { CLINIC_INFO, SERVICES } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useServices } from "@/integrations/supabase/hooks";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { data: settings } = useSiteSettings();
+  const { data: services } = useServices();
+
+  const general = settings?.general;
+  const contact = settings?.contact;
+  const hours = settings?.hours;
+  const links = settings?.links;
+  const appearance = settings?.appearance;
 
   return (
     <footer className="bg-primary text-primary-foreground">
@@ -11,10 +20,10 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Clinic info */}
           <div>
-            <h3 className="text-lg font-heading font-bold mb-4">{CLINIC_INFO.name}</h3>
-            <p className="text-sm opacity-80 mb-4">{CLINIC_INFO.tagline}</p>
+            <h3 className="text-lg font-heading font-bold mb-4">{general?.clinic_name ?? "Smilz Dental Treatment Facility"}</h3>
+            <p className="text-sm opacity-80 mb-4">{general?.tagline ?? "Bridging Gaps... Spreading Smiles!"}</p>
             <p className="text-sm opacity-80">
-              Trusted dental care in South Kolkata since {CLINIC_INFO.yearEstablished}. Comprehensive, affordable, and patient-centric dental treatments.
+              {appearance?.footer_text || `Trusted dental care in South Kolkata since ${general?.year_established ?? 1999}. Comprehensive, affordable, and patient-centric dental treatments.`}
             </p>
           </div>
 
@@ -44,10 +53,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-heading font-bold mb-4">Our Services</h3>
             <ul className="space-y-2 text-sm">
-              {SERVICES.map((service) => (
-                <li key={service.id}>
+              {(services ?? []).map((service) => (
+                <li key={service.slug}>
                   <Link
-                    to={`/services/${service.id}`}
+                    to={`/services/${service.slug}`}
                     className="opacity-80 hover:opacity-100 transition-opacity"
                   >
                     {service.title}
@@ -63,29 +72,29 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2 opacity-80">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>{CLINIC_INFO.addressFull}</span>
+                <span>{contact?.address_full ?? "21, Garia Park, Garia Park Buddha Temple, Garia, South Kolkata 700084"}</span>
               </li>
               <li>
-                <a href={`tel:${CLINIC_INFO.phone}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+                <a href={`tel:${contact?.phone ?? "8961775554"}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
                   <Phone className="h-4 w-4" />
-                  {CLINIC_INFO.phoneFormatted}
+                  {contact?.phone_formatted ?? "8961 77 5554"}
                 </a>
               </li>
               <li>
-                <a href={`tel:${CLINIC_INFO.emergency}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+                <a href={`tel:${contact?.emergency ?? "9831070248"}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
                   <Phone className="h-4 w-4" />
-                  Emergency: {CLINIC_INFO.emergency}
+                  Emergency: {contact?.emergency ?? "9831070248"}
                 </a>
               </li>
               <li>
-                <a href={`mailto:${CLINIC_INFO.email}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+                <a href={`mailto:${contact?.email ?? "dr.d.dutta@gmail.com"}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
                   <Mail className="h-4 w-4" />
-                  {CLINIC_INFO.email}
+                  {contact?.email ?? "dr.d.dutta@gmail.com"}
                 </a>
               </li>
               <li>
                 <a
-                  href={`https://wa.me/${CLINIC_INFO.whatsapp}`}
+                  href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity"
@@ -97,9 +106,9 @@ const Footer = () => {
               <li className="flex items-start gap-2 opacity-80">
                 <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p>{CLINIC_INFO.hours.days}</p>
-                  <p>{CLINIC_INFO.hours.morning}</p>
-                  <p>{CLINIC_INFO.hours.evening}</p>
+                  <p>{hours?.days ?? "Monday – Saturday"}</p>
+                  <p>{hours?.morning ?? "9:00 AM – 1:00 PM"}</p>
+                  <p>{hours?.evening ?? "5:00 PM – 9:00 PM"}</p>
                 </div>
               </li>
             </ul>
@@ -107,7 +116,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/20 text-center text-sm opacity-70">
-          <p>&copy; {currentYear} {CLINIC_INFO.name}. All rights reserved.</p>
+          <p>&copy; {currentYear} {general?.clinic_name ?? "Smilz Dental Treatment Facility"}. All rights reserved.</p>
         </div>
       </div>
     </footer>
