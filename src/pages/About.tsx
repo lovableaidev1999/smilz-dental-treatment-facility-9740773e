@@ -1,20 +1,66 @@
 import { motion } from "framer-motion";
-import { Award, Heart, Shield, Users } from "lucide-react";
+import { Award, Heart, Shield, Users, Phone, Clock, MapPin, Calendar } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
+
+interface PageSection {
+  id: string;
+  section_id: string;
+  section_title: string | null;
+  heading: string | null;
+  subheading: string | null;
+  body_text: string | null;
+  image_url: string | null;
+  button_text: string | null;
+  button_link: string | null;
+  is_active: boolean;
+}
 
 const About = () => {
   const { data: settings } = useSiteSettings();
   const general = settings?.general;
   const contact = settings?.contact;
+  const hours = settings?.hours;
   const links = settings?.links;
+  const coordinates = settings?.coordinates;
+
+  const { data: sections } = useQuery({
+    queryKey: ["page_content", "about"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("page_content")
+        .select("*")
+        .eq("page_name", "about")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) {
+        console.warn("page_content not available:", error.message);
+        return [];
+      }
+      return data as PageSection[];
+    },
+  });
+
+  const getSection = (id: string) => sections?.find((s) => s.section_id === id);
+
+  const heroSection = getSection("hero");
+  const doctorSection = getSection("doctor");
+  const ctaSection = getSection("cta");
+
+  const mapSrc = coordinates
+    ? `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3686.5!2d${coordinates.lng}!3d${coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z!5e0!3m2!1sen!2sin!4v1700000000000`
+    : null;
 
   return (
     <>
       <SEOHead
-        title={`About Us - ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}`}
-        description={`Learn about ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}, led by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}. Trusted dental care in Garia, South Kolkata since ${general?.year_established ?? 1999}. 25+ years of experience.`}
+        title={`About Us - ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}`}
+        description={`Learn about ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}, led by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}. Trusted dental care in Garia, South Kolkata since ${general?.year_established ?? 1999}.`}
         keywords="best dentist Garia, Dr Dibyendu Dutta, dental clinic South Kolkata"
         canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/about`}
         breadcrumbs={[
@@ -23,33 +69,60 @@ const About = () => {
         ]}
       />
 
+      {/* Hero Section */}
       <section className="bg-gradient-primary text-primary-foreground section-padding">
         <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">About Us</h1>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
+            {heroSection?.heading ?? "About Us"}
+          </h1>
           <p className="text-primary-foreground/85 max-w-xl mx-auto">
-            Over 25 years of dedicated dental care in the heart of Garia, South Kolkata.
+            {heroSection?.subheading ?? `Over 25 years of dedicated dental care in the heart of Garia, South Kolkata.`}
           </p>
         </div>
       </section>
 
+      {/* Doctor Section */}
       <section className="section-padding">
         <div className="container-narrow mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-            <motion.img src={doctorImg} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} - Dentist at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1024} initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} />
+            <motion.img
+              src={doctorSection?.image_url || doctorImg}
+              alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} - Dentist at ${general?.clinic_name ?? "Smilz"}`}
+              className="rounded-2xl shadow-elevated w-full"
+              loading="lazy"
+              width={800}
+              height={1024}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            />
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <h2 className="text-3xl font-heading font-bold text-foreground mb-4">Meet {general?.doctor_name ?? "Dr. Dibyendu Dutta"}</h2>
-              <p className="text-muted-foreground mb-4">
-                With over 25 years of experience in dentistry, {general?.doctor_name ?? "Dr. Dibyendu Dutta"} founded {general?.clinic_name ?? "Smilz Dental Treatment Facility"} in {general?.year_established ?? 1999} with a vision to provide accessible, honest, and high-quality dental care to the community of South Kolkata.
-              </p>
-              <p className="text-muted-foreground mb-4">
-                Conveniently situated in the heart of Garia at <strong>{contact?.address ?? "21, Garia Park, Kolkata 700084"}</strong>, our clinic is equipped with the latest dental technologies to provide the most effective treatments with precision and care.
-              </p>
-              <p className="text-muted-foreground">
-                At {general?.clinic_name ?? "Smilz"}, we believe exceptional dental care should be accessible to everyone. Our goal is to provide high-quality treatments that combine cutting-edge technology with a personalized and thoughtful approach to dentistry.
-              </p>
+              <h2 className="text-3xl font-heading font-bold text-foreground mb-4">
+                {doctorSection?.heading ?? `Meet ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}`}
+              </h2>
+              <div className="space-y-4 text-muted-foreground">
+                {doctorSection?.body_text ? (
+                  doctorSection.body_text.split("\n").filter(Boolean).map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))
+                ) : (
+                  <>
+                    <p>
+                      With over 25 years of experience in dentistry, {general?.doctor_name ?? "Dr. Dibyendu Dutta"} founded{" "}
+                      {general?.clinic_name ?? "Smilz Dental Treatment Facility"} in {general?.year_established ?? 1999} with a
+                      vision to provide accessible, honest, and high-quality dental care to the community of South Kolkata.
+                    </p>
+                    <p>
+                      Conveniently situated in the heart of Garia at <strong>{contact?.address ?? "21, Garia Park, Kolkata 700084"}</strong>,
+                      our clinic is equipped with the latest dental technologies.
+                    </p>
+                  </>
+                )}
+              </div>
             </motion.div>
           </div>
 
+          {/* Values Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: Heart, title: "Patient-Centric", desc: "Every patient receives undivided attention and personalized care." },
@@ -57,13 +130,181 @@ const About = () => {
               { icon: Award, title: "25+ Years", desc: `Trusted expertise serving Garia and South Kolkata since ${general?.year_established ?? 1999}.` },
               { icon: Users, title: "Family Friendly", desc: "Comprehensive dental solutions for patients of all ages." },
             ].map(({ icon: Icon, title, desc }, i) => (
-              <motion.div key={title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-card rounded-xl p-6 shadow-card text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary mb-4"><Icon className="h-6 w-6 text-primary" /></div>
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card rounded-xl p-6 shadow-card text-center"
+              >
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary mb-4">
+                  <Icon className="h-6 w-6 text-primary" />
+                </div>
                 <h3 className="font-heading font-semibold text-foreground mb-2">{title}</h3>
                 <p className="text-sm text-muted-foreground">{desc}</p>
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Clinic Info: Address, Timings, Phone */}
+      <section className="section-padding bg-secondary/30">
+        <div className="container-narrow mx-auto">
+          <motion.h2
+            className="text-3xl font-heading font-bold text-foreground text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            Visit Our Clinic
+          </motion.h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Address */}
+            <motion.div
+              className="bg-card rounded-xl p-6 shadow-card text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                <MapPin className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-heading font-semibold text-foreground mb-2">Our Address</h3>
+              <p className="text-muted-foreground text-sm">
+                {contact?.address_full ?? contact?.address ?? "21, Garia Park, Kolkata 700084"}
+              </p>
+              {links?.google_maps_url && (
+                <a
+                  href={links.google_maps_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary text-sm font-medium mt-3 inline-block hover:underline"
+                >
+                  Get Directions →
+                </a>
+              )}
+            </motion.div>
+
+            {/* Timings */}
+            <motion.div
+              className="bg-card rounded-xl p-6 shadow-card text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                <Clock className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-heading font-semibold text-foreground mb-2">Clinic Timings</h3>
+              <div className="text-muted-foreground text-sm space-y-1">
+                <p><span className="font-medium text-foreground">Morning:</span> {hours?.morning ?? "9:00 AM – 1:00 PM"}</p>
+                <p><span className="font-medium text-foreground">Evening:</span> {hours?.evening ?? "5:00 PM – 9:00 PM"}</p>
+                <p className="mt-2">{hours?.days ?? "Monday – Saturday"}</p>
+                <p className="text-destructive text-xs font-medium">{hours?.closed ?? "Sunday"} – Closed</p>
+              </div>
+            </motion.div>
+
+            {/* Phone Numbers */}
+            <motion.div
+              className="bg-card rounded-xl p-6 shadow-card text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                <Phone className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-heading font-semibold text-foreground mb-2">Contact Numbers</h3>
+              <div className="text-muted-foreground text-sm space-y-2">
+                <p>
+                  <span className="font-medium text-foreground">Appointment:</span>{" "}
+                  <a href={`tel:${contact?.phone ?? "8961775554"}`} className="text-primary hover:underline">
+                    {contact?.phone_formatted ?? contact?.phone ?? "8961 77 5554"}
+                  </a>
+                </p>
+                <p>
+                  <span className="font-medium text-foreground">Emergency:</span>{" "}
+                  <a href={`tel:${contact?.emergency ?? "9831070248"}`} className="text-primary hover:underline">
+                    {contact?.emergency ?? "9831070248"}
+                  </a>
+                </p>
+                <p>
+                  <span className="font-medium text-foreground">Email:</span>{" "}
+                  <a href={`mailto:${contact?.email ?? ""}`} className="text-primary hover:underline text-xs">
+                    {contact?.email ?? "dr.d.dutta@gmail.com"}
+                  </a>
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Map Section */}
+      <section className="section-padding">
+        <div className="container-narrow mx-auto">
+          <motion.h2
+            className="text-3xl font-heading font-bold text-foreground text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            Find Us on the Map
+          </motion.h2>
+          <motion.div
+            className="rounded-2xl overflow-hidden shadow-elevated aspect-video"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <iframe
+              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates?.lat ?? 22.4625},${coordinates?.lng ?? 88.3942}&zoom=16`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title={`${general?.clinic_name ?? "Smilz"} Location`}
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="section-padding bg-gradient-primary text-primary-foreground">
+        <div className="container-narrow mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
+              {ctaSection?.heading ?? "Ready for a Healthier Smile?"}
+            </h2>
+            <p className="text-primary-foreground/85 max-w-lg mx-auto mb-8">
+              {ctaSection?.subheading ?? "Book your appointment today and experience the Smilz difference. Walk-ins welcome, appointments preferred."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" variant="secondary" className="font-semibold">
+                <Link to={ctaSection?.button_link ?? "/contact"}>
+                  <Calendar className="mr-2 h-5 w-5" />
+                  {ctaSection?.button_text ?? "Book Appointment"}
+                </Link>
+              </Button>
+              {contact?.whatsapp && (
+                <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                  <a href={`https://wa.me/${contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
+                    WhatsApp Us
+                  </a>
+                </Button>
+              )}
+            </div>
+          </motion.div>
         </div>
       </section>
     </>
