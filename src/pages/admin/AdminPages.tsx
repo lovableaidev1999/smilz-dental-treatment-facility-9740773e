@@ -49,7 +49,13 @@ const AdminPages = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (section: any) => {
-      const { id, created_at, ...rest } = section;
+      const { id, created_at, updated_at, ...rest } = section;
+      if (!rest.section_id || !rest.section_id.trim()) {
+        throw new Error("Section ID is required");
+      }
+      if (!rest.page_name) {
+        throw new Error("Page name is missing");
+      }
       const payload = { ...rest, updated_at: new Date().toISOString() };
       if (id) {
         const { error } = await supabase.from("page_content").update(payload).eq("id", id);
