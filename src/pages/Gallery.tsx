@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { usePageContent } from "@/hooks/usePageContent";
 import { useGallery } from "@/integrations/supabase/hooks";
 
 const Gallery = () => {
   const { data: galleryItems, isLoading } = useGallery();
   const { data: settings } = useSiteSettings();
+  const { getSection } = usePageContent("gallery");
   const links = settings?.links;
+  const hero = getSection("hero");
 
   return (
     <>
@@ -23,8 +26,8 @@ const Gallery = () => {
 
       <section className="bg-gradient-primary text-primary-foreground section-padding">
         <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Treatment Gallery</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">Real results from real patients. See the transformations we deliver every day.</p>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{hero?.heading ?? "Treatment Gallery"}</h1>
+          <p className="text-primary-foreground/85 max-w-xl mx-auto">{hero?.subheading ?? "Real results from real patients. See the transformations we deliver every day."}</p>
         </div>
       </section>
 
@@ -32,6 +35,8 @@ const Gallery = () => {
         <div className="container-narrow mx-auto">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">{[...Array(4)].map((_, i) => <div key={i} className="bg-card rounded-2xl h-64 animate-pulse" />)}</div>
+          ) : (galleryItems ?? []).length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">No gallery items yet. Add them from the admin panel.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {(galleryItems ?? []).map((item, i) => (

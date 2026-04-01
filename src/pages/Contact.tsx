@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Phone, MessageCircle, Mail, MapPin, Clock, Send } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { usePageContent } from "@/hooks/usePageContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,11 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 const Contact = () => {
   const { toast } = useToast();
   const { data: settings } = useSiteSettings();
+  const { getSection } = usePageContent("contact");
   const [form, setForm] = useState({ name: "", email: "", mobile: "", message: "" });
 
   const contact = settings?.contact;
   const hours = settings?.hours;
   const links = settings?.links;
+  const coordinates = settings?.coordinates;
+  const hero = getSection("hero");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +45,8 @@ const Contact = () => {
 
       <section className="bg-gradient-primary text-primary-foreground section-padding">
         <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Contact Us</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">We'd love to hear from you. Book an appointment or reach out with any questions.</p>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{hero?.heading ?? "Contact Us"}</h1>
+          <p className="text-primary-foreground/85 max-w-xl mx-auto">{hero?.subheading ?? "We'd love to hear from you. Book an appointment or reach out with any questions."}</p>
         </div>
       </section>
 
@@ -82,8 +86,12 @@ const Contact = () => {
                   </div>
                 </div>
               </div>
-              <div className="rounded-xl overflow-hidden shadow-card">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3686.5!2d88.3942!3d22.4625!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a027a0a96aaaa2b%3A0x462d364e446441!2sSMiLZ%20Dental%20Treatment%20Facility!5e0!3m2!1sen!2sin!4v1" width="100%" height="300" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Smilz Dental location on Google Maps" />
+              <div className="rounded-xl overflow-hidden shadow-card aspect-video">
+                <iframe
+                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates?.lat ?? 22.4625},${coordinates?.lng ?? 88.3942}&zoom=16`}
+                  width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade" title="Smilz Dental location on Google Maps"
+                />
               </div>
             </motion.div>
 

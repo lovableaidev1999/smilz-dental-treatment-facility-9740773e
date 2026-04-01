@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
 
 const serviceIcons: Record<string, string> = {
@@ -13,7 +14,9 @@ const serviceIcons: Record<string, string> = {
 const ServicesPage = () => {
   const { data: services, isLoading } = useServices();
   const { data: settings } = useSiteSettings();
+  const { getSection } = usePageContent("services");
   const links = settings?.links;
+  const hero = getSection("hero");
 
   return (
     <>
@@ -29,8 +32,8 @@ const ServicesPage = () => {
 
       <section className="bg-gradient-primary text-primary-foreground section-padding">
         <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Our Dental Services</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">Complete dental solutions for all your needs — from routine care to advanced procedures, delivered with precision and care.</p>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{hero?.heading ?? "Our Dental Services"}</h1>
+          <p className="text-primary-foreground/85 max-w-xl mx-auto">{hero?.subheading ?? "Complete dental solutions for all your needs — from routine care to advanced procedures, delivered with precision and care."}</p>
         </div>
       </section>
 
