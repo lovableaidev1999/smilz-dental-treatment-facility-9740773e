@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { CLINIC_INFO } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface SEOHeadProps {
   title: string;
@@ -19,27 +19,28 @@ interface SEOHeadProps {
 }
 
 const SEOHead = ({
-  title,
-  description,
-  keywords,
-  canonicalUrl,
-  ogImage,
-  type = "website",
-  article,
-  breadcrumbs,
-  faqs,
+  title, description, keywords, canonicalUrl, ogImage,
+  type = "website", article, breadcrumbs, faqs,
 }: SEOHeadProps) => {
-  const fullTitle = `${title} | ${CLINIC_INFO.name}`;
-  const url = canonicalUrl || CLINIC_INFO.website;
+  const { data: settings } = useSiteSettings();
+  const general = settings?.general;
+  const contact = settings?.contact;
+  const links = settings?.links;
+  const coords = settings?.coordinates;
+
+  const clinicName = general?.clinic_name ?? "Smilz Dental Treatment Facility";
+  const website = links?.website ?? "https://www.smilz.net";
+  const fullTitle = `${title} | ${clinicName}`;
+  const url = canonicalUrl || website;
 
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "Dentist",
-    name: CLINIC_INFO.name,
-    image: ogImage || `${CLINIC_INFO.website}/og-image.jpg`,
-    url: CLINIC_INFO.website,
-    telephone: CLINIC_INFO.phone,
-    email: CLINIC_INFO.email,
+    name: clinicName,
+    image: ogImage || `${website}/og-image.jpg`,
+    url: website,
+    telephone: contact?.phone ?? "8961775554",
+    email: contact?.email ?? "dr.d.dutta@gmail.com",
     address: {
       "@type": "PostalAddress",
       streetAddress: "21, Garia Park",
@@ -50,59 +51,38 @@ const SEOHead = ({
     },
     geo: {
       "@type": "GeoCoordinates",
-      latitude: CLINIC_INFO.coordinates.lat,
-      longitude: CLINIC_INFO.coordinates.lng,
+      latitude: coords?.lat ?? 22.4625,
+      longitude: coords?.lng ?? 88.3942,
     },
     openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        opens: "09:00",
-        closes: "13:00",
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        opens: "17:00",
-        closes: "21:00",
-      },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "09:00", closes: "13:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "17:00", closes: "21:00" },
     ],
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: CLINIC_INFO.googleRating,
-      reviewCount: CLINIC_INFO.reviewCount,
+      ratingValue: general?.google_rating ?? 4.8,
+      reviewCount: general?.review_count ?? 44,
     },
-    foundingDate: CLINIC_INFO.yearEstablished.toString(),
+    foundingDate: (general?.year_established ?? 1999).toString(),
     priceRange: "$$",
   };
 
-  const breadcrumbSchema = breadcrumbs
-    ? {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        itemListElement: breadcrumbs.map((item, i) => ({
-          "@type": "ListItem",
-          position: i + 1,
-          name: item.name,
-          item: item.url,
-        })),
-      }
-    : null;
+  const breadcrumbSchema = breadcrumbs ? {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbs.map((item, i) => ({
+      "@type": "ListItem", position: i + 1, name: item.name, item: item.url,
+    })),
+  } : null;
 
-  const faqSchema = faqs?.length
-    ? {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: faqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.q,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: faq.a,
-          },
-        })),
-      }
-    : null;
+  const faqSchema = faqs?.length ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question", name: faq.q,
+      acceptedAnswer: { "@type": "Answer", text: faq.a },
+    })),
+  } : null;
 
   return (
     <Helmet>
@@ -110,35 +90,21 @@ const SEOHead = ({
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={url} />
-
-      {/* Open Graph */}
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
-      <meta property="og:site_name" content={CLINIC_INFO.name} />
+      <meta property="og:site_name" content={clinicName} />
       {ogImage && <meta property="og:image" content={ogImage} />}
       <meta property="og:locale" content="en_IN" />
-
-      {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-
-      {/* Article meta */}
-      {article?.publishedTime && (
-        <meta property="article:published_time" content={article.publishedTime} />
-      )}
+      {article?.publishedTime && <meta property="article:published_time" content={article.publishedTime} />}
       {article?.author && <meta property="article:author" content={article.author} />}
-
-      {/* JSON-LD */}
       <script type="application/ld+json">{JSON.stringify(localBusinessSchema)}</script>
-      {breadcrumbSchema && (
-        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
-      )}
-      {faqSchema && (
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      )}
+      {breadcrumbSchema && <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>}
+      {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
     </Helmet>
   );
 };

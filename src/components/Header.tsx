@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Phone, MessageCircle, Menu, X, Clock, MapPin } from "lucide-react";
-import { CLINIC_INFO } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import logo from "@/assets/logo.png";
 
 const navLinks = [
@@ -16,6 +16,10 @@ const navLinks = [
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { data: settings } = useSiteSettings();
+
+  const contact = settings?.contact;
+  const hours = settings?.hours;
 
   return (
     <>
@@ -25,20 +29,20 @@ const Header = () => {
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5" />
-              {CLINIC_INFO.address}
+              {contact?.address ?? "21, Garia Park, Kolkata 700084"}
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
-              Mon-Sat: {CLINIC_INFO.hours.morning} & {CLINIC_INFO.hours.evening}
+              Mon-Sat: {hours?.morning ?? "9:00 AM – 1:00 PM"} & {hours?.evening ?? "5:00 PM – 9:00 PM"}
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <a href={`tel:${CLINIC_INFO.phone}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+            <a href={`tel:${contact?.phone ?? "8961775554"}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
               <Phone className="h-3.5 w-3.5" />
-              {CLINIC_INFO.phoneFormatted}
+              {contact?.phone_formatted ?? "8961 77 5554"}
             </a>
             <a
-              href={`https://wa.me/${CLINIC_INFO.whatsapp}`}
+              href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
@@ -54,7 +58,7 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md shadow-card border-b border-border">
         <div className="container-narrow mx-auto flex items-center justify-between py-3 px-4">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Smilz Dental Clinic Logo" className="h-12 w-auto" />
+            <img src={settings?.appearance?.logo_url || logo} alt={`${settings?.general?.clinic_name ?? "Smilz"} Logo`} className="h-12 w-auto" />
           </Link>
 
           {/* Desktop nav */}
@@ -77,7 +81,7 @@ const Header = () => {
           {/* CTA + Mobile toggle */}
           <div className="flex items-center gap-3">
             <a
-              href={`https://wa.me/${CLINIC_INFO.whatsapp}?text=Hi, I would like to book an appointment.`}
+              href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}?text=Hi, I would like to book an appointment.`}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-2 bg-gradient-accent text-accent-foreground px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
@@ -113,7 +117,7 @@ const Header = () => {
                 </Link>
               ))}
               <a
-                href={`https://wa.me/${CLINIC_INFO.whatsapp}?text=Hi, I would like to book an appointment.`}
+                href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}?text=Hi, I would like to book an appointment.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 flex items-center justify-center gap-2 bg-gradient-accent text-accent-foreground px-5 py-3 rounded-lg text-sm font-semibold"
