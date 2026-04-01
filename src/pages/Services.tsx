@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
-import { CLINIC_INFO, SERVICES } from "@/lib/constants";
+import { CLINIC_INFO } from "@/lib/constants";
+import { useServices } from "@/integrations/supabase/hooks";
 
 const serviceIcons: Record<string, string> = {
   "dental-implants": "🦷",
@@ -14,6 +15,8 @@ const serviceIcons: Record<string, string> = {
 };
 
 const ServicesPage = () => {
+  const { data: services, isLoading } = useServices();
+
   return (
     <>
       <SEOHead
@@ -26,7 +29,6 @@ const ServicesPage = () => {
         ]}
       />
 
-      {/* Page Header */}
       <section className="bg-gradient-primary text-primary-foreground section-padding">
         <div className="container-narrow mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Our Dental Services</h1>
@@ -38,31 +40,39 @@ const ServicesPage = () => {
 
       <section className="section-padding">
         <div className="container-narrow mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {SERVICES.map((service, i) => (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-              >
-                <Link
-                  to={`/services/${service.id}`}
-                  className="group block bg-card rounded-2xl p-8 shadow-card hover:shadow-hover transition-all duration-300 h-full border border-border hover:border-primary/30"
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-card rounded-2xl p-8 shadow-card animate-pulse h-56" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {(services ?? []).map((service, i) => (
+                <motion.div
+                  key={service.slug}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
                 >
-                  <div className="text-5xl mb-5">{serviceIcons[service.id]}</div>
-                  <h2 className="text-xl font-heading font-bold text-foreground group-hover:text-primary transition-colors mb-3">
-                    {service.title}
-                  </h2>
-                  <p className="text-muted-foreground text-sm mb-5">{service.shortDesc}</p>
-                  <span className="text-primary text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                    View Details <ChevronRight className="h-4 w-4" />
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                  <Link
+                    to={`/services/${service.slug}`}
+                    className="group block bg-card rounded-2xl p-8 shadow-card hover:shadow-hover transition-all duration-300 h-full border border-border hover:border-primary/30"
+                  >
+                    <div className="text-5xl mb-5">{serviceIcons[service.slug] ?? "🦷"}</div>
+                    <h2 className="text-xl font-heading font-bold text-foreground group-hover:text-primary transition-colors mb-3">
+                      {service.title}
+                    </h2>
+                    <p className="text-muted-foreground text-sm mb-5">{service.short_desc}</p>
+                    <span className="text-primary text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                      View Details <ChevronRight className="h-4 w-4" />
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>
