@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, Shield, Clock, Award, ChevronRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
-import { CLINIC_INFO, SERVICES, REVIEWS } from "@/lib/constants";
+import { CLINIC_INFO, REVIEWS } from "@/lib/constants";
+import { useServices } from "@/integrations/supabase/hooks";
 import heroImg from "@/assets/hero-dental.jpg";
 import doctorImg from "@/assets/doctor.jpg";
 
@@ -25,6 +26,8 @@ const fadeUp = {
 };
 
 const Home = () => {
+  const { data: services, isLoading: servicesLoading } = useServices();
+
   return (
     <>
       <SEOHead
@@ -110,32 +113,40 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SERVICES.map((service, i) => (
-              <motion.div
-                key={service.id}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-50px" }}
-                variants={fadeUp}
-              >
-                <Link
-                  to={`/services/${service.id}`}
-                  className="group block bg-card rounded-xl p-6 shadow-card hover:shadow-hover transition-all duration-300 h-full"
+          {servicesLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-card rounded-xl p-6 shadow-card animate-pulse h-48" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(services ?? []).map((service, i) => (
+                <motion.div
+                  key={service.slug}
+                  custom={i}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-50px" }}
+                  variants={fadeUp}
                 >
-                  <div className="text-4xl mb-4">{serviceIcons[service.id]}</div>
-                  <h3 className="text-lg font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-2">
-                    {service.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">{service.shortDesc}</p>
-                  <span className="text-primary text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Learn More <ChevronRight className="h-4 w-4" />
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                  <Link
+                    to={`/services/${service.slug}`}
+                    className="group block bg-card rounded-xl p-6 shadow-card hover:shadow-hover transition-all duration-300 h-full"
+                  >
+                    <div className="text-4xl mb-4">{serviceIcons[service.slug] ?? "🦷"}</div>
+                    <h3 className="text-lg font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-2">
+                      {service.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">{service.short_desc}</p>
+                    <span className="text-primary text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Learn More <ChevronRight className="h-4 w-4" />
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
