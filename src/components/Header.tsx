@@ -1,0 +1,131 @@
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Phone, MessageCircle, Menu, X, Clock, MapPin } from "lucide-react";
+import { CLINIC_INFO } from "@/lib/constants";
+import logo from "@/assets/logo.png";
+
+const navLinks = [
+  { label: "Home", path: "/" },
+  { label: "Services", path: "/services" },
+  { label: "About Us", path: "/about" },
+  { label: "Gallery", path: "/gallery" },
+  { label: "Insights", path: "/blog" },
+  { label: "Contact", path: "/contact" },
+];
+
+const Header = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  return (
+    <>
+      {/* Top bar */}
+      <div className="bg-primary text-primary-foreground text-sm hidden md:block">
+        <div className="container-narrow mx-auto flex items-center justify-between py-2 px-4">
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              {CLINIC_INFO.address}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              Mon-Sat: {CLINIC_INFO.hours.morning} & {CLINIC_INFO.hours.evening}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href={`tel:${CLINIC_INFO.phone}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+              <Phone className="h-3.5 w-3.5" />
+              {CLINIC_INFO.phoneFormatted}
+            </a>
+            <a
+              href={`https://wa.me/${CLINIC_INFO.whatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Main header */}
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md shadow-card border-b border-border">
+        <div className="container-narrow mx-auto flex items-center justify-between py-3 px-4">
+          <Link to="/" className="flex items-center gap-3">
+            <img src={logo} alt="Smilz Dental Clinic Logo" className="h-12 w-auto" />
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  location.pathname === link.path
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground hover:bg-secondary hover:text-secondary-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* CTA + Mobile toggle */}
+          <div className="flex items-center gap-3">
+            <a
+              href={`https://wa.me/${CLINIC_INFO.whatsapp}?text=Hi, I would like to book an appointment.`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-2 bg-gradient-accent text-accent-foreground px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Book Appointment
+            </a>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile nav */}
+        {mobileOpen && (
+          <div className="lg:hidden border-t border-border bg-card animate-fade-in">
+            <nav className="container-narrow mx-auto flex flex-col py-4 px-4 gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    location.pathname === link.path
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <a
+                href={`https://wa.me/${CLINIC_INFO.whatsapp}?text=Hi, I would like to book an appointment.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 flex items-center justify-center gap-2 bg-gradient-accent text-accent-foreground px-5 py-3 rounded-lg text-sm font-semibold"
+              >
+                Book Appointment
+              </a>
+            </nav>
+          </div>
+        )}
+      </header>
+    </>
+  );
+};
+
+export default Header;
