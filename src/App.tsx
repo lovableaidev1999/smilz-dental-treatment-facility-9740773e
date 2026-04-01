@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -5,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
 import ServicesPage from "@/pages/Services";
@@ -31,12 +33,40 @@ import AdminMedia from "@/pages/admin/AdminMedia";
 import AdminGallery from "@/pages/admin/AdminGallery";
 import AdminReviews from "@/pages/admin/AdminReviews";
 
+const FONT_IMPORT_MAP: Record<string, string> = {
+  "Playfair Display": "Playfair+Display",
+  "Cormorant Garamond": "Cormorant+Garamond",
+  "Open Sans": "Open+Sans",
+};
+
+const FontApplier = () => {
+  const { data: settings } = useSiteSettings();
+  const font = settings?.appearance?.font_family || "Poppins";
+
+  useEffect(() => {
+    const fontParam = FONT_IMPORT_MAP[font] || font.replace(/ /g, "+");
+    const linkId = "dynamic-font-link";
+    let link = document.getElementById(linkId) as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement("link");
+      link.id = linkId;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    link.href = `https://fonts.googleapis.com/css2?family=${fontParam}:wght@300;400;500;600;700;800&display=swap`;
+    document.documentElement.style.setProperty("--app-font", `'${font}', sans-serif`);
+  }, [font]);
+
+  return null;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <FontApplier />
         <TooltipProvider>
           <Toaster />
           <Sonner />
