@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Eye, EyeOff, ChevronDown, ChevronRight } from "lucide-react";
+import { Save, Eye, EyeOff, ChevronRight, Plus, Trash2, GripVertical } from "lucide-react";
 
 const PAGES = ["home", "about", "contact", "services", "gallery", "blog"];
 
@@ -16,6 +16,20 @@ const AdminPages = () => {
   const [activePage, setActivePage] = useState("home");
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newForm, setNewForm] = useState<any>({
+    page_name: "home",
+    section_id: "",
+    section_title: "",
+    heading: "",
+    subheading: "",
+    body_text: "",
+    image_url: "",
+    button_text: "",
+    button_link: "",
+    sort_order: 99,
+    is_active: true,
+  });
 
   const { data: sections, isLoading } = useQuery({
     queryKey: ["admin_page_content", activePage],
@@ -35,18 +49,35 @@ const AdminPages = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (section: any) => {
-      const { error } = await supabase
-        .from("page_content")
-        .upsert({
-          ...section,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "page_name,section_id" });
+      const { id, created_at, ...rest } = section;
+      const payload = { ...rest, updated_at: new Date().toISOString() };
+      if (id) {
+        const { error } = await supabase.from("page_content").update(payload).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("page_content").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin_page_content"] });
+      qc.invalidateQueries({ queryKey: ["page_content"] });
+      toast({ title: "Section saved!" });
+      setEditingSection(null);
+      setShowNewForm(false);
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("page_content").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin_page_content"] });
-      toast({ title: "Section saved!" });
-      setEditingSection(null);
+      qc.invalidateQueries({ queryKey: ["page_content"] });
+      toast({ title: "Section deleted" });
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -56,24 +87,97 @@ const AdminPages = () => {
       const { error } = await supabase.from("page_content").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin_page_content"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin_page_content"] });
+      qc.invalidateQueries({ queryKey: ["page_content"] });
+    },
   });
 
   const startEditing = (section: any) => {
     setEditingSection(section.id);
     setForm({ ...section });
+    setShowNewForm(false);
+  };
+
+  const SectionForm = ({ data, onSave, onCancel, isNew = false }: any) => {
+    const [local, setLocal] = useState(data);
+    return (
+      <div className="p-6 space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Section Title</label>
+            <Input value={local.section_title ?? ""} onChange={(e) => setLocal({ ...local, section_title: e.target.value })} placeholder="e.g. Hero Section" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Section ID {isNew && <span className="text-destructive">*</span>}</label>
+            <Input value={local.section_id ?? ""} onChange={(e) => setLocal({ ...local, section_id: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, "-") })} disabled={!isNew} className={!isNew ? "opacity-60" : ""} placeholder="e.g. hero" />
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1.5 block">Heading</label>
+          <Input value={local.heading ?? ""} onChange={(e) => setLocal({ ...local, heading: e.target.value })} placeholder="Main heading text" />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1.5 block">Subheading</label>
+          <Input value={local.subheading ?? ""} onChange={(e) => setLocal({ ...local, subheading: e.target.value })} placeholder="Subtitle or tagline" />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1.5 block">Body Text</label>
+          <Textarea value={local.body_text ?? ""} onChange={(e) => setLocal({ ...local, body_text: e.target.value })} rows={4} placeholder="Paragraph content (use new lines to separate paragraphs)" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Image URL</label>
+            <Input value={local.image_url ?? ""} onChange={(e) => setLocal({ ...local, image_url: e.target.value })} placeholder="https://..." />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Sort Order</label>
+            <Input type="number" value={local.sort_order ?? 0} onChange={(e) => setLocal({ ...local, sort_order: Number(e.target.value) })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Button Text</label>
+            <Input value={local.button_text ?? ""} onChange={(e) => setLocal({ ...local, button_text: e.target.value })} placeholder="e.g. Learn More" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Button Link</label>
+            <Input value={local.button_link ?? ""} onChange={(e) => setLocal({ ...local, button_link: e.target.value })} placeholder="e.g. /contact" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => onSave(local)} className="gap-2" disabled={saveMutation.isPending}>
+            <Save className="h-4 w-4" /> {isNew ? "Create Section" : "Save Section"}
+          </Button>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-heading font-bold text-foreground mb-6">Page Sections</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-heading font-bold text-foreground">Page Sections</h1>
+        <Button
+          onClick={() => {
+            setShowNewForm(!showNewForm);
+            setEditingSection(null);
+            setNewForm((f: any) => ({ ...f, page_name: activePage, sort_order: (sections?.length ?? 0) + 1 }));
+          }}
+          className="gap-2"
+          size="sm"
+        >
+          <Plus className="h-4 w-4" /> Add Section
+        </Button>
+      </div>
 
       {/* Page tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         {PAGES.map((page) => (
           <button
             key={page}
-            onClick={() => { setActivePage(page); setEditingSection(null); }}
+            onClick={() => { setActivePage(page); setEditingSection(null); setShowNewForm(false); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
               activePage === page ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary/10"
             }`}
@@ -83,11 +187,28 @@ const AdminPages = () => {
         ))}
       </div>
 
+      {/* New section form */}
+      {showNewForm && (
+        <Card className="mb-4 border-primary/30">
+          <CardContent className="p-0">
+            <div className="px-6 pt-4 pb-0">
+              <p className="text-sm font-medium text-primary">New Section for "{activePage}" page</p>
+            </div>
+            <SectionForm
+              data={{ ...newForm, page_name: activePage }}
+              isNew
+              onSave={(data: any) => saveMutation.mutate(data)}
+              onCancel={() => setShowNewForm(false)}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {isLoading ? (
         <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-secondary rounded-lg animate-pulse" />)}</div>
       ) : (sections ?? []).length === 0 ? (
         <p className="text-muted-foreground text-center py-12">
-          No sections found for this page. Run the DATABASE_SETUP.sql to seed page content.
+          No sections found for this page. Click "Add Section" to create one.
         </p>
       ) : (
         <div className="space-y-3">
@@ -95,70 +216,38 @@ const AdminPages = () => {
             <Card key={section.id} className={!section.is_active ? "opacity-50" : ""}>
               <CardContent className="p-0">
                 {editingSection === section.id ? (
-                  <div className="p-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Section Title</label>
-                        <Input value={form.section_title ?? ""} onChange={(e) => setForm({ ...form, section_title: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Section ID</label>
-                        <Input value={form.section_id ?? ""} disabled className="opacity-60" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Heading</label>
-                      <Input value={form.heading ?? ""} onChange={(e) => setForm({ ...form, heading: e.target.value })} />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Subheading</label>
-                      <Input value={form.subheading ?? ""} onChange={(e) => setForm({ ...form, subheading: e.target.value })} />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Body Text</label>
-                      <Textarea value={form.body_text ?? ""} onChange={(e) => setForm({ ...form, body_text: e.target.value })} rows={4} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Image URL</label>
-                        <Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Sort Order</label>
-                        <Input type="number" value={form.sort_order ?? 0} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Button Text</label>
-                        <Input value={form.button_text ?? ""} onChange={(e) => setForm({ ...form, button_text: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1.5 block">Button Link</label>
-                        <Input value={form.button_link ?? ""} onChange={(e) => setForm({ ...form, button_link: e.target.value })} />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={() => saveMutation.mutate(form)} className="gap-2" disabled={saveMutation.isPending}>
-                        <Save className="h-4 w-4" /> Save Section
-                      </Button>
-                      <Button variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
-                    </div>
-                  </div>
+                  <SectionForm
+                    data={section}
+                    onSave={(data: any) => saveMutation.mutate(data)}
+                    onCancel={() => setEditingSection(null)}
+                  />
                 ) : (
                   <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={() => startEditing(section)}>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <GripVertical className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground">{section.section_title || section.section_id}</p>
-                      <p className="text-sm text-muted-foreground truncate">{section.heading}</p>
+                      <p className="text-sm text-muted-foreground truncate">{section.heading || "(no heading)"}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">#{section.sort_order}</span>
+                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">#{section.sort_order}</span>
+                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded font-mono">{section.section_id}</span>
                       <Button
                         variant="ghost" size="icon"
                         onClick={(e) => { e.stopPropagation(); toggleActive.mutate({ id: section.id, is_active: !section.is_active }); }}
                       >
                         {section.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete "${section.section_title || section.section_id}" section?`)) {
+                            deleteMutation.mutate(section.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
