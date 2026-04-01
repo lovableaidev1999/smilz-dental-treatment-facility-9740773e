@@ -1,0 +1,98 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface SiteSettings {
+  general: {
+    clinic_name: string;
+    tagline: string;
+    doctor_name: string;
+    year_established: number;
+    google_rating: number;
+    review_count: number;
+  };
+  contact: {
+    address: string;
+    address_full: string;
+    phone: string;
+    phone_formatted: string;
+    emergency: string;
+    email: string;
+    whatsapp: string;
+  };
+  hours: {
+    morning: string;
+    evening: string;
+    days: string;
+    closed: string;
+  };
+  links: {
+    website: string;
+    google_maps_url: string;
+    facebook: string;
+    instagram: string;
+    youtube: string;
+  };
+  seo: {
+    default_title: string;
+    default_description: string;
+    default_keywords: string;
+  };
+  appearance: {
+    font_family: string;
+    logo_url: string;
+    default_banner_image: string;
+    footer_text: string;
+  };
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+}
+
+const DEFAULT_SETTINGS: SiteSettings = {
+  general: { clinic_name: "Smilz Dental Treatment Facility", tagline: "Bridging Gaps... Spreading Smiles!", doctor_name: "Dr. Dibyendu Dutta", year_established: 1999, google_rating: 4.8, review_count: 44 },
+  contact: { address: "21, Garia Park, Kolkata 700084", address_full: "21, Garia Park, Garia Park Buddha Temple, Garia, South Kolkata 700084", phone: "8961775554", phone_formatted: "8961 77 5554", emergency: "9831070248", email: "dr.d.dutta@gmail.com", whatsapp: "918961775554" },
+  hours: { morning: "9:00 AM – 1:00 PM", evening: "5:00 PM – 9:00 PM", days: "Monday – Saturday", closed: "Sunday" },
+  links: { website: "https://www.smilz.net", google_maps_url: "https://maps.google.com/?cid=5056757662094737709", facebook: "", instagram: "", youtube: "" },
+  seo: { default_title: "Best Dental Clinic in Garia, South Kolkata", default_description: "Smilz Dental Treatment Facility - Trusted dental clinic in Garia Park, Kolkata since 1999.", default_keywords: "dental clinic Garia Kolkata, dentist South Kolkata" },
+  appearance: { font_family: "Poppins", logo_url: "", default_banner_image: "", footer_text: "" },
+  coordinates: { lat: 22.4625, lng: 88.3942 },
+};
+
+export const useSiteSettings = () => {
+  return useQuery({
+    queryKey: ["site_settings"],
+    queryFn: async (): Promise<SiteSettings> => {
+      const { data, error } = await supabase.from("site_settings").select("*");
+      if (error) {
+        console.warn("site_settings table not found, using defaults", error.message);
+        return DEFAULT_SETTINGS;
+      }
+      if (!data || data.length === 0) return DEFAULT_SETTINGS;
+
+      const settings = { ...DEFAULT_SETTINGS };
+      for (const row of data) {
+        if (row.key in settings) {
+          (settings as any)[row.key] = { ...(settings as any)[row.key], ...row.value };
+        }
+      }
+      return settings;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useUpdateSetting = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: any }) => {
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["site_settings"] }),
+  });
+};
+
+export { DEFAULT_SETTINGS };
