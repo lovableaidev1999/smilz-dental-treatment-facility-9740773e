@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Calendar, ChevronRight } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { usePageContent } from "@/hooks/usePageContent";
 import { useBlogPosts } from "@/integrations/supabase/hooks";
 
 const CATEGORY_TABS = [
@@ -29,7 +30,9 @@ const Blog = () => {
   const [activeTab, setActiveTab] = useState("");
   const { data: allPosts, isLoading } = useBlogPosts();
   const { data: settings } = useSiteSettings();
+  const { getSection } = usePageContent("blog");
   const links = settings?.links;
+  const hero = getSection("hero");
 
   const filteredPosts = activeTab
     ? (allPosts ?? []).filter((p) => categoryToTab[p.category] === activeTab || p.category === activeTab)
@@ -50,8 +53,8 @@ const Blog = () => {
 
       <section className="bg-gradient-primary text-primary-foreground section-padding">
         <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Dental Insights</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">Expert articles on oral health, dental procedures, and wellness tips from our team.</p>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{hero?.heading ?? "Dental Insights"}</h1>
+          <p className="text-primary-foreground/85 max-w-xl mx-auto">{hero?.subheading ?? "Expert articles on oral health, dental procedures, and wellness tips from our team."}</p>
         </div>
       </section>
 
