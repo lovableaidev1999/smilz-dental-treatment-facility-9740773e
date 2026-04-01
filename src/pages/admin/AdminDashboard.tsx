@@ -11,7 +11,7 @@ const AdminDashboard = () => {
         supabase.from("services").select("id", { count: "exact", head: true }),
         supabase.from("blog_posts").select("id", { count: "exact", head: true }),
         supabase.from("gallery").select("id", { count: "exact", head: true }),
-        supabase.from("media_library").select("id", { count: "exact", head: true }).then(r => r).catch(() => ({ count: 0 })),
+        supabase.from("media_library").select("id", { count: "exact", head: true }),
       ]);
       return {
         services: services.count ?? 0,
