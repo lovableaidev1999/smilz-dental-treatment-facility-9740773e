@@ -181,7 +181,7 @@ const About = () => {
                 </Link>
               </Button>
               {contact?.whatsapp && (
-                <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Button asChild size="lg" className="bg-dental-green text-primary-foreground hover:bg-dental-green/90 font-semibold">
                   <a href={`https://wa.me/${contact.whatsapp}`} target="_blank" rel="noopener noreferrer">WhatsApp Us</a>
                 </Button>
               )}
