@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, Shield, Clock, Award, ChevronRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import GoogleReviewSlider from "@/components/GoogleReviewSlider";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
