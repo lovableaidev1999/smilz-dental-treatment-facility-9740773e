@@ -88,92 +88,38 @@ const AdminMigrateImages = () => {
     }
   };
 
-  // Download image via fetch, upload to Supabase storage, update DB
+  const SUPABASE_FUNCTION_URL = "https://eukymrxxmvkchxfpjjuz.supabase.co/functions/v1/migrate-image";
+
+  // Migrate a single image via the server-side edge function
   const migrateImage = async (item: MigrationItem, index: number): Promise<boolean> => {
     try {
-      // 1. Download
       updateItem(index, { status: "downloading" });
 
-      // Use a proxy-free approach: fetch directly (works if CORS allows)
-      // For images from WordPress, we try direct fetch first
-      let blob: Blob;
-      try {
-        const response = await fetch(item.oldUrl);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        blob = await response.blob();
-      } catch {
-        // Fallback: use an img element + canvas to download (bypasses CORS for images)
-        blob = await downloadViaCanvas(item.oldUrl);
-      }
-
-      // 2. Upload to Supabase storage
-      updateItem(index, { status: "uploading" });
-      const ext = item.oldUrl.split(".").pop()?.split("?")[0]?.toLowerCase() || "png";
-      const fileName = `migrated/${item.table}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-      const { error: uploadErr } = await supabase.storage.from("media").upload(fileName, blob, {
-        contentType: blob.type || `image/${ext}`,
-        upsert: true,
+      const response = await fetch(SUPABASE_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          imageUrl: item.oldUrl,
+          table: item.table,
+          id: item.id,
+          field: item.field,
+        }),
       });
-      if (uploadErr) throw new Error(`Upload failed: ${uploadErr.message}`);
 
-      const { data: urlData } = supabase.storage.from("media").getPublicUrl(fileName);
-      const newUrl = urlData.publicUrl;
-
-      // 3. Update database reference
-      updateItem(index, { status: "updating" });
-
-      if (item.table === "site_settings") {
-        // For site_settings, we need to update JSON value
-        // Skip for now — flag for manual update
-        updateItem(index, { newUrl, status: "done" });
-      } else {
-        const { error: updateErr } = await supabase
-          .from(item.table)
-          .update({ [item.field]: newUrl })
-          .eq("id", item.id);
-        if (updateErr) throw new Error(`DB update failed: ${updateErr.message}`);
-        updateItem(index, { newUrl, status: "done" });
+      const result = await response.json();
+      if (!response.ok || result.error) {
+        throw new Error(result.error || `HTTP ${response.status}`);
       }
 
-      // 4. Also record in media_library
-      const originalName = item.oldUrl.split("/").pop()?.split("?")[0] || "migrated-image";
-      await supabase.from("media_library").insert({
-        file_name: originalName,
-        file_url: newUrl,
-        file_type: "image",
-        alt_text: originalName.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
-        folder: "migrated",
-        file_size: blob.size,
-      }).then(() => {});
-
+      updateItem(index, { newUrl: result.newUrl, status: "done" });
       return true;
     } catch (err: any) {
       updateItem(index, { status: "error", error: err.message });
       return false;
     }
-  };
-
-  // Canvas-based image download (bypasses CORS for displayable images)
-  const downloadViaCanvas = (url: string): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas not supported"));
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob(
-          (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
-          "image/png"
-        );
-      };
-      img.onerror = () => reject(new Error("Image load failed (CORS blocked)"));
-      img.src = url;
-    });
   };
 
   // Step 2: Migrate all pending images
