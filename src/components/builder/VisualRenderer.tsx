@@ -240,6 +240,48 @@ const ContactFormWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; r
   );
 };
 
+// ─── Tabs Widget (needs hooks) ──────────────────────────
+const TabsWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const items = node.props.items || [];
+  return (
+    <div className={rClasses} style={baseStyles}>
+      <div className="flex border-b border-border">
+        {items.map((item: any, i: number) => (
+          <button key={i} onClick={() => setActiveTab(i)} className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${i === activeTab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            {item.title}
+          </button>
+        ))}
+      </div>
+      <div className="p-4 text-muted-foreground">{items[activeTab]?.content}</div>
+    </div>
+  );
+};
+
+// ─── Image Carousel Widget (needs hooks) ────────────────
+const ImageCarouselWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
+  const [current, setCurrent] = useState(0);
+  const imgs = (node.props.images || []).filter((img: any) => img.src);
+  useEffect(() => {
+    if (!node.props.autoplay || imgs.length <= 1) return;
+    const t = setInterval(() => setCurrent(c => (c + 1) % imgs.length), node.props.interval || 3000);
+    return () => clearInterval(t);
+  }, [imgs.length, node.props.autoplay, node.props.interval]);
+  if (!imgs.length) return <div className="bg-muted rounded-lg h-48 flex items-center justify-center text-muted-foreground">Add images to carousel</div>;
+  return (
+    <div className={`relative overflow-hidden rounded-lg ${rClasses}`} style={baseStyles}>
+      <img src={imgs[current]?.src} alt={imgs[current]?.alt || ''} className="w-full h-64 object-cover transition-opacity" loading="lazy" />
+      {imgs.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {imgs.map((_: any, i: number) => (
+            <button key={i} onClick={() => setCurrent(i)} className={`w-2 h-2 rounded-full transition-colors ${i === current ? 'bg-primary' : 'bg-background/60'}`} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Recursive renderer ─────────────────────────────────
 const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
   const key = `${node.type}-${node.id}`;
@@ -455,6 +497,141 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
           ))}
         </ul>
       );
+
+    case 'video': {
+      // Support YouTube, Vimeo embed URLs or direct video
+      const url = node.props.url || '';
+      const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+      const isVimeo = url.includes('vimeo.com');
+      const getYoutubeId = (u: string) => {
+        const m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&?/]+)/);
+        return m?.[1] || '';
+      };
+      const getVimeoId = (u: string) => {
+        const m = u.match(/vimeo\.com\/(\d+)/);
+        return m?.[1] || '';
+      };
+      if (isYoutube) {
+        return (
+          <div key={key} className={rClasses} style={{ ...baseStyles, aspectRatio: node.props.aspectRatio || '16/9' }}>
+            <iframe src={`https://www.youtube.com/embed/${getYoutubeId(url)}?autoplay=${node.props.autoplay ? 1 : 0}&loop=${node.props.loop ? 1 : 0}&mute=${node.props.muted ? 1 : 0}`} className="w-full h-full rounded-lg" allow="autoplay; encrypted-media" allowFullScreen loading="lazy" />
+          </div>
+        );
+      }
+      if (isVimeo) {
+        return (
+          <div key={key} className={rClasses} style={{ ...baseStyles, aspectRatio: node.props.aspectRatio || '16/9' }}>
+            <iframe src={`https://player.vimeo.com/video/${getVimeoId(url)}?autoplay=${node.props.autoplay ? 1 : 0}&loop=${node.props.loop ? 1 : 0}&muted=${node.props.muted ? 1 : 0}`} className="w-full h-full rounded-lg" allow="autoplay; encrypted-media" allowFullScreen loading="lazy" />
+          </div>
+        );
+      }
+      return (
+        <div key={key} className={rClasses} style={{ ...baseStyles, aspectRatio: node.props.aspectRatio || '16/9' }}>
+          <video src={url} autoPlay={node.props.autoplay} loop={node.props.loop} muted={node.props.muted} controls className="w-full h-full rounded-lg object-cover" />
+        </div>
+      );
+    }
+
+    case 'google-map': {
+      const q = encodeURIComponent(node.props.address || 'Kolkata, India');
+      return (
+        <div key={key} className={rClasses} style={baseStyles}>
+          <iframe
+            src={`https://maps.google.com/maps?q=${q}&z=${node.props.zoom || 14}&output=embed`}
+            className="w-full rounded-lg border-0"
+            style={{ height: node.props.height || '300px' }}
+            loading="lazy"
+            allowFullScreen
+          />
+        </div>
+      );
+    }
+
+    case 'icon': {
+      const IconMap: Record<string, string> = { Star: '★', Heart: '♥', Check: '✓', Phone: '☎', Mail: '✉', Home: '⌂', ArrowRight: '→' };
+      return (
+        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: (node.props.align || 'center') as any }}>
+          <span style={{ fontSize: node.props.size || '48px', color: node.props.color || 'hsl(var(--primary))' }}>
+            {IconMap[node.props.icon] || '★'}
+          </span>
+        </div>
+      );
+    }
+
+    case 'tabs':
+      return <TabsWidget key={key} node={node} rClasses={rClasses} baseStyles={baseStyles} />;
+
+    case 'accordion': {
+      const items = node.props.items || [];
+      return (
+        <div key={key} className={rClasses} style={baseStyles}>
+          <Accordion type="single" collapsible className="w-full">
+            {items.map((item: { title: string; content: string }, i: number) => (
+              <AccordionItem key={i} value={`acc-${node.id}-${i}`}>
+                <AccordionTrigger className="text-foreground font-medium text-left">{item.title}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">{item.content}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      );
+    }
+
+    case 'image-box':
+      return (
+        <div key={key} className={`text-${node.props.align || 'center'} ${rClasses}`} style={baseStyles}>
+          {node.props.src && <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3 object-cover" loading="lazy" />}
+          <h4 className="text-lg font-semibold text-foreground">{node.props.title}</h4>
+          <p className="text-sm text-muted-foreground mt-1">{node.props.description}</p>
+        </div>
+      );
+
+    case 'icon-box': {
+      const IconMap: Record<string, string> = { Star: '★', Heart: '♥', Check: '✓', Phone: '☎', Mail: '✉', Home: '⌂', ArrowRight: '→' };
+      return (
+        <div key={key} className={`text-${node.props.align || 'center'} ${rClasses}`} style={baseStyles}>
+          <span className="inline-block mb-3" style={{ fontSize: '40px', color: node.props.iconColor || 'hsl(var(--primary))' }}>
+            {IconMap[node.props.icon] || '★'}
+          </span>
+          <h4 className="text-lg font-semibold text-foreground">{node.props.title}</h4>
+          <p className="text-sm text-muted-foreground mt-1">{node.props.description}</p>
+        </div>
+      );
+    }
+
+    case 'image-carousel':
+      return <ImageCarouselWidget key={key} node={node} rClasses={rClasses} baseStyles={baseStyles} />;
+
+    case 'gallery': {
+      const imgs = (node.props.images || []).filter((img: any) => img.src);
+      const cols = node.props.columns || 3;
+      return (
+        <div key={key} className={rClasses} style={{ ...baseStyles, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: node.props.gap || '0.5rem' }}>
+          {imgs.map((img: any, i: number) => (
+            <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" />
+          ))}
+          {!imgs.length && <div className="col-span-full text-center text-muted-foreground py-8">Add images to gallery</div>}
+        </div>
+      );
+    }
+
+    case 'social-icons': {
+      const platformIcons: Record<string, string> = { facebook: 'f', instagram: '📷', youtube: '▶', twitter: '𝕏', linkedin: 'in', whatsapp: '💬' };
+      return (
+        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: (node.props.align || 'center') as any }}>
+          <div className="inline-flex gap-3">
+            {(node.props.icons || []).map((s: any, i: number) => (
+              <a key={i} href={s.url || '#'} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                style={{ width: node.props.size ? `calc(${node.props.size} + 16px)` : '40px', height: node.props.size ? `calc(${node.props.size} + 16px)` : '40px', fontSize: node.props.size || '16px' }}
+              >
+                {platformIcons[s.platform] || s.platform?.[0]?.toUpperCase() || '?'}
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     case 'html-embed':
       return (
