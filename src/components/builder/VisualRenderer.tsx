@@ -170,6 +170,76 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
   );
 };
 
+// ─── Contact Form Widget ────────────────────────────────
+const ContactFormWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await supabase.from('contact_submissions').insert({
+        name: formData['Name'] || '',
+        email: formData['Email'] || '',
+        phone: formData['Phone'] || '',
+        message: formData['Message'] || '',
+        source: 'page-builder',
+      });
+      setSubmitted(true);
+      setFormData({});
+    } catch (err) {
+      console.error('Form submission error:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className={`p-8 text-center bg-primary/5 rounded-xl ${rClasses}`} style={baseStyles}>
+        <p className="text-lg font-semibold text-foreground">Thank you!</p>
+        <p className="text-muted-foreground mt-1">We'll be in touch soon.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={handleSubmit}>
+      {(node.props.fields || []).map((field: any, i: number) => (
+        <div key={i}>
+          <label className="block text-sm font-medium text-foreground mb-1">{field.label}</label>
+          {field.type === 'textarea' ? (
+            <textarea
+              className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground"
+              rows={4}
+              required={field.required}
+              value={formData[field.label] || ''}
+              onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))}
+            />
+          ) : (
+            <input
+              type={field.type}
+              className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground"
+              required={field.required}
+              value={formData[field.label] || ''}
+              onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))}
+            />
+          )}
+        </div>
+      ))}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+      >
+        {submitting ? 'Sending...' : (node.props.submitText || 'Submit')}
+      </button>
+    </form>
+  );
+};
+
 // ─── Recursive renderer ─────────────────────────────────
 const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
   const key = `${node.type}-${node.id}`;
