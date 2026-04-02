@@ -43,12 +43,19 @@ const ServiceDetail = () => {
         description={seoDesc}
         keywords={service.keywords || `${service.title.toLowerCase()} Kolkata, ${service.title.toLowerCase()} Garia, ${service.title.toLowerCase()} cost, best ${service.title.toLowerCase()} South Kolkata`}
         canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/services/${service.slug}`}
+        ogImage={service.featured_image}
         breadcrumbs={[
           { name: "Home", url: links?.website ?? "https://www.smilz.net" },
           { name: "Services", url: `${links?.website ?? "https://www.smilz.net"}/services` },
           { name: service.title, url: `${links?.website ?? "https://www.smilz.net"}/services/${service.slug}` },
         ]}
         faqs={faqs}
+        service={{
+          name: service.title,
+          description: service.short_desc || service.description?.substring(0, 200) || "",
+          image: service.featured_image,
+          url: `${links?.website ?? "https://www.smilz.net"}/services/${service.slug}`,
+        }}
       />
 
       {/* Hero with breadcrumb */}
@@ -95,6 +102,7 @@ const ServiceDetail = () => {
                       src={service.featured_image}
                       alt={`${service.title} treatment at ${general?.clinic_name ?? "Smilz"} dental clinic in Garia, Kolkata`}
                       className="w-full h-auto object-cover"
+                      loading="lazy"
                       width={800}
                       height={500}
                     />

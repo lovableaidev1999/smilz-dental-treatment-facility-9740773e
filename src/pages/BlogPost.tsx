@@ -36,6 +36,14 @@ const BlogPost = () => {
         description={post.meta_description || post.excerpt}
         keywords={`${post.category}, dental blog Kolkata`}
         canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/blog/${post.slug}`}
+        type="article"
+        article={{
+          publishedTime: post.published_at,
+          modifiedTime: post.updated_at || post.published_at,
+          author: post.author,
+          section: post.category,
+        }}
+        ogImage={post.featured_image}
         breadcrumbs={[
           { name: "Home", url: links?.website ?? "https://www.smilz.net" },
           { name: "Insights", url: `${links?.website ?? "https://www.smilz.net"}/blog` },
@@ -64,7 +72,7 @@ const BlogPost = () => {
       <section className="section-padding">
         <div className="container-narrow mx-auto max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            {post.featured_image && <img src={post.featured_image} alt={post.title} className="w-full rounded-2xl mb-8 shadow-card" loading="lazy" />}
+            {post.featured_image && <img src={post.featured_image} alt={`${post.title} - dental health article by ${post.author || "Dr. Dibyendu Dutta"}`} className="w-full rounded-2xl mb-8 shadow-card" loading="lazy" width={800} height={450} />}
             <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: post.content }} />
             {post.tags && post.tags.length > 0 && (
               <div className="mt-10 pt-6 border-t border-border">
