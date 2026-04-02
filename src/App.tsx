@@ -115,6 +115,7 @@ const App = () => (
                 <Route path="gallery" element={<AdminGallery />} />
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="migrate" element={<AdminMigrateImages />} />
+                <Route path="header-footer" element={<AdminHeaderFooter />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
