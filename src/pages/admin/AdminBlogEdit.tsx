@@ -182,8 +182,15 @@ const AdminBlogEdit = () => {
                 <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Featured Image URL</label>
-                <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} />
+                <label className="text-sm font-medium mb-1.5 block">Featured Image</label>
+                <div className="flex gap-2">
+                  <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} placeholder="URL or upload →" className="flex-1" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => imgRef.current?.click()} disabled={isCompressing}>
+                    {isCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
+                  <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={handleFeaturedUpload} />
+                </div>
+                {form.featured_image && <img src={form.featured_image} alt="Preview" className="mt-2 rounded-md max-h-32 object-cover" />}
               </div>
             </CardContent>
           </Card>
