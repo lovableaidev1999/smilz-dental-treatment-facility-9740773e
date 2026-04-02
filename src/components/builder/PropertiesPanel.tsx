@@ -246,7 +246,15 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
     case 'image':
       return (
         <>
-          <PropField label="Image URL" value={props.src} onChange={v => updateProp('src', v)} placeholder="https://..." />
+          <div className="space-y-1">
+            <Label className="text-xs">Image URL</Label>
+            <div className="flex gap-1">
+              <Input value={props.src || ''} onChange={e => updateProp('src', e.target.value)} placeholder="https://..." className="h-7 text-xs flex-1" />
+              <Button variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={extra?.onOpenMediaPicker}>
+                <ImageIcon className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
           <PropField label="Alt Text" value={props.alt} onChange={v => updateProp('alt', v)} />
           <PropField label="Caption" value={props.caption} onChange={v => updateProp('caption', v)} />
           <PropField label="Border Radius" value={props.borderRadius} onChange={v => updateProp('borderRadius', v)} />
