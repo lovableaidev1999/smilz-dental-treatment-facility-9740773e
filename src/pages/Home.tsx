@@ -158,30 +158,11 @@ const Home = () => {
       {/* Reviews Section */}
       <section className="section-padding bg-dental-surface">
         <div className="container-narrow mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10">
             <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">{reviewSection?.subheading ?? "Patient Testimonials"}</p>
             <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">{reviewSection?.heading ?? "What Our Patients Say"}</h2>
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <div className="flex">{[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 fill-dental-gold text-dental-gold" />)}</div>
-              <span className="text-foreground font-semibold">{general?.google_rating ?? 4.8}</span>
-              <span className="text-muted-foreground">({general?.review_count ?? 44} reviews on Google)</span>
-            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(reviews ?? []).map((review, i) => (
-              <motion.div key={review.id || review.name} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeUp} className="bg-card rounded-xl p-6 shadow-card">
-                <div className="flex mb-3">{[...Array(review.rating)].map((_, j) => <Star key={j} className="h-4 w-4 fill-dental-gold text-dental-gold" />)}</div>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-4">"{review.text}"</p>
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sm text-foreground">{review.name}</span>
-                  <span className="text-xs text-muted-foreground">{review.date}</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <a href={links?.google_maps_url ?? "#"} target="_blank" rel="noopener noreferrer" className="text-primary font-medium text-sm hover:underline">See all reviews on Google →</a>
-          </div>
+          <GoogleReviewSlider reviews={reviews ?? []} />
         </div>
       </section>
 

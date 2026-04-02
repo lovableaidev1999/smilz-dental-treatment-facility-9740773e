@@ -102,6 +102,7 @@ const ServiceDetail = () => {
                       src={service.featured_image}
                       alt={`${service.title} treatment at ${general?.clinic_name ?? "Smilz"} dental clinic in Garia, Kolkata`}
                       className="w-full h-auto object-cover"
+                      loading="lazy"
                       width={800}
                       height={500}
                     />
