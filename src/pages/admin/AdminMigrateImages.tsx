@@ -89,6 +89,7 @@ const AdminMigrateImages = () => {
   };
 
   const SUPABASE_FUNCTION_URL = "https://eukymrxxmvkchxfpjjuz.supabase.co/functions/v1/migrate-image";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1a3ltcnh4bXZrY2h4ZnBqanV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzg1NTksImV4cCI6MjA5MDYxNDU1OX0.rtXAdsH4BDwRd4zBScoB-sleoQAPTeWPZsExBcM79Fc";
 
   // Migrate a single image via the server-side edge function
   const migrateImage = async (item: MigrationItem, index: number): Promise<boolean> => {
@@ -99,7 +100,8 @@ const AdminMigrateImages = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           imageUrl: item.oldUrl,
