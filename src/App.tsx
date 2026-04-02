@@ -82,10 +82,13 @@ const RecoveryRouteHandler = () => {
 
     const search = new URLSearchParams(location.search);
     const hash = new URLSearchParams(location.hash.startsWith("#") ? location.hash.slice(1) : location.hash);
-    const isResetFlow = search.get("reset") === "1";
-    const hasRecoveryPayload = !!search.get("code") || (!!search.get("token_hash") && search.get("type") === "recovery") || (!!hash.get("access_token") && !!hash.get("refresh_token"));
+    const hasRecoveryPayload =
+      !!search.get("code") ||
+      (!!search.get("token_hash") && search.get("type") === "recovery") ||
+      (!!hash.get("access_token") && !!hash.get("refresh_token")) ||
+      hash.get("type") === "recovery";
 
-    if (isResetFlow && hasRecoveryPayload) {
+    if (hasRecoveryPayload) {
       navigate(
         {
           pathname: "/admin/reset-password",
