@@ -310,11 +310,70 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
             <Label className="text-xs">Full Width</Label>
             <Switch checked={props.fullWidth} onCheckedChange={v => updateProp('fullWidth', v)} />
           </div>
+          <Separator className="my-2" />
+          <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Grid Layout</p>
+          <div className="space-y-2">
+            <div className="grid grid-cols-4 gap-1">
+              {LAYOUT_PRESETS.map(preset => (
+                <button
+                  key={preset.label}
+                  onClick={() => updateProp('gridColumns', preset.gridColumns)}
+                  className={`p-1.5 rounded border text-[9px] transition-colors ${
+                    props.gridColumns === preset.gridColumns
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:border-primary/40'
+                  }`}
+                  title={preset.label}
+                >
+                  <div
+                    className="w-full h-4 rounded overflow-hidden mb-0.5"
+                    style={{ display: 'grid', gridTemplateColumns: preset.gridColumns, gap: '1px' }}
+                  >
+                    {preset.gridColumns.split(' ').map((_, i) => (
+                      <div key={i} className="bg-current rounded-sm opacity-30" />
+                    ))}
+                  </div>
+                  <span className="leading-none">{preset.label}</span>
+                </button>
+              ))}
+            </div>
+            <PropField label="Grid Columns (custom)" value={props.gridColumns} onChange={v => updateProp('gridColumns', v)} placeholder="e.g. 1fr 2fr 1fr" />
+            <PropField label="Column Gap" value={props.columnGap} onChange={v => updateProp('columnGap', v)} placeholder="e.g. 1.5rem" />
+            <PropField label="Row Gap" value={props.rowGap} onChange={v => updateProp('rowGap', v)} placeholder="e.g. 1.5rem" />
+          </div>
         </>
       );
 
     case 'column':
-      return <PropField label="Width" value={props.width} onChange={v => updateProp('width', v)} placeholder="e.g. 50% or 1fr" />;
+      return (
+        <>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Vertical Align</Label>
+            <Select value={props.verticalAlign || 'flex-start'} onValueChange={v => updateProp('verticalAlign', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="flex-start">Top</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="flex-end">Bottom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      );
+
+    case 'grid':
+      return (
+        <>
+          <PropField label="Columns" value={String(props.gridCols)} onChange={v => updateProp('gridCols', parseInt(v) || 2)} />
+          <PropField label="Rows" value={String(props.gridRows)} onChange={v => updateProp('gridRows', parseInt(v) || 2)} />
+          <PropField label="Column Gap" value={props.columnGap} onChange={v => updateProp('columnGap', v)} placeholder="e.g. 1rem" />
+          <PropField label="Row Gap" value={props.rowGap} onChange={v => updateProp('rowGap', v)} placeholder="e.g. 1rem" />
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            // Add a new cell (column) to the grid
+            const { dispatch } = useBuilder();
+          }}>+ Add Cell</Button>
+        </>
+      );
 
     case 'blog-loop':
       return (
