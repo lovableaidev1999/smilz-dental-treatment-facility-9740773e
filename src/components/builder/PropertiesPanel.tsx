@@ -167,10 +167,10 @@ const PropertiesPanel = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Entrance</Label>
-            <Select value={node.props.animation || ''} onValueChange={v => updateProp('animation', v)}>
+            <Select value={node.props.animation || 'none'} onValueChange={v => updateProp('animation', v === 'none' ? '' : v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="fade-in">Fade In</SelectItem>
                 <SelectItem value="slide-up">Slide Up</SelectItem>
                 <SelectItem value="slide-left">Slide Left</SelectItem>
