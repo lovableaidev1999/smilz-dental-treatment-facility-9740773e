@@ -87,10 +87,10 @@ const BlogBuilderInner = ({ title, onBack, onSave, isSaving }: {
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
           <div className="ml-auto flex gap-2">
-            <Button variant="outline" size="sm" onClick={onSaveDraft} disabled={isSaving}>
+            <Button variant="outline" size="sm" onClick={() => onSave(state.layout, true)} disabled={isSaving}>
               <FileText className="h-4 w-4 mr-1" /> Save Draft
             </Button>
-            <Button size="sm" onClick={onPublish} disabled={isSaving}>
+            <Button size="sm" onClick={() => onSave(state.layout, false)} disabled={isSaving}>
               <Save className="h-4 w-4 mr-1" /> Publish
             </Button>
           </div>
