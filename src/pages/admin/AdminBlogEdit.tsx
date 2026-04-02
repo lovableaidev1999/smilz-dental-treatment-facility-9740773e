@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye, Code } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import TipTapEditor from "@/components/editor/TipTapEditor";
+import BlockRenderer from "@/components/BlockRenderer";
+import type { JSONContent } from "@tiptap/core";
 
 const CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
@@ -24,12 +27,15 @@ const AdminBlogEdit = () => {
   const { toast } = useToast();
 
   const [form, setForm] = useState({
-    title: "", slug: "", excerpt: "", content: "",
+    title: "", slug: "", excerpt: "",
     category: "general", tags: [] as string[],
     featured_image: "", author: "Dr. Dibyendu Dutta",
     is_published: true, meta_title: "", meta_description: "",
     published_at: new Date().toISOString().split("T")[0],
   });
+  const [contentJson, setContentJson] = useState<JSONContent | null>(null);
+  const [legacyHtml, setLegacyHtml] = useState("");
+  const [editorMode, setEditorMode] = useState<"blocks" | "html" | "preview">("blocks");
   const [tagsInput, setTagsInput] = useState("");
   const imgRef = useRef<HTMLInputElement>(null);
   const { compress, isCompressing } = useImageUpload();
@@ -66,7 +72,7 @@ const AdminBlogEdit = () => {
     if (post) {
       setForm({
         title: post.title ?? "", slug: post.slug ?? "",
-        excerpt: post.excerpt ?? "", content: post.content ?? "",
+        excerpt: post.excerpt ?? "",
         category: post.category ?? "general",
         tags: Array.isArray(post.tags) ? post.tags : [],
         featured_image: post.featured_image ?? "",
@@ -77,6 +83,14 @@ const AdminBlogEdit = () => {
         published_at: post.published_at ? post.published_at.split("T")[0] : "",
       });
       setTagsInput(Array.isArray(post.tags) ? post.tags.join(", ") : "");
+      // Load block content or fall back to legacy HTML
+      if (post.content_json) {
+        setContentJson(post.content_json as JSONContent);
+        setEditorMode("blocks");
+      } else if (post.content) {
+        setLegacyHtml(post.content);
+        setEditorMode("html");
+      }
     }
   }, [post]);
 
@@ -89,6 +103,8 @@ const AdminBlogEdit = () => {
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
         published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
         updated_at: new Date().toISOString(),
+        content_json: contentJson,
+        content: legacyHtml || "",
       };
       if (isNew) {
         payload.created_at = new Date().toISOString();
@@ -123,8 +139,9 @@ const AdminBlogEdit = () => {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {/* Title & Slug */}
           <Card>
-            <CardHeader><CardTitle>Post Content</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Post Details</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Title</label>
@@ -143,14 +160,72 @@ const AdminBlogEdit = () => {
                 <label className="text-sm font-medium mb-1.5 block">Excerpt</label>
                 <Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={3} />
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Content (HTML)</label>
-                <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={15} className="font-mono text-xs" />
+            </CardContent>
+          </Card>
+
+          {/* Content Editor */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Content</CardTitle>
+                <div className="flex gap-1 bg-secondary rounded-lg p-0.5">
+                  <button
+                    onClick={() => setEditorMode("blocks")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorMode === "blocks" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Blocks
+                  </button>
+                  <button
+                    onClick={() => setEditorMode("html")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${editorMode === "html" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <Code className="h-3 w-3" /> HTML
+                  </button>
+                  <button
+                    onClick={() => setEditorMode("preview")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${editorMode === "preview" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <Eye className="h-3 w-3" /> Preview
+                  </button>
+                </div>
               </div>
+            </CardHeader>
+            <CardContent>
+              {editorMode === "blocks" && (
+                <TipTapEditor
+                  content={contentJson}
+                  onChange={setContentJson}
+                  placeholder="Start writing your blog post… Use the toolbar to add headings, images, CTAs, and FAQs."
+                />
+              )}
+              {editorMode === "html" && (
+                <Textarea
+                  value={legacyHtml}
+                  onChange={(e) => setLegacyHtml(e.target.value)}
+                  rows={15}
+                  className="font-mono text-xs"
+                  placeholder="Legacy HTML content…"
+                />
+              )}
+              {editorMode === "preview" && contentJson && (
+                <div className="border border-border rounded-lg p-6 bg-background min-h-[400px]">
+                  <BlockRenderer content={contentJson} />
+                </div>
+              )}
+              {editorMode === "preview" && !contentJson && legacyHtml && (
+                <div
+                  className="prose prose-sm max-w-none p-6 border border-border rounded-lg min-h-[400px]"
+                  dangerouslySetInnerHTML={{ __html: legacyHtml }}
+                />
+              )}
+              {editorMode === "preview" && !contentJson && !legacyHtml && (
+                <div className="text-center text-muted-foreground py-20">No content yet. Switch to Blocks or HTML mode to add content.</div>
+              )}
             </CardContent>
           </Card>
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-6">
           <Card>
             <CardHeader><CardTitle>Publish</CardTitle></CardHeader>
