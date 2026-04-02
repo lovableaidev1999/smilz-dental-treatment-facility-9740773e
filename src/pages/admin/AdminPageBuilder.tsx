@@ -37,6 +37,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
   const [pageTitle, setPageTitle] = useState(initialTitle);
   const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const undoRedo = useUndoRedo();
   const prevLayoutRef = useRef<string>('');
 
