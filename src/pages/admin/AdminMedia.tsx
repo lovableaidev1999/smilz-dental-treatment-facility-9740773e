@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Trash2, Copy, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 const AdminMedia = () => {
   const qc = useQueryClient();
@@ -13,6 +14,7 @@ const AdminMedia = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [folder, setFolder] = useState("general");
+  const { compress, isCompressing } = useImageUpload();
 
   const { data: media, isLoading } = useQuery({
     queryKey: ["admin_media"],
