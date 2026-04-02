@@ -12,13 +12,113 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
 import type { JSONContent } from "@tiptap/core";
-import type { LayoutNode } from "@/types/visual-builder";
-import { BuilderProvider } from "@/hooks/useBuilderState";
+import type { LayoutNode, BlockType } from "@/types/visual-builder";
+import { BuilderProvider, useBuilder } from "@/hooks/useBuilderState";
 import BuilderCanvas from "@/components/builder/BuilderCanvas";
 import BlockPalette from "@/components/builder/BlockPalette";
 import PropertiesPanel from "@/components/builder/PropertiesPanel";
-import BuilderTopBar from "@/components/builder/BuilderTopBar";
 import VisualRenderer from "@/components/builder/VisualRenderer";
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
+
+// ─── Inner blog builder with DnD ────────────────────────
+const BlogBuilderInner = ({ title, onBack, onSaveDraft, onPublish, isSaving }: {
+  title: string;
+  onBack: () => void;
+  onSaveDraft: () => void;
+  onPublish: () => void;
+  isSaving: boolean;
+}) => {
+  const { state, dispatch, addBlock } = useBuilder();
+  const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const data = event.active.data.current;
+    if (data?.fromPalette) setActiveDragType(data.blockType);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragType(null);
+    const { active, over } = event;
+    if (!over) return;
+    const activeData = active.data.current;
+    const overData = over.data.current;
+    if (activeData?.fromPalette) {
+      const blockType = activeData.blockType as BlockType;
+      let targetParentId: string | null = null;
+      if (overData?.containerId !== undefined) targetParentId = overData.containerId;
+      else if (overData?.parentId !== undefined) targetParentId = overData.parentId;
+      addBlock(blockType, targetParentId);
+      return;
+    }
+    if (activeData?.blockId && !activeData.fromPalette) {
+      const activeId = activeData.blockId;
+      const overId = over.id as string;
+      if (activeId === overId) return;
+      const overContainerId = overData?.containerId ?? overData?.parentId ?? null;
+      dispatch({
+        type: 'MOVE_BLOCK',
+        payload: { blockId: activeId, targetParentId: overContainerId, targetIndex: 0 },
+      });
+    }
+  };
+
+  const activeDef = activeDragType ? getBlockDefinition(activeDragType) : null;
+  const DragIcon = activeDef ? getBlockIcon(activeDef) : null;
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="fixed inset-0 z-50 bg-background flex flex-col">
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
+          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
+            <ArrowLeft className="h-4 w-4" /> Back to Editor
+          </Button>
+          <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" size="sm" onClick={onSaveDraft} disabled={isSaving}>
+              <FileText className="h-4 w-4 mr-1" /> Save Draft
+            </Button>
+            <Button size="sm" onClick={onPublish} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-1" /> Publish
+            </Button>
+          </div>
+        </div>
+        <div className="flex flex-1 overflow-hidden">
+          <div className="w-56 border-r border-border overflow-y-auto bg-card">
+            <BlockPalette />
+          </div>
+          <div className="flex-1 overflow-auto bg-muted/30">
+            <BuilderCanvas />
+          </div>
+          <div className="w-72 border-l border-border overflow-y-auto bg-card">
+            <PropertiesPanel />
+          </div>
+        </div>
+      </div>
+      <DragOverlay>
+        {activeDragType && DragIcon && (
+          <div className="flex items-center gap-2 bg-card border border-border shadow-lg rounded-lg px-3 py-2 text-sm">
+            <DragIcon className="h-4 w-4" />
+            <span>{getBlockDefinition(activeDragType)?.label}</span>
+          </div>
+        )}
+      </DragOverlay>
+    </DndContext>
+  );
+};
 
 const CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
@@ -162,33 +262,13 @@ const AdminBlogEdit = () => {
   if (editorMode === "visual") {
     return (
       <BuilderProvider initialLayout={visualLayout || []}>
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
-            <Button variant="ghost" size="sm" onClick={() => setEditorMode("blocks")} className="gap-1">
-              <ArrowLeft className="h-4 w-4" /> Back to Editor
-            </Button>
-            <span className="text-sm font-medium text-foreground">Visual Builder — {form.title || 'Untitled'}</span>
-            <div className="ml-auto flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => saveMutation.mutate(true)} disabled={saveMutation.isPending}>
-                <FileText className="h-4 w-4 mr-1" /> Save Draft
-              </Button>
-              <Button size="sm" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending}>
-                <Save className="h-4 w-4 mr-1" /> Publish
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-1 overflow-hidden">
-            <div className="w-56 border-r border-border overflow-y-auto bg-card">
-              <BlockPalette />
-            </div>
-            <div className="flex-1 overflow-auto bg-muted/30">
-              <BuilderCanvas />
-            </div>
-            <div className="w-72 border-l border-border overflow-y-auto bg-card">
-              <PropertiesPanel />
-            </div>
-          </div>
-        </div>
+        <BlogBuilderInner
+          title={form.title}
+          onBack={() => setEditorMode("blocks")}
+          onSaveDraft={() => saveMutation.mutate(true)}
+          onPublish={() => saveMutation.mutate(false)}
+          isSaving={saveMutation.isPending}
+        />
       </BuilderProvider>
     );
   }
