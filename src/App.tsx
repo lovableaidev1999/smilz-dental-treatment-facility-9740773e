@@ -44,6 +44,7 @@ import AdminHeaderFooter from "@/pages/admin/AdminHeaderFooter";
 import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 import AdminPageBuilder from "@/pages/admin/AdminPageBuilder";
 import AdminPageLayouts from "@/pages/admin/AdminPageLayouts";
+import BuiltPage from "@/pages/BuiltPage";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
@@ -123,6 +124,7 @@ const App = () => (
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/referral" element={<Referral />} />
+                <Route path="/p/:slug" element={<BuiltPage />} />
               </Route>
 
               {/* WordPress date-based URL redirects */}

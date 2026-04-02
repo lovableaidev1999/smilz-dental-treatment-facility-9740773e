@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,53 @@ interface Props {
   layout: LayoutNode[];
   className?: string;
 }
+
+// ─── Animation wrapper ──────────────────────────────────
+const AnimatedBlock = ({ children, animation, delay, hoverEffect }: {
+  children: React.ReactNode;
+  animation?: string;
+  delay?: string;
+  hoverEffect?: string;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(!animation);
+
+  useEffect(() => {
+    if (!animation || !ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [animation]);
+
+  const animStyles: Record<string, React.CSSProperties> = {
+    'fade-in': { opacity: visible ? 1 : 0, transition: `opacity 0.6s ease ${delay || '0'}ms` },
+    'slide-up': { opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(30px)', transition: `opacity 0.6s ease ${delay || '0'}ms, transform 0.6s ease ${delay || '0'}ms` },
+    'slide-left': { opacity: visible ? 1 : 0, transform: visible ? 'translateX(0)' : 'translateX(-30px)', transition: `opacity 0.6s ease ${delay || '0'}ms, transform 0.6s ease ${delay || '0'}ms` },
+    'slide-right': { opacity: visible ? 1 : 0, transform: visible ? 'translateX(0)' : 'translateX(30px)', transition: `opacity 0.6s ease ${delay || '0'}ms, transform 0.6s ease ${delay || '0'}ms` },
+    'scale-in': { opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(0.9)', transition: `opacity 0.6s ease ${delay || '0'}ms, transform 0.6s ease ${delay || '0'}ms` },
+  };
+
+  const hoverClasses: Record<string, string> = {
+    'lift': 'hover:-translate-y-1 hover:shadow-elevated',
+    'glow': 'hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]',
+    'scale': 'hover:scale-105',
+  };
+
+  if (!animation && !hoverEffect) return <>{children}</>;
+
+  return (
+    <div
+      ref={ref}
+      style={animation ? animStyles[animation] : undefined}
+      className={`transition-all duration-300 ${hoverEffect ? hoverClasses[hoverEffect] || '' : ''}`}
+    >
+      {children}
+    </div>
+  );
+};
 
 // ─── Responsive styles ──────────────────────────────────
 // For public rendering we use desktop by default
@@ -119,6 +167,76 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
         </Link>
       ))}
     </div>
+  );
+};
+
+// ─── Contact Form Widget ────────────────────────────────
+const ContactFormWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await supabase.from('contact_submissions').insert({
+        name: formData['Name'] || '',
+        email: formData['Email'] || '',
+        phone: formData['Phone'] || '',
+        message: formData['Message'] || '',
+        source: 'page-builder',
+      });
+      setSubmitted(true);
+      setFormData({});
+    } catch (err) {
+      console.error('Form submission error:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className={`p-8 text-center bg-primary/5 rounded-xl ${rClasses}`} style={baseStyles}>
+        <p className="text-lg font-semibold text-foreground">Thank you!</p>
+        <p className="text-muted-foreground mt-1">We'll be in touch soon.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={handleSubmit}>
+      {(node.props.fields || []).map((field: any, i: number) => (
+        <div key={i}>
+          <label className="block text-sm font-medium text-foreground mb-1">{field.label}</label>
+          {field.type === 'textarea' ? (
+            <textarea
+              className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground"
+              rows={4}
+              required={field.required}
+              value={formData[field.label] || ''}
+              onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))}
+            />
+          ) : (
+            <input
+              type={field.type}
+              className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground"
+              required={field.required}
+              value={formData[field.label] || ''}
+              onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))}
+            />
+          )}
+        </div>
+      ))}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+      >
+        {submitting ? 'Sending...' : (node.props.submitText || 'Submit')}
+      </button>
+    </form>
   );
 };
 
@@ -299,23 +417,7 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
       );
 
     case 'contact-form':
-      return (
-        <form key={key} className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={e => e.preventDefault()}>
-          {(node.props.fields || []).map((field: any, i: number) => (
-            <div key={i}>
-              <label className="block text-sm font-medium text-foreground mb-1">{field.label}</label>
-              {field.type === 'textarea' ? (
-                <textarea className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" rows={4} required={field.required} />
-              ) : (
-                <input type={field.type} className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" required={field.required} />
-              )}
-            </div>
-          ))}
-          <button type="submit" className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors">
-            {node.props.submitText || 'Submit'}
-          </button>
-        </form>
-      );
+      return <ContactFormWidget key={key} node={node} rClasses={rClasses} baseStyles={baseStyles} />;
 
     case 'icon-list':
       return (
@@ -357,7 +459,24 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 const VisualRenderer = ({ layout, className }: Props) => {
   return (
     <div className={className}>
-      {layout.map((node, i) => renderNode(node, i))}
+      {layout.map((node, i) => {
+        const rendered = renderNode(node, i);
+        if (!rendered) return null;
+        const hasAnimation = node.props?.animation || node.props?.hoverEffect;
+        if (hasAnimation) {
+          return (
+            <AnimatedBlock
+              key={node.id}
+              animation={node.props.animation}
+              delay={node.props.animationDelay}
+              hoverEffect={node.props.hoverEffect}
+            >
+              {rendered}
+            </AnimatedBlock>
+          );
+        }
+        return rendered;
+      })}
     </div>
   );
 };

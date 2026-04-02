@@ -7,8 +7,7 @@ import { useBuilder } from '@/hooks/useBuilderState';
 import { getBlockDefinition, getBlockIcon } from './block-registry';
 import { CONTAINER_TYPES } from '@/types/visual-builder';
 import type { LayoutNode, DeviceMode } from '@/types/visual-builder';
-import { Link } from 'react-router-dom';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import InlineEditable from './InlineEditable';
 
 // ─── Resolve responsive styles ─────────────────────────
 const getResponsiveStyles = (node: LayoutNode, device: DeviceMode): React.CSSProperties => {
@@ -40,12 +39,30 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
 
   switch (type) {
     case 'heading': {
-      const Tag = `h${props.level || 2}` as keyof JSX.IntrinsicElements;
       const sizes: Record<number, string> = { 1: 'text-3xl font-bold', 2: 'text-2xl font-bold', 3: 'text-xl font-semibold' };
-      return <Tag className={`${sizes[props.level] || sizes[2]} text-foreground`} style={{ color: props.color || undefined }}>{props.text}</Tag>;
+      const tag = `h${props.level || 2}`;
+      return (
+        <InlineEditable
+          blockId={node.id}
+          propKey="text"
+          value={props.text}
+          tag={tag}
+          className={`${sizes[props.level] || sizes[2]} text-foreground`}
+          style={{ color: props.color || undefined }}
+        />
+      );
     }
     case 'text':
-      return <p className="text-muted-foreground leading-relaxed" style={{ color: props.color || undefined }}>{props.text}</p>;
+      return (
+        <InlineEditable
+          blockId={node.id}
+          propKey="text"
+          value={props.text}
+          tag="p"
+          className="text-muted-foreground leading-relaxed"
+          style={{ color: props.color || undefined }}
+        />
+      );
     case 'image':
       return props.src ? (
         <figure>
@@ -63,9 +80,13 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
       };
       return (
         <div style={{ textAlign: props.align || 'left' }}>
-          <span className={`inline-block px-6 py-2.5 rounded-lg font-semibold text-sm ${styles[props.style] || styles.primary}`}>
-            {props.text}
-          </span>
+          <InlineEditable
+            blockId={node.id}
+            propKey="text"
+            value={props.text}
+            tag="span"
+            className={`inline-block px-6 py-2.5 rounded-lg font-semibold text-sm ${styles[props.style] || styles.primary}`}
+          />
         </div>
       );
     }
