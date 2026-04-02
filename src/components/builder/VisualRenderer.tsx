@@ -248,22 +248,31 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 
   switch (node.type) {
     case 'section': {
-      const sectionStyle: React.CSSProperties = {
-        ...baseStyles,
-        display: baseStyles.display === 'none' ? 'none' : 'flex',
-        flexDirection: baseStyles.flexDirection || 'row',
-        background: node.props.background || undefined,
-        backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+      const gridColumns = node.props.gridColumns || '1fr';
+      const sectionInner: React.CSSProperties = {
+        display: 'grid',
+        gridTemplateColumns: gridColumns,
+        columnGap: node.props.columnGap || '1.5rem',
+        rowGap: node.props.rowGap || '1.5rem',
+        alignItems: baseStyles.alignItems || undefined,
       };
       return (
-        <section key={key} className={`w-full ${rClasses}`} style={sectionStyle}>
+        <section
+          key={key}
+          className={`w-full ${rClasses}`}
+          style={{
+            ...baseStyles,
+            background: node.props.background || undefined,
+            backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
           <div
             className="w-full mx-auto"
             style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '1280px') }}
           >
-            <div className="flex flex-wrap" style={{ gap: baseStyles.gap, alignItems: baseStyles.alignItems, justifyContent: baseStyles.justifyContent }}>
+            <div style={sectionInner}>
               {node.children?.map((child, i) => renderNode(child, i))}
             </div>
           </div>
@@ -271,15 +280,31 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
       );
     }
 
+    case 'grid': {
+      const cols = node.props.gridCols || 2;
+      const gridStyle: React.CSSProperties = {
+        ...baseStyles,
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        columnGap: node.props.columnGap || '1rem',
+        rowGap: node.props.rowGap || '1rem',
+      };
+      return (
+        <div key={key} className={rClasses} style={gridStyle}>
+          {node.children?.map((child, i) => renderNode(child, i))}
+        </div>
+      );
+    }
+
     case 'column': {
       const colStyle: React.CSSProperties = {
         ...baseStyles,
-        width: node.props.width || '100%',
         display: baseStyles.display === 'none' ? 'none' : 'flex',
         flexDirection: 'column',
+        justifyContent: node.props.verticalAlign || 'flex-start',
       };
       return (
-        <div key={key} className={`${rClasses}`} style={colStyle}>
+        <div key={key} className={rClasses} style={colStyle}>
           {node.children?.map((child, i) => renderNode(child, i))}
         </div>
       );

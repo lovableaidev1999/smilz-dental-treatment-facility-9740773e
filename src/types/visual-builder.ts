@@ -2,6 +2,7 @@
 export type BlockType =
   | 'section'
   | 'column'
+  | 'grid'
   | 'heading'
   | 'text'
   | 'image'
@@ -18,7 +19,7 @@ export type BlockType =
   | 'html-embed';
 
 // Container types that can hold children
-export const CONTAINER_TYPES: BlockType[] = ['section', 'column'];
+export const CONTAINER_TYPES: BlockType[] = ['section', 'column', 'grid'];
 
 // ─── Responsive Values ──────────────────────────────────
 export type DeviceMode = 'desktop' | 'tablet' | 'mobile';
