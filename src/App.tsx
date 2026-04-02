@@ -39,6 +39,7 @@ import AdminBlogEdit from "@/pages/admin/AdminBlogEdit";
 import AdminMedia from "@/pages/admin/AdminMedia";
 import AdminGallery from "@/pages/admin/AdminGallery";
 import AdminReviews from "@/pages/admin/AdminReviews";
+import AdminMigrateImages from "@/pages/admin/AdminMigrateImages";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
@@ -112,6 +113,7 @@ const App = () => (
                 <Route path="media" element={<AdminMedia />} />
                 <Route path="gallery" element={<AdminGallery />} />
                 <Route path="reviews" element={<AdminReviews />} />
+                <Route path="migrate" element={<AdminMigrateImages />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
