@@ -167,10 +167,10 @@ const PropertiesPanel = () => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Entrance</Label>
-            <Select value={node.props.animation || ''} onValueChange={v => updateProp('animation', v)}>
+            <Select value={node.props.animation || 'none'} onValueChange={v => updateProp('animation', v === 'none' ? '' : v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="fade-in">Fade In</SelectItem>
                 <SelectItem value="slide-up">Slide Up</SelectItem>
                 <SelectItem value="slide-left">Slide Left</SelectItem>
@@ -182,10 +182,10 @@ const PropertiesPanel = () => {
           <PropField label="Delay (ms)" value={node.props.animationDelay || ''} onChange={v => updateProp('animationDelay', v)} placeholder="e.g. 200" />
           <div className="flex items-center justify-between">
             <Label className="text-xs">Hover Effect</Label>
-            <Select value={node.props.hoverEffect || ''} onValueChange={v => updateProp('hoverEffect', v)}>
+            <Select value={node.props.hoverEffect || 'none'} onValueChange={v => updateProp('hoverEffect', v === 'none' ? '' : v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="lift">Lift</SelectItem>
                 <SelectItem value="glow">Glow</SelectItem>
                 <SelectItem value="scale">Scale</SelectItem>
