@@ -2,7 +2,7 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Settings, FileText, Stethoscope, Image,
-  Layers, LogOut, Menu, X, Star, ChevronLeft
+  Layers, LogOut, Menu, X, Star, ChevronLeft, PanelTop
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Settings", path: "/admin/settings", icon: Settings },
+  { label: "Header & Footer", path: "/admin/header-footer", icon: PanelTop },
   { label: "Pages", path: "/admin/pages", icon: Layers },
   { label: "Services", path: "/admin/services", icon: Stethoscope },
   { label: "Blog Posts", path: "/admin/blog", icon: FileText },
