@@ -82,7 +82,16 @@ const AdminGallery = () => {
         <Card className="mb-6">
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-medium mb-1.5 block">Image URL</label><Input value={newItem.src} onChange={(e) => setNewItem({ ...newItem, src: e.target.value })} /></div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Image</label>
+                <div className="flex gap-2">
+                  <Input value={newItem.src} onChange={(e) => setNewItem({ ...newItem, src: e.target.value })} placeholder="URL or upload →" className="flex-1" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={isCompressing}>
+                    {isCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                </div>
+              </div>
               <div><label className="text-sm font-medium mb-1.5 block">Alt Text</label><Input value={newItem.alt} onChange={(e) => setNewItem({ ...newItem, alt: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1.5 block">Caption</label><Input value={newItem.caption} onChange={(e) => setNewItem({ ...newItem, caption: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1.5 block">Sort Order</label><Input type="number" value={newItem.sort_order} onChange={(e) => setNewItem({ ...newItem, sort_order: Number(e.target.value) })} /></div>
