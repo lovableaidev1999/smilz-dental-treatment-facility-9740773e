@@ -39,6 +39,7 @@ import AdminBlogEdit from "@/pages/admin/AdminBlogEdit";
 import AdminMedia from "@/pages/admin/AdminMedia";
 import AdminGallery from "@/pages/admin/AdminGallery";
 import AdminReviews from "@/pages/admin/AdminReviews";
+import AdminMigrateImages from "@/pages/admin/AdminMigrateImages";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
