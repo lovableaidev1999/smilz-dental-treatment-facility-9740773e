@@ -182,10 +182,10 @@ const PropertiesPanel = () => {
           <PropField label="Delay (ms)" value={node.props.animationDelay || ''} onChange={v => updateProp('animationDelay', v)} placeholder="e.g. 200" />
           <div className="flex items-center justify-between">
             <Label className="text-xs">Hover Effect</Label>
-            <Select value={node.props.hoverEffect || ''} onValueChange={v => updateProp('hoverEffect', v)}>
+            <Select value={node.props.hoverEffect || 'none'} onValueChange={v => updateProp('hoverEffect', v === 'none' ? '' : v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="lift">Lift</SelectItem>
                 <SelectItem value="glow">Glow</SelectItem>
                 <SelectItem value="scale">Scale</SelectItem>
