@@ -31,6 +31,25 @@ const AdminBlogEdit = () => {
     published_at: new Date().toISOString().split("T")[0],
   });
   const [tagsInput, setTagsInput] = useState("");
+  const imgRef = useRef<HTMLInputElement>(null);
+  const { compress, isCompressing } = useImageUpload();
+
+  const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { file: compressed } = await compress(file);
+      const path = `blog/${Date.now()}-${compressed.name}`;
+      const { error } = await supabase.storage.from("media").upload(path, compressed, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("media").getPublicUrl(path);
+      setForm((p) => ({ ...p, featured_image: data.publicUrl }));
+      toast({ title: "Featured image uploaded & compressed!" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    e.target.value = "";
+  };
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["admin_blog_post", id],
