@@ -31,11 +31,10 @@ import {
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 // ─── Inner blog builder with DnD ────────────────────────
-const BlogBuilderInner = ({ title, onBack, onSaveDraft, onPublish, isSaving }: {
+const BlogBuilderInner = ({ title, onBack, onSave, isSaving }: {
   title: string;
   onBack: () => void;
-  onSaveDraft: () => void;
-  onPublish: () => void;
+  onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
@@ -88,10 +87,10 @@ const BlogBuilderInner = ({ title, onBack, onSaveDraft, onPublish, isSaving }: {
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
           <div className="ml-auto flex gap-2">
-            <Button variant="outline" size="sm" onClick={onSaveDraft} disabled={isSaving}>
+            <Button variant="outline" size="sm" onClick={() => onSave(state.layout, true)} disabled={isSaving}>
               <FileText className="h-4 w-4 mr-1" /> Save Draft
             </Button>
-            <Button size="sm" onClick={onPublish} disabled={isSaving}>
+            <Button size="sm" onClick={() => onSave(state.layout, false)} disabled={isSaving}>
               <Save className="h-4 w-4 mr-1" /> Publish
             </Button>
           </div>
@@ -206,7 +205,7 @@ const AdminBlogEdit = () => {
   }, [post]);
 
   const saveMutation = useMutation({
-    mutationFn: async (asDraft?: boolean) => {
+    mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       const isPublished = asDraft === true ? false : form.is_published;
       const payload: any = {
@@ -219,6 +218,10 @@ const AdminBlogEdit = () => {
         content_json: contentJson,
         content: legacyHtml || "",
       };
+      // Include visual layout if provided (from visual builder mode)
+      if (visualLayoutJson) {
+        payload.visual_layout_json = visualLayoutJson;
+      }
       if (isNew) {
         payload.created_at = new Date().toISOString();
         const { error } = await supabase.from("blog_posts").insert(payload);
@@ -265,8 +268,10 @@ const AdminBlogEdit = () => {
         <BlogBuilderInner
           title={form.title}
           onBack={() => setEditorMode("blocks")}
-          onSaveDraft={() => saveMutation.mutate(true)}
-          onPublish={() => saveMutation.mutate(false)}
+          onSave={(layout, asDraft) => {
+            setVisualLayout(layout);
+            saveMutation.mutate({ asDraft, visualLayoutJson: layout });
+          }}
           isSaving={saveMutation.isPending}
         />
       </BuilderProvider>
@@ -388,10 +393,10 @@ const AdminBlogEdit = () => {
                 <label className="text-sm font-medium mb-1.5 block">Publish Date</label>
                 <Input type="date" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} />
               </div>
-              <Button onClick={() => saveMutation.mutate(false)} className="w-full gap-2" disabled={saveMutation.isPending}>
+              <Button onClick={() => saveMutation.mutate({ asDraft: false })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <Save className="h-4 w-4" /> {isNew ? "Create & Publish" : "Save & Publish"}
               </Button>
-              <Button variant="outline" onClick={() => saveMutation.mutate(true)} className="w-full gap-2" disabled={saveMutation.isPending}>
+              <Button variant="outline" onClick={() => saveMutation.mutate({ asDraft: true })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
               {!isNew && (
