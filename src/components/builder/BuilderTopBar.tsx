@@ -1,6 +1,7 @@
 import { Monitor, Tablet, Smartphone, Save, Eye, Upload, ArrowLeft, Undo2, Redo2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBuilder } from '@/hooks/useBuilderState';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import type { DeviceMode } from '@/types/visual-builder';
 
 interface Props {
@@ -9,6 +10,10 @@ interface Props {
   onPublish: () => void;
   onPreview: () => void;
   onBack: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   saving: boolean;
 }
 
@@ -18,7 +23,7 @@ const devices: { mode: DeviceMode; icon: React.FC<any>; label: string; width: st
   { mode: 'mobile', icon: Smartphone, label: 'Mobile', width: '375px' },
 ];
 
-const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, saving }: Props) => {
+const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, onUndo, onRedo, canUndo, canRedo, saving }: Props) => {
   const { state, dispatch } = useBuilder();
 
   return (
@@ -37,6 +42,24 @@ const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, saving
         >
           <Layers className="h-4 w-4" />
         </Button>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onUndo} disabled={!canUndo}>
+                <Undo2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom"><p className="text-xs">Undo (Ctrl+Z)</p></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onRedo} disabled={!canRedo}>
+                <Redo2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom"><p className="text-xs">Redo (Ctrl+Y)</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Center — Device Switcher */}

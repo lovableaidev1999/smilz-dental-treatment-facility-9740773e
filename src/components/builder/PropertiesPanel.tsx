@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
 import { getBlockDefinition, getBlockIcon } from './block-registry';
 import { Input } from '@/components/ui/input';
@@ -6,13 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Trash2, Copy } from 'lucide-react';
+import { Trash2, Copy, Clipboard, ImageIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import MediaPickerDialog from './MediaPickerDialog';
 import type { DeviceMode, ResponsiveProps } from '@/types/visual-builder';
 
 const PropertiesPanel = () => {
   const { state, dispatch, findNode } = useBuilder();
   const { selectedBlockId, deviceMode } = state;
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   if (!selectedBlockId) {
     return (
@@ -52,20 +55,23 @@ const PropertiesPanel = () => {
 
       {/* Actions */}
       <div className="flex gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}
-        >
+        <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}>
           <Copy className="h-3 w-3 mr-1" /> Duplicate
         </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}
-        >
+        <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'COPY_BLOCK', payload: selectedBlockId })}>
+          <Clipboard className="h-3 w-3 mr-1" /> Copy
+        </Button>
+      </div>
+      <div className="flex gap-1">
+        <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
+          disabled={!state.clipboardBlock}
+          onClick={() => dispatch({ type: 'PASTE_BLOCK', payload: { parentId: null } })}>
+          <Clipboard className="h-3 w-3 mr-1" /> Paste
+        </Button>
+        <Button variant="destructive" size="sm" className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}>
           <Trash2 className="h-3 w-3 mr-1" /> Delete
         </Button>
       </div>
@@ -75,7 +81,7 @@ const PropertiesPanel = () => {
       {/* Content Props */}
       <div className="space-y-3">
         <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Content</p>
-        {renderContentProps(node, updateProp)}
+        {renderContentProps(node, updateProp, { onOpenMediaPicker: () => setShowMediaPicker(true) })}
       </div>
 
       <Separator />
@@ -188,6 +194,13 @@ const PropertiesPanel = () => {
           </div>
         </div>
       </div>
+
+      {/* Media Picker for image blocks */}
+      <MediaPickerDialog
+        open={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={(url) => updateProp('src', url)}
+      />
     </div>
   );
 };
@@ -207,7 +220,7 @@ const PropField = ({ label, value, onChange, placeholder, multiline }: {
 );
 
 // Render content-specific props per block type
-function renderContentProps(node: any, updateProp: (k: string, v: any) => void) {
+function renderContentProps(node: any, updateProp: (k: string, v: any) => void, extra?: { onOpenMediaPicker?: () => void }) {
   const { type, props } = node;
 
   switch (type) {
@@ -241,7 +254,15 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void) 
     case 'image':
       return (
         <>
-          <PropField label="Image URL" value={props.src} onChange={v => updateProp('src', v)} placeholder="https://..." />
+          <div className="space-y-1">
+            <Label className="text-xs">Image URL</Label>
+            <div className="flex gap-1">
+              <Input value={props.src || ''} onChange={e => updateProp('src', e.target.value)} placeholder="https://..." className="h-7 text-xs flex-1" />
+              <Button variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={extra?.onOpenMediaPicker}>
+                <ImageIcon className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
           <PropField label="Alt Text" value={props.alt} onChange={v => updateProp('alt', v)} />
           <PropField label="Caption" value={props.caption} onChange={v => updateProp('caption', v)} />
           <PropField label="Border Radius" value={props.borderRadius} onChange={v => updateProp('borderRadius', v)} />

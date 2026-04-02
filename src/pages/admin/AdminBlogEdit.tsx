@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, Loader2, Eye, Code } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2 } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
@@ -95,10 +95,12 @@ const AdminBlogEdit = () => {
   }, [post]);
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (asDraft?: boolean) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const isPublished = asDraft === true ? false : form.is_published;
       const payload: any = {
         ...form,
+        is_published: isPublished,
         tags,
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
         published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
@@ -114,11 +116,26 @@ const AdminBlogEdit = () => {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", id);
         if (error) throw error;
       }
+      return asDraft;
+    },
+    onSuccess: (asDraft) => {
+      qc.invalidateQueries({ queryKey: ["admin_blog"] });
+      qc.invalidateQueries({ queryKey: ["blog_posts"] });
+      toast({ title: asDraft ? "Saved as draft!" : (isNew ? "Post created!" : "Post updated!") });
+      navigate("/admin/blog");
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (isNew) return;
+      const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin_blog"] });
-      qc.invalidateQueries({ queryKey: ["blog_posts"] });
-      toast({ title: isNew ? "Post created!" : "Post updated!" });
+      toast({ title: "Post deleted" });
       navigate("/admin/blog");
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
@@ -229,18 +246,22 @@ const AdminBlogEdit = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader><CardTitle>Publish</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} className="rounded" />
-                <label className="text-sm">Published</label>
-              </div>
+            <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Publish Date</label>
                 <Input type="date" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} />
               </div>
-              <Button onClick={() => saveMutation.mutate()} className="w-full gap-2" disabled={saveMutation.isPending}>
-                <Save className="h-4 w-4" /> {isNew ? "Create Post" : "Save & Publish"}
+              <Button onClick={() => saveMutation.mutate(false)} className="w-full gap-2" disabled={saveMutation.isPending}>
+                <Save className="h-4 w-4" /> {isNew ? "Create & Publish" : "Save & Publish"}
               </Button>
+              <Button variant="outline" onClick={() => saveMutation.mutate(true)} className="w-full gap-2" disabled={saveMutation.isPending}>
+                <FileText className="h-4 w-4" /> Save as Draft
+              </Button>
+              {!isNew && (
+                <Button variant="destructive" onClick={() => { if (confirm("Delete this post permanently?")) deleteMutation.mutate(); }} className="w-full gap-2" disabled={deleteMutation.isPending}>
+                  <Trash2 className="h-4 w-4" /> Delete Post
+                </Button>
+              )}
             </CardContent>
           </Card>
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   DndContext,
@@ -9,13 +9,12 @@ import {
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
-  type DragOverEvent,
 } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import { useToast } from '@/hooks/use-toast';
 import { BuilderProvider, useBuilder } from '@/hooks/useBuilderState';
 import { usePageLayoutById, useSavePageLayout } from '@/hooks/usePageLayouts';
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 import BuilderTopBar from '@/components/builder/BuilderTopBar';
 import BlockPalette from '@/components/builder/BlockPalette';
 import LayersPanel from '@/components/builder/LayersPanel';
@@ -37,6 +36,53 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
   const saveLayout = useSavePageLayout();
   const [pageTitle, setPageTitle] = useState(initialTitle);
   const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
+  const undoRedo = useUndoRedo();
+  const prevLayoutRef = useRef<string>('');
+
+  // Track layout changes for undo/redo
+  useEffect(() => {
+    const serialized = JSON.stringify(state.layout);
+    if (serialized !== prevLayoutRef.current) {
+      prevLayoutRef.current = serialized;
+      undoRedo.pushState(state.layout);
+    }
+  }, [state.layout]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        const prev = undoRedo.undo();
+        if (prev) dispatch({ type: 'SET_LAYOUT', payload: prev });
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        const next = undoRedo.redo();
+        if (next) dispatch({ type: 'SET_LAYOUT', payload: next });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && state.selectedBlockId) {
+        dispatch({ type: 'COPY_BLOCK', payload: state.selectedBlockId });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && state.clipboardBlock) {
+        dispatch({ type: 'PASTE_BLOCK', payload: { parentId: null } });
+      }
+      if (e.key === 'Delete' && state.selectedBlockId) {
+        dispatch({ type: 'DELETE_BLOCK', payload: state.selectedBlockId });
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [state.selectedBlockId, state.clipboardBlock, undoRedo, dispatch]);
+
+  const handleUndo = () => {
+    const prev = undoRedo.undo();
+    if (prev) dispatch({ type: 'SET_LAYOUT', payload: prev });
+  };
+  const handleRedo = () => {
+    const next = undoRedo.redo();
+    if (next) dispatch({ type: 'SET_LAYOUT', payload: next });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -44,9 +90,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
   const handleDragStart = (event: DragStartEvent) => {
     const data = event.active.data.current;
-    if (data?.fromPalette) {
-      setActiveDragType(data.blockType);
-    }
+    if (data?.fromPalette) setActiveDragType(data.blockType);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -57,51 +101,24 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    // From palette → canvas
     if (activeData?.fromPalette) {
       const blockType = activeData.blockType as BlockType;
-      // Determine target container
       let targetParentId: string | null = null;
-      if (overData?.containerId !== undefined) {
-        targetParentId = overData.containerId;
-      } else if (overData?.parentId !== undefined) {
-        targetParentId = overData.parentId;
-      }
+      if (overData?.containerId !== undefined) targetParentId = overData.containerId;
+      else if (overData?.parentId !== undefined) targetParentId = overData.parentId;
       addBlock(blockType, targetParentId);
       return;
     }
 
-    // Reorder within canvas
     if (activeData?.blockId && !activeData.fromPalette) {
       const activeId = activeData.blockId;
       const overId = over.id as string;
       if (activeId === overId) return;
-
-      // Find positions and reorder
       const overContainerId = overData?.containerId ?? overData?.parentId ?? null;
-      const activeParentId = activeData.parentId;
-
-      if (activeParentId === overContainerId || overContainerId === null) {
-        // Same parent → reorder
-        dispatch({
-          type: 'MOVE_BLOCK',
-          payload: {
-            blockId: activeId,
-            targetParentId: overContainerId,
-            targetIndex: 0, // Will be adjusted by the tree logic
-          },
-        });
-      } else {
-        // Different parent → move
-        dispatch({
-          type: 'MOVE_BLOCK',
-          payload: {
-            blockId: activeId,
-            targetParentId: overContainerId,
-            targetIndex: 0,
-          },
-        });
-      }
+      dispatch({
+        type: 'MOVE_BLOCK',
+        payload: { blockId: activeId, targetParentId: overContainerId, targetIndex: 0 },
+      });
     }
   };
 
@@ -116,10 +133,9 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
       });
       dispatch({ type: 'MARK_SAVED' });
       toast({
-        title: publish ? 'Published!' : 'Saved!',
+        title: publish ? 'Published!' : 'Saved as draft!',
         description: publish ? 'Your page is now live.' : 'Draft saved successfully.',
       });
-      // If this was a new layout, redirect to include the ID
       if (!layoutId && result.id) {
         navigate(`/admin/page-builder/${result.id}`, { replace: true });
       }
@@ -129,12 +145,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         <BuilderTopBar
           pageTitle={pageTitle}
@@ -142,11 +153,14 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
           onBack={() => navigate('/admin/pages')}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={undoRedo.canUndo}
+          canRedo={undoRedo.canRedo}
           saving={saveLayout.isPending}
         />
 
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel */}
           <div className="w-56 border-r border-border bg-card shrink-0 overflow-hidden flex flex-col">
             <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
               <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0">
@@ -166,10 +180,8 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
             </Tabs>
           </div>
 
-          {/* Center Canvas */}
           <BuilderCanvas />
 
-          {/* Right Panel */}
           <div className="w-64 border-l border-border bg-card shrink-0 overflow-hidden">
             <div className="h-9 border-b border-border flex items-center px-3">
               <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
@@ -181,7 +193,6 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
         </div>
       </div>
 
-      {/* Drag overlay */}
       <DragOverlay>
         {activeDragType && (() => {
           const def = getBlockDefinition(activeDragType);
