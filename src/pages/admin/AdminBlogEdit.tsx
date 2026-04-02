@@ -172,33 +172,13 @@ const AdminBlogEdit = () => {
   if (editorMode === "visual") {
     return (
       <BuilderProvider initialLayout={visualLayout || []}>
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
-            <Button variant="ghost" size="sm" onClick={() => setEditorMode("blocks")} className="gap-1">
-              <ArrowLeft className="h-4 w-4" /> Back to Editor
-            </Button>
-            <span className="text-sm font-medium text-foreground">Visual Builder — {form.title || 'Untitled'}</span>
-            <div className="ml-auto flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => saveMutation.mutate(true)} disabled={saveMutation.isPending}>
-                <FileText className="h-4 w-4 mr-1" /> Save Draft
-              </Button>
-              <Button size="sm" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending}>
-                <Save className="h-4 w-4 mr-1" /> Publish
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-1 overflow-hidden">
-            <div className="w-56 border-r border-border overflow-y-auto bg-card">
-              <BlockPalette />
-            </div>
-            <div className="flex-1 overflow-auto bg-muted/30">
-              <BuilderCanvas />
-            </div>
-            <div className="w-72 border-l border-border overflow-y-auto bg-card">
-              <PropertiesPanel />
-            </div>
-          </div>
-        </div>
+        <BlogBuilderInner
+          title={form.title}
+          onBack={() => setEditorMode("blocks")}
+          onSaveDraft={() => saveMutation.mutate(true)}
+          onPublish={() => saveMutation.mutate(false)}
+          isSaving={saveMutation.isPending}
+        />
       </BuilderProvider>
     );
   }
