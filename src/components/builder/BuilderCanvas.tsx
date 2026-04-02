@@ -39,12 +39,30 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
 
   switch (type) {
     case 'heading': {
-      const Tag = `h${props.level || 2}` as keyof JSX.IntrinsicElements;
       const sizes: Record<number, string> = { 1: 'text-3xl font-bold', 2: 'text-2xl font-bold', 3: 'text-xl font-semibold' };
-      return <Tag className={`${sizes[props.level] || sizes[2]} text-foreground`} style={{ color: props.color || undefined }}>{props.text}</Tag>;
+      const tag = `h${props.level || 2}`;
+      return (
+        <InlineEditable
+          blockId={node.id}
+          propKey="text"
+          value={props.text}
+          tag={tag}
+          className={`${sizes[props.level] || sizes[2]} text-foreground`}
+          style={{ color: props.color || undefined }}
+        />
+      );
     }
     case 'text':
-      return <p className="text-muted-foreground leading-relaxed" style={{ color: props.color || undefined }}>{props.text}</p>;
+      return (
+        <InlineEditable
+          blockId={node.id}
+          propKey="text"
+          value={props.text}
+          tag="p"
+          className="text-muted-foreground leading-relaxed"
+          style={{ color: props.color || undefined }}
+        />
+      );
     case 'image':
       return props.src ? (
         <figure>
