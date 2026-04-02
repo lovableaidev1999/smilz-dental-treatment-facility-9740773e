@@ -11,14 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-dental.jpg";
 import doctorImg from "@/assets/doctor.jpg";
 
-const serviceIcons: Record<string, string> = {
-  "dental-implants": "🦷",
-  "root-canal": "🔬",
-  "orthodontics": "😬",
-  "smile-designing": "✨",
-  "tooth-whitening": "🌟",
-  "scaling-polishing": "🪥",
-};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
