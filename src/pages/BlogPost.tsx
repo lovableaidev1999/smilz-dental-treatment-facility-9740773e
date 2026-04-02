@@ -4,6 +4,7 @@ import { Calendar, ChevronRight, ArrowLeft, User } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
+import BlockRenderer from "@/components/BlockRenderer";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
