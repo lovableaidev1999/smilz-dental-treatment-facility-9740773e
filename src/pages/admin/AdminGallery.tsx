@@ -13,6 +13,25 @@ const AdminGallery = () => {
   const { toast } = useToast();
   const [showAdd, setShowAdd] = useState(false);
   const [newItem, setNewItem] = useState({ src: "", alt: "", caption: "", category: "", sort_order: 0 });
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { compress, isCompressing } = useImageUpload();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { file: compressed } = await compress(file);
+      const path = `gallery/${Date.now()}-${compressed.name}`;
+      const { error } = await supabase.storage.from("media").upload(path, compressed, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("media").getPublicUrl(path);
+      setNewItem((p) => ({ ...p, src: data.publicUrl, alt: compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ") }));
+      toast({ title: "Image uploaded & compressed!" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    e.target.value = "";
+  };
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["admin_gallery"],
