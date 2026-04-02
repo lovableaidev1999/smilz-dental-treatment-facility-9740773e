@@ -7,11 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
 import type { JSONContent } from "@tiptap/core";
+import type { LayoutNode } from "@/types/visual-builder";
+import { BuilderProvider } from "@/hooks/useBuilderState";
+import BuilderCanvas from "@/components/builder/BuilderCanvas";
+import BlockPalette from "@/components/builder/BlockPalette";
+import PropertiesPanel from "@/components/builder/PropertiesPanel";
+import BuilderTopBar from "@/components/builder/BuilderTopBar";
+import VisualRenderer from "@/components/builder/VisualRenderer";
 
 const CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
@@ -35,7 +42,8 @@ const AdminBlogEdit = () => {
   });
   const [contentJson, setContentJson] = useState<JSONContent | null>(null);
   const [legacyHtml, setLegacyHtml] = useState("");
-  const [editorMode, setEditorMode] = useState<"blocks" | "html" | "preview">("blocks");
+  const [visualLayout, setVisualLayout] = useState<LayoutNode[] | null>(null);
+  const [editorMode, setEditorMode] = useState<"blocks" | "html" | "visual" | "preview">("blocks");
   const [tagsInput, setTagsInput] = useState("");
   const imgRef = useRef<HTMLInputElement>(null);
   const { compress, isCompressing } = useImageUpload();
@@ -83,8 +91,11 @@ const AdminBlogEdit = () => {
         published_at: post.published_at ? post.published_at.split("T")[0] : "",
       });
       setTagsInput(Array.isArray(post.tags) ? post.tags.join(", ") : "");
-      // Load block content or fall back to legacy HTML
-      if (post.content_json) {
+      // Load visual layout if present
+      if ((post as any).visual_layout_json && Array.isArray((post as any).visual_layout_json) && (post as any).visual_layout_json.length > 0) {
+        setVisualLayout((post as any).visual_layout_json);
+        setEditorMode("visual");
+      } else if (post.content_json) {
         setContentJson(post.content_json as JSONContent);
         setEditorMode("blocks");
       } else if (post.content) {
@@ -147,6 +158,41 @@ const AdminBlogEdit = () => {
 
   if (!isNew && isLoading) return <div className="animate-pulse"><div className="h-8 bg-secondary rounded w-1/3 mb-4" /><div className="h-96 bg-secondary rounded" /></div>;
 
+  // Visual builder mode renders full-screen
+  if (editorMode === "visual") {
+    return (
+      <BuilderProvider initialLayout={visualLayout || []}>
+        <div className="fixed inset-0 z-50 bg-background flex flex-col">
+          <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
+            <Button variant="ghost" size="sm" onClick={() => setEditorMode("blocks")} className="gap-1">
+              <ArrowLeft className="h-4 w-4" /> Back to Editor
+            </Button>
+            <span className="text-sm font-medium text-foreground">Visual Builder — {form.title || 'Untitled'}</span>
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => saveMutation.mutate(true)} disabled={saveMutation.isPending}>
+                <FileText className="h-4 w-4 mr-1" /> Save Draft
+              </Button>
+              <Button size="sm" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending}>
+                <Save className="h-4 w-4 mr-1" /> Publish
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-56 border-r border-border overflow-y-auto bg-card">
+              <BlockPalette />
+            </div>
+            <div className="flex-1 overflow-auto bg-muted/30">
+              <BuilderCanvas />
+            </div>
+            <div className="w-72 border-l border-border overflow-y-auto bg-card">
+              <PropertiesPanel />
+            </div>
+          </div>
+        </div>
+      </BuilderProvider>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
@@ -193,6 +239,12 @@ const AdminBlogEdit = () => {
                     Blocks
                   </button>
                   <button
+                    onClick={() => setEditorMode("visual")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${editorMode === "visual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LayoutGrid className="h-3 w-3" /> Visual Builder
+                  </button>
+                  <button
                     onClick={() => setEditorMode("html")}
                     className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${editorMode === "html" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                   >
@@ -229,14 +281,19 @@ const AdminBlogEdit = () => {
                   <BlockRenderer content={contentJson} />
                 </div>
               )}
-              {editorMode === "preview" && !contentJson && legacyHtml && (
+              {editorMode === "preview" && visualLayout && visualLayout.length > 0 && (
+                <div className="border border-border rounded-lg p-6 bg-background min-h-[400px]">
+                  <VisualRenderer layout={visualLayout} />
+                </div>
+              )}
+              {editorMode === "preview" && !contentJson && !visualLayout?.length && legacyHtml && (
                 <div
                   className="prose prose-sm max-w-none p-6 border border-border rounded-lg min-h-[400px]"
                   dangerouslySetInnerHTML={{ __html: legacyHtml }}
                 />
               )}
-              {editorMode === "preview" && !contentJson && !legacyHtml && (
-                <div className="text-center text-muted-foreground py-20">No content yet. Switch to Blocks or HTML mode to add content.</div>
+              {editorMode === "preview" && !contentJson && !visualLayout?.length && !legacyHtml && (
+                <div className="text-center text-muted-foreground py-20">No content yet. Switch to Blocks, Visual Builder, or HTML mode to add content.</div>
               )}
             </CardContent>
           </Card>
