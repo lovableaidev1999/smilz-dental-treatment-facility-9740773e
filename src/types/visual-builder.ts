@@ -16,7 +16,17 @@ export type BlockType =
   | 'blog-loop'
   | 'service-loop'
   | 'contact-form'
-  | 'html-embed';
+  | 'html-embed'
+  | 'video'
+  | 'google-map'
+  | 'icon'
+  | 'tabs'
+  | 'accordion'
+  | 'image-box'
+  | 'icon-box'
+  | 'image-carousel'
+  | 'gallery'
+  | 'social-icons';
 
 // Container types that can hold children
 export const CONTAINER_TYPES: BlockType[] = ['section', 'column', 'grid'];
