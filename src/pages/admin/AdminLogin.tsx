@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Mail, ArrowLeft } from "lucide-react";
 
+// Use published URL for password reset redirects (not localhost)
+const getRedirectUrl = () => {
+  const origin = window.location.origin;
+  // If running on localhost or preview, use the published URL
+  if (origin.includes("localhost") || origin.includes("lovable.app")) {
+    return "https://smilz-dental-treatment-facility.lovable.app/admin/login";
+  }
+  return `${origin}/admin/login`;
+};
+
 const AdminLogin = () => {
   const { user, loading, signIn } = useAuth();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -16,6 +27,16 @@ const AdminLogin = () => {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mode, setMode] = useState<"login" | "forgot" | "reset">("login");
+
+  // Check URL hash for recovery tokens (handles redirect from email)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes("type=recovery")) {
+      setMode("reset");
+      setError("");
+      setSuccess("");
+    }
+  }, [location]);
 
   // Detect PASSWORD_RECOVERY event from the reset link
   useEffect(() => {
