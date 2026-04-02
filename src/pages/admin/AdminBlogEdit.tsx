@@ -95,10 +95,12 @@ const AdminBlogEdit = () => {
   }, [post]);
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (asDraft?: boolean) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const isPublished = asDraft === true ? false : form.is_published;
       const payload: any = {
         ...form,
+        is_published: isPublished,
         tags,
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
         published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
@@ -114,11 +116,26 @@ const AdminBlogEdit = () => {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", id);
         if (error) throw error;
       }
+      return asDraft;
+    },
+    onSuccess: (asDraft) => {
+      qc.invalidateQueries({ queryKey: ["admin_blog"] });
+      qc.invalidateQueries({ queryKey: ["blog_posts"] });
+      toast({ title: asDraft ? "Saved as draft!" : (isNew ? "Post created!" : "Post updated!") });
+      navigate("/admin/blog");
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (isNew) return;
+      const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin_blog"] });
-      qc.invalidateQueries({ queryKey: ["blog_posts"] });
-      toast({ title: isNew ? "Post created!" : "Post updated!" });
+      toast({ title: "Post deleted" });
       navigate("/admin/blog");
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
