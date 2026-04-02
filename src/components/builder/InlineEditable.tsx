@@ -14,7 +14,8 @@ interface Props {
  * Inline editable text component for the builder canvas.
  * Click to select block, double-click to edit text inline.
  */
-const InlineEditable = ({ blockId, propKey, value, tag: Tag = 'span', className, style }: Props) => {
+const InlineEditable = ({ blockId, propKey, value, tag = 'span', className, style }: Props) => {
+  const Tag = tag as any;
   const { state, dispatch } = useBuilder();
   const [editing, setEditing] = useState(false);
   const ref = useRef<HTMLElement>(null);
