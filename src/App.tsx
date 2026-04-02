@@ -88,6 +88,7 @@ const App = () => (
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/reset-password" element={<AdminResetPassword />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="settings" element={<AdminSettings />} />
