@@ -7,8 +7,7 @@ import { useBuilder } from '@/hooks/useBuilderState';
 import { getBlockDefinition, getBlockIcon } from './block-registry';
 import { CONTAINER_TYPES } from '@/types/visual-builder';
 import type { LayoutNode, DeviceMode } from '@/types/visual-builder';
-import { Link } from 'react-router-dom';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import InlineEditable from './InlineEditable';
 
 // ─── Resolve responsive styles ─────────────────────────
 const getResponsiveStyles = (node: LayoutNode, device: DeviceMode): React.CSSProperties => {
