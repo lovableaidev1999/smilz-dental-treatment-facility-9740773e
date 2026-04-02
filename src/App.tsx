@@ -42,6 +42,8 @@ import AdminReviews from "@/pages/admin/AdminReviews";
 import AdminMigrateImages from "@/pages/admin/AdminMigrateImages";
 import AdminHeaderFooter from "@/pages/admin/AdminHeaderFooter";
 import AdminResetPassword from "@/pages/admin/AdminResetPassword";
+import AdminPageBuilder from "@/pages/admin/AdminPageBuilder";
+import AdminPageLayouts from "@/pages/admin/AdminPageLayouts";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
@@ -146,7 +148,11 @@ const App = () => (
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="migrate" element={<AdminMigrateImages />} />
                 <Route path="header-footer" element={<AdminHeaderFooter />} />
+                <Route path="page-layouts" element={<AdminPageLayouts />} />
               </Route>
+              {/* Full-screen page builder (outside admin sidebar layout) */}
+              <Route path="/admin/page-builder/new" element={<AdminPageBuilder />} />
+              <Route path="/admin/page-builder/:id" element={<AdminPageBuilder />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
