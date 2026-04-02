@@ -393,10 +393,10 @@ const AdminBlogEdit = () => {
                 <label className="text-sm font-medium mb-1.5 block">Publish Date</label>
                 <Input type="date" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} />
               </div>
-              <Button onClick={() => saveMutation.mutate(false)} className="w-full gap-2" disabled={saveMutation.isPending}>
+              <Button onClick={() => saveMutation.mutate({ asDraft: false })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <Save className="h-4 w-4" /> {isNew ? "Create & Publish" : "Save & Publish"}
               </Button>
-              <Button variant="outline" onClick={() => saveMutation.mutate(true)} className="w-full gap-2" disabled={saveMutation.isPending}>
+              <Button variant="outline" onClick={() => saveMutation.mutate({ asDraft: true })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
               {!isNew && (
