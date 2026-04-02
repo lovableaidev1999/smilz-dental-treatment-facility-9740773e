@@ -2,7 +2,7 @@ import type { BlockDefinition, BlockType, LayoutNode } from '@/types/visual-buil
 import {
   Layout, Columns, Type, AlignLeft, ImageIcon, MousePointerClick,
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
-  HelpCircle, Newspaper, Briefcase, Mail, FileText,
+  HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
 } from 'lucide-react';
 
 const genId = () => `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -20,8 +20,18 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       backgroundImage: '',
       maxWidth: '1280px',
       fullWidth: false,
+      layoutMode: 'grid',
+      gridColumns: '1fr 1fr',
+      columnGap: '1.5rem',
+      rowGap: '1.5rem',
     },
     defaultChildren: [
+      {
+        id: genId(),
+        type: 'column',
+        props: { width: '100%' },
+        children: [],
+      },
       {
         id: genId(),
         type: 'column',
@@ -36,7 +46,26 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: 'Columns',
     category: 'layout',
     canHaveChildren: true,
-    defaultProps: { width: '50%' },
+    defaultProps: { width: '100%', verticalAlign: 'flex-start' },
+  },
+  {
+    type: 'grid',
+    label: 'Grid Layout',
+    icon: 'Grid3X3',
+    category: 'layout',
+    canHaveChildren: true,
+    defaultProps: {
+      gridRows: 2,
+      gridCols: 2,
+      columnGap: '1rem',
+      rowGap: '1rem',
+    },
+    defaultChildren: Array.from({ length: 4 }, () => ({
+      id: genId(),
+      type: 'column' as BlockType,
+      props: { width: '100%' },
+      children: [],
+    })),
   },
 
   // Basic
@@ -182,8 +211,27 @@ export const getBlocksByCategory = (category: BlockDefinition['category']) =>
 export const BLOCK_ICON_MAP: Record<string, React.FC<any>> = {
   Layout, Columns, Type, AlignLeft, ImageIcon, MousePointerClick,
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
-  HelpCircle, Newspaper, Briefcase, Mail, FileText,
+  HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
 };
 
 export const getBlockIcon = (def: BlockDefinition) =>
   BLOCK_ICON_MAP[def.icon] || FileText;
+
+// ─── Section Layout Presets ──────────────────────────────
+export interface LayoutPreset {
+  label: string;
+  icon: string;
+  gridColumns: string;
+  columnCount: number;
+}
+
+export const LAYOUT_PRESETS: LayoutPreset[] = [
+  { label: '1 Column', icon: '▬', gridColumns: '1fr', columnCount: 1 },
+  { label: '2 Columns', icon: '▬▬', gridColumns: '1fr 1fr', columnCount: 2 },
+  { label: '3 Columns', icon: '▬▬▬', gridColumns: '1fr 1fr 1fr', columnCount: 3 },
+  { label: '4 Columns', icon: '▬▬▬▬', gridColumns: '1fr 1fr 1fr 1fr', columnCount: 4 },
+  { label: '30 / 70', icon: '◂▸', gridColumns: '30% 70%', columnCount: 2 },
+  { label: '70 / 30', icon: '▸◂', gridColumns: '70% 30%', columnCount: 2 },
+  { label: '25 / 50 / 25', icon: '◂▬▸', gridColumns: '1fr 2fr 1fr', columnCount: 3 },
+  { label: '25 / 75', icon: '◁▷', gridColumns: '1fr 3fr', columnCount: 2 },
+];
