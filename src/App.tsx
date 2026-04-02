@@ -148,7 +148,11 @@ const App = () => (
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="migrate" element={<AdminMigrateImages />} />
                 <Route path="header-footer" element={<AdminHeaderFooter />} />
+                <Route path="page-layouts" element={<AdminPageLayouts />} />
               </Route>
+              {/* Full-screen page builder (outside admin sidebar layout) */}
+              <Route path="/admin/page-builder/new" element={<AdminPageBuilder />} />
+              <Route path="/admin/page-builder/:id" element={<AdminPageBuilder />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
