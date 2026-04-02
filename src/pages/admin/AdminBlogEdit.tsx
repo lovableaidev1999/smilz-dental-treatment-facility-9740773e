@@ -76,7 +76,8 @@ const BlogBuilderInner = ({ title, onBack, onSaveDraft, onPublish, isSaving }: {
     }
   };
 
-  const DragIcon = activeDragType ? getBlockIcon(activeDragType) : null;
+  const activeDef = activeDragType ? getBlockDefinition(activeDragType) : null;
+  const DragIcon = activeDef ? getBlockIcon(activeDef) : null;
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
