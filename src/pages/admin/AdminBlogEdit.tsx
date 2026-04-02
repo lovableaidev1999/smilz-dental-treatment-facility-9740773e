@@ -131,8 +131,13 @@ const AdminBlogEdit = () => {
                 <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} onBlur={autoSlug} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Slug</label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                <label className="text-sm font-medium mb-1.5 block">URL Slug <span className="text-destructive">*</span></label>
+                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-") })} placeholder="e.g. best-dental-implants-kolkata" className="font-mono text-sm" />
+                {form.slug && (
+                  <p className="text-xs text-muted-foreground mt-1.5 font-mono bg-secondary px-2 py-1 rounded">
+                    smilz.net/blog/<span className="text-primary font-semibold">{form.slug}</span>
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Excerpt</label>
