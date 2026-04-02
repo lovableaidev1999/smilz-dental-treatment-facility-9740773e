@@ -81,7 +81,7 @@ const PropertiesPanel = () => {
       {/* Content Props */}
       <div className="space-y-3">
         <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Content</p>
-        {renderContentProps(node, updateProp)}
+        {renderContentProps(node, updateProp, { onOpenMediaPicker: () => setShowMediaPicker(true) })}
       </div>
 
       <Separator />
