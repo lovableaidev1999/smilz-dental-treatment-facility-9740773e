@@ -12,13 +12,23 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
 import type { JSONContent } from "@tiptap/core";
-import type { LayoutNode } from "@/types/visual-builder";
-import { BuilderProvider } from "@/hooks/useBuilderState";
+import type { LayoutNode, BlockType } from "@/types/visual-builder";
+import { BuilderProvider, useBuilder } from "@/hooks/useBuilderState";
 import BuilderCanvas from "@/components/builder/BuilderCanvas";
 import BlockPalette from "@/components/builder/BlockPalette";
 import PropertiesPanel from "@/components/builder/PropertiesPanel";
-import BuilderTopBar from "@/components/builder/BuilderTopBar";
 import VisualRenderer from "@/components/builder/VisualRenderer";
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 const CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
