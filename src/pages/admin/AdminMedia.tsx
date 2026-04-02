@@ -31,10 +31,11 @@ const AdminMedia = () => {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       setUploading(true);
-      const ext = file.name.split(".").pop();
-      const path = `${folder}/${Date.now()}-${file.name}`;
+      // Compress image before upload
+      const { file: compressedFile } = await compress(file);
+      const path = `${folder}/${Date.now()}-${compressedFile.name}`;
 
-      const { error: uploadError } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from("media").upload(path, compressedFile, { upsert: true });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
