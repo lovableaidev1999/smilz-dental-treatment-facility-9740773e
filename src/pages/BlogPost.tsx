@@ -36,6 +36,14 @@ const BlogPost = () => {
         description={post.meta_description || post.excerpt}
         keywords={`${post.category}, dental blog Kolkata`}
         canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/blog/${post.slug}`}
+        type="article"
+        article={{
+          publishedTime: post.published_at,
+          modifiedTime: post.updated_at || post.published_at,
+          author: post.author,
+          section: post.category,
+        }}
+        ogImage={post.featured_image}
         breadcrumbs={[
           { name: "Home", url: links?.website ?? "https://www.smilz.net" },
           { name: "Insights", url: `${links?.website ?? "https://www.smilz.net"}/blog` },
