@@ -347,23 +347,7 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
       );
 
     case 'contact-form':
-      return (
-        <form key={key} className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={e => e.preventDefault()}>
-          {(node.props.fields || []).map((field: any, i: number) => (
-            <div key={i}>
-              <label className="block text-sm font-medium text-foreground mb-1">{field.label}</label>
-              {field.type === 'textarea' ? (
-                <textarea className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" rows={4} required={field.required} />
-              ) : (
-                <input type={field.type} className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" required={field.required} />
-              )}
-            </div>
-          ))}
-          <button type="submit" className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors">
-            {node.props.submitText || 'Submit'}
-          </button>
-        </form>
-      );
+      return <ContactFormWidget key={key} node={node} rClasses={rClasses} baseStyles={baseStyles} />;
 
     case 'icon-list':
       return (
