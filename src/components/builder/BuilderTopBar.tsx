@@ -1,6 +1,7 @@
 import { Monitor, Tablet, Smartphone, Save, Eye, Upload, ArrowLeft, Undo2, Redo2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBuilder } from '@/hooks/useBuilderState';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import type { DeviceMode } from '@/types/visual-builder';
 
 interface Props {
@@ -9,6 +10,10 @@ interface Props {
   onPublish: () => void;
   onPreview: () => void;
   onBack: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   saving: boolean;
 }
 
