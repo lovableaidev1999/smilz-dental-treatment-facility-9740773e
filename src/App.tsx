@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -41,6 +41,7 @@ import AdminGallery from "@/pages/admin/AdminGallery";
 import AdminReviews from "@/pages/admin/AdminReviews";
 import AdminMigrateImages from "@/pages/admin/AdminMigrateImages";
 import AdminHeaderFooter from "@/pages/admin/AdminHeaderFooter";
+import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
@@ -69,6 +70,33 @@ const FontApplier = () => {
   return null;
 };
 
+const RecoveryRouteHandler = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname === "/admin/reset-password") return;
+
+    const search = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.startsWith("#") ? location.hash.slice(1) : location.hash);
+    const isResetFlow = search.get("reset") === "1";
+    const hasRecoveryPayload = !!search.get("code") || (!!search.get("token_hash") && search.get("type") === "recovery") || (!!hash.get("access_token") && !!hash.get("refresh_token"));
+
+    if (isResetFlow && hasRecoveryPayload) {
+      navigate(
+        {
+          pathname: "/admin/reset-password",
+          search: location.search,
+          hash: location.hash,
+        },
+        { replace: true },
+      );
+    }
+  }, [location.hash, location.pathname, location.search, navigate]);
+
+  return null;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -80,6 +108,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <RecoveryRouteHandler />
             <Routes>
               {/* Public routes */}
               <Route element={<Layout />}>
@@ -103,6 +132,7 @@ const App = () => (
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/reset-password" element={<AdminResetPassword />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="settings" element={<AdminSettings />} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,14 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Mail, ArrowLeft } from "lucide-react";
 
-// Use published URL for password reset redirects (not localhost)
-const getRedirectUrl = () => {
+const PUBLISHED_ORIGIN = "https://smilz-dental-treatment-facility.lovable.app";
+
+const getPasswordResetRedirectUrl = () => {
   const origin = window.location.origin;
-  // If running on localhost or preview, use the published URL
-  if (origin.includes("localhost") || origin.includes("lovable.app")) {
-    return "https://smilz-dental-treatment-facility.lovable.app/admin/login";
+
+  if (
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1") ||
+    (origin.includes("lovable.app") && origin !== PUBLISHED_ORIGIN)
+  ) {
+    return `${PUBLISHED_ORIGIN}/?reset=1`;
   }
-  return `${origin}/admin/login`;
+
+  return `${origin}/?reset=1`;
 };
 
 const AdminLogin = () => {
@@ -21,37 +27,23 @@ const AdminLogin = () => {
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [mode, setMode] = useState<"login" | "forgot" | "reset">("login");
+  const [mode, setMode] = useState<"login" | "forgot">("login");
 
-  // Check URL hash for recovery tokens (handles redirect from email)
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes("type=recovery")) {
-      setMode("reset");
+    const search = new URLSearchParams(location.search);
+
+    if (search.get("reset") === "success") {
+      setMode("login");
       setError("");
-      setSuccess("");
+      setSuccess("Password updated successfully. Sign in with your new password.");
     }
-  }, [location]);
-
-  // Detect PASSWORD_RECOVERY event from the reset link
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setMode("reset");
-        setError("");
-        setSuccess("");
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+  }, [location.search]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
-  if (user && mode !== "reset") return <Navigate to="/admin" replace />;
+  if (user) return <Navigate to="/admin" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +61,7 @@ const AdminLogin = () => {
     setSuccess("");
     setSubmitting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getRedirectUrl(),
+      redirectTo: getPasswordResetRedirectUrl(),
     });
     if (error) {
       setError(error.message);
@@ -79,38 +71,8 @@ const AdminLogin = () => {
     setSubmitting(false);
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setSubmitting(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess("Password updated successfully! Redirecting...");
-      setTimeout(() => {
-        setMode("login");
-        setSuccess("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }, 2000);
-    }
-    setSubmitting(false);
-  };
-
-  const title = mode === "login" ? "Admin Login" : mode === "forgot" ? "Reset Password" : "Set New Password";
-  const subtitle = mode === "login" ? "Smilz CMS Dashboard" : mode === "forgot" ? "Enter your email to receive a reset link" : "Enter your new password below";
+  const title = mode === "login" ? "Admin Login" : "Reset Password";
+  const subtitle = mode === "login" ? "Smilz CMS Dashboard" : "Enter your email to receive a reset link";
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -126,6 +88,7 @@ const AdminLogin = () => {
         {mode === "login" && (
           <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-6 shadow-card border border-border space-y-4">
             {error && <div className="bg-destructive/10 text-destructive text-sm px-4 py-2 rounded-lg">{error}</div>}
+            {success && <div className="bg-accent/50 text-accent-foreground text-sm px-4 py-2 rounded-lg">{success}</div>}
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
               <div className="relative">
@@ -169,29 +132,6 @@ const AdminLogin = () => {
           </form>
         )}
 
-        {mode === "reset" && (
-          <form onSubmit={handleResetPassword} className="bg-card rounded-2xl p-6 shadow-card border border-border space-y-4">
-            {error && <div className="bg-destructive/10 text-destructive text-sm px-4 py-2 rounded-lg">{error}</div>}
-            {success && <div className="bg-accent/50 text-accent-foreground text-sm px-4 py-2 rounded-lg">{success}</div>}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="pl-10" placeholder="••••••••" />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10" placeholder="••••••••" />
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={submitting || !!success}>
-              {submitting ? "Updating..." : "Update Password"}
-            </Button>
-          </form>
-        )}
       </div>
     </div>
   );
