@@ -240,7 +240,7 @@ const AdminBlogEdit = () => {
                   </button>
                   <button
                     onClick={() => setEditorMode("visual")}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${editorMode === "visual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${(editorMode as string) === "visual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     <LayoutGrid className="h-3 w-3" /> Visual Builder
                   </button>
