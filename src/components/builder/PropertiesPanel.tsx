@@ -368,10 +368,6 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
           <PropField label="Rows" value={String(props.gridRows)} onChange={v => updateProp('gridRows', parseInt(v) || 2)} />
           <PropField label="Column Gap" value={props.columnGap} onChange={v => updateProp('columnGap', v)} placeholder="e.g. 1rem" />
           <PropField label="Row Gap" value={props.rowGap} onChange={v => updateProp('rowGap', v)} placeholder="e.g. 1rem" />
-          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
-            // Add a new cell (column) to the grid
-            const { dispatch } = useBuilder();
-          }}>+ Add Cell</Button>
         </>
       );
 
