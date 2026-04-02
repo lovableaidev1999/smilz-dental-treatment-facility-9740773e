@@ -80,9 +80,13 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
       };
       return (
         <div style={{ textAlign: props.align || 'left' }}>
-          <span className={`inline-block px-6 py-2.5 rounded-lg font-semibold text-sm ${styles[props.style] || styles.primary}`}>
-            {props.text}
-          </span>
+          <InlineEditable
+            blockId={node.id}
+            propKey="text"
+            value={props.text}
+            tag="span"
+            className={`inline-block px-6 py-2.5 rounded-lg font-semibold text-sm ${styles[props.style] || styles.primary}`}
+          />
         </div>
       );
     }
