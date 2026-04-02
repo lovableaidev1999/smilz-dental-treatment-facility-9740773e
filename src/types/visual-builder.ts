@@ -85,7 +85,9 @@ export type BuilderAction =
   | { type: 'HOVER_BLOCK'; payload: string | null }
   | { type: 'SET_DEVICE'; payload: DeviceMode }
   | { type: 'TOGGLE_LAYERS' }
-  | { type: 'MARK_SAVED' };
+  | { type: 'MARK_SAVED' }
+  | { type: 'COPY_BLOCK'; payload: string }
+  | { type: 'PASTE_BLOCK'; payload: { parentId: string | null; index?: number } };
 
 // ─── Block Definition (registry) ────────────────────────
 export interface BlockDefinition {
