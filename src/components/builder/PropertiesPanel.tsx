@@ -212,7 +212,7 @@ const PropField = ({ label, value, onChange, placeholder, multiline }: {
 );
 
 // Render content-specific props per block type
-function renderContentProps(node: any, updateProp: (k: string, v: any) => void) {
+function renderContentProps(node: any, updateProp: (k: string, v: any) => void, extra?: { onOpenMediaPicker?: () => void }) {
   const { type, props } = node;
 
   switch (type) {
