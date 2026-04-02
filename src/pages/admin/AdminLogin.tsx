@@ -16,10 +16,10 @@ const getPasswordResetRedirectUrl = () => {
     origin.includes("127.0.0.1") ||
     (origin.includes("lovable.app") && origin !== PUBLISHED_ORIGIN)
   ) {
-    return `${PUBLISHED_ORIGIN}/?reset=1`;
+    return `${PUBLISHED_ORIGIN}/admin/reset-password`;
   }
 
-  return `${origin}/?reset=1`;
+  return `${origin}/admin/reset-password`;
 };
 
 const AdminLogin = () => {
