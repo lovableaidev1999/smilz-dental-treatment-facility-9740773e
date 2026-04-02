@@ -2,7 +2,7 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Settings, FileText, Stethoscope, Image,
-  Layers, LogOut, Menu, X, Star, ChevronLeft
+  Layers, LogOut, Menu, X, Star, ChevronLeft, PanelTop
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
