@@ -205,7 +205,7 @@ const AdminBlogEdit = () => {
   }, [post]);
 
   const saveMutation = useMutation({
-    mutationFn: async (asDraft?: boolean) => {
+    mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       const isPublished = asDraft === true ? false : form.is_published;
       const payload: any = {
@@ -218,6 +218,10 @@ const AdminBlogEdit = () => {
         content_json: contentJson,
         content: legacyHtml || "",
       };
+      // Include visual layout if provided (from visual builder mode)
+      if (visualLayoutJson) {
+        payload.visual_layout_json = visualLayoutJson;
+      }
       if (isNew) {
         payload.created_at = new Date().toISOString();
         const { error } = await supabase.from("blog_posts").insert(payload);
@@ -264,8 +268,10 @@ const AdminBlogEdit = () => {
         <BlogBuilderInner
           title={form.title}
           onBack={() => setEditorMode("blocks")}
-          onSaveDraft={() => saveMutation.mutate(true)}
-          onPublish={() => saveMutation.mutate(false)}
+          onSave={(layout, asDraft) => {
+            setVisualLayout(layout);
+            saveMutation.mutate({ asDraft, visualLayoutJson: layout });
+          }}
           isSaving={saveMutation.isPending}
         />
       </BuilderProvider>
