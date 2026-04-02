@@ -2,6 +2,7 @@
 export type BlockType =
   | 'section'
   | 'column'
+  | 'grid'
   | 'heading'
   | 'text'
   | 'image'
