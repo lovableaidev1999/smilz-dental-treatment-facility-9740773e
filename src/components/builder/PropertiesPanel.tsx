@@ -194,6 +194,13 @@ const PropertiesPanel = () => {
           </div>
         </div>
       </div>
+
+      {/* Media Picker for image blocks */}
+      <MediaPickerDialog
+        open={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={(url) => updateProp('src', url)}
+      />
     </div>
   );
 };
