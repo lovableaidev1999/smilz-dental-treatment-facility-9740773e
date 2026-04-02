@@ -41,12 +41,12 @@ const AdminMedia = () => {
       const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
 
       const { error: dbError } = await supabase.from("media_library").insert({
-        file_name: file.name,
+        file_name: compressedFile.name,
         file_url: urlData.publicUrl,
-        file_type: file.type.startsWith("image") ? "image" : "file",
-        alt_text: file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+        file_type: compressedFile.type.startsWith("image") ? "image" : "file",
+        alt_text: compressedFile.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
         folder,
-        file_size: file.size,
+        file_size: compressedFile.size,
       });
       if (dbError) console.warn("Could not save to media_library:", dbError.message);
 
