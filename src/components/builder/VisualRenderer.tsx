@@ -459,7 +459,24 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 const VisualRenderer = ({ layout, className }: Props) => {
   return (
     <div className={className}>
-      {layout.map((node, i) => renderNode(node, i))}
+      {layout.map((node, i) => {
+        const rendered = renderNode(node, i);
+        if (!rendered) return null;
+        const hasAnimation = node.props?.animation || node.props?.hoverEffect;
+        if (hasAnimation) {
+          return (
+            <AnimatedBlock
+              key={node.id}
+              animation={node.props.animation}
+              delay={node.props.animationDelay}
+              hoverEffect={node.props.hoverEffect}
+            >
+              {rendered}
+            </AnimatedBlock>
+          );
+        }
+        return rendered;
+      })}
     </div>
   );
 };
