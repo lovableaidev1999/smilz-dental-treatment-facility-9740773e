@@ -74,7 +74,11 @@ const BlogPost = () => {
         <div className="container-narrow mx-auto max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             {post.featured_image && <img src={post.featured_image} alt={`${post.title} - dental health article by ${post.author || "Dr. Dibyendu Dutta"}`} className="w-full rounded-2xl mb-8 shadow-card" loading="lazy" width={800} height={450} />}
-            <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: post.content }} />
+            {post.content_json ? (
+              <BlockRenderer content={post.content_json} className="mb-8" />
+            ) : (
+              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: post.content }} />
+            )}
             {post.tags && post.tags.length > 0 && (
               <div className="mt-10 pt-6 border-t border-border">
                 <p className="text-sm font-medium text-foreground mb-3">Tags:</p>
