@@ -5,7 +5,7 @@ interface Props {
   blockId: string;
   propKey: string;
   value: string;
-  tag?: keyof JSX.IntrinsicElements;
+  tag?: string;
   className?: string;
   style?: React.CSSProperties;
 }
