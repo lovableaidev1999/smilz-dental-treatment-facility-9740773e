@@ -43,6 +43,22 @@ export interface SiteSettings {
     default_banner_image: string;
     footer_text: string;
   };
+  header: {
+    show_top_bar: boolean;
+    nav_links: { label: string; path: string }[];
+    cta_text: string;
+    cta_message: string;
+    logo_max_height: number;
+  };
+  footer: {
+    show_quick_links: boolean;
+    show_services: boolean;
+    show_contact: boolean;
+    quick_links: { label: string; path: string }[];
+    custom_copyright: string;
+    layout: "standard" | "minimal" | "centered";
+    show_social_icons: boolean;
+  };
   coordinates: {
     lat: number;
     lng: number;
