@@ -110,9 +110,9 @@ const AdminMedia = () => {
             <option value="gallery">Gallery</option>
             <option value="banners">Banners</option>
           </select>
-          <Button onClick={() => fileRef.current?.click()} className="gap-2" disabled={uploading}>
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Upload
+          <Button onClick={() => fileRef.current?.click()} className="gap-2" disabled={uploading || isCompressing}>
+            {(uploading || isCompressing) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {isCompressing ? "Compressing..." : "Upload"}
           </Button>
           <input ref={fileRef} type="file" multiple accept="image/*,video/*,.pdf" className="hidden" onChange={handleFileChange} />
         </div>
