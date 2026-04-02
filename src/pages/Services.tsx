@@ -111,7 +111,7 @@ const ServicesPage = () => {
                 >
                   <Link
                     to={`/services/${service.slug}`}
-                    className="group block bg-card rounded-2xl shadow-card hover:shadow-hover transition-all duration-300 h-full border border-border hover:border-primary/30 overflow-hidden"
+                    className="group block bg-card rounded-2xl shadow-card hover:shadow-hover hover:-translate-y-1.5 hover:border-primary/30 transition-all duration-300 h-full border border-border overflow-hidden"
                   >
                     {service.featured_image && (
                       <div className="aspect-[4/3] overflow-hidden">

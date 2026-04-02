@@ -11,14 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-dental.jpg";
 import doctorImg from "@/assets/doctor.jpg";
 
-const serviceIcons: Record<string, string> = {
-  "dental-implants": "🦷",
-  "root-canal": "🔬",
-  "orthodontics": "😬",
-  "smile-designing": "✨",
-  "tooth-whitening": "🌟",
-  "scaling-polishing": "🪥",
-};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -116,8 +108,12 @@ const Home = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {(services ?? []).map((service, i) => (
                 <motion.div key={service.slug} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeUp}>
-                  <Link to={`/services/${service.slug}`} className="group block bg-card rounded-xl p-6 shadow-card hover:shadow-hover transition-all duration-300 h-full">
-                    <div className="text-4xl mb-4">{serviceIcons[service.slug] ?? "🦷"}</div>
+                  <Link to={`/services/${service.slug}`} className="group block bg-card rounded-xl p-6 shadow-card hover:shadow-hover hover:-translate-y-1.5 hover:border-primary/20 border border-transparent transition-all duration-300 h-full">
+                    {service.featured_image ? (
+                      <img src={service.featured_image} alt={service.title} className="h-10 w-10 object-contain mb-4 rounded" loading="lazy" />
+                    ) : (
+                      <div className="text-4xl mb-4">{service.icon ?? "🦷"}</div>
+                    )}
                     <h3 className="text-lg font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-2">{service.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{service.short_desc}</p>
                     <span className="text-primary text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">Learn More <ChevronRight className="h-4 w-4" /></span>
