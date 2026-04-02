@@ -161,24 +161,43 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
         />
 
         <div className="flex-1 flex overflow-hidden">
-          <div className="w-56 border-r border-border bg-card shrink-0 overflow-hidden flex flex-col">
-            <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-              <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0">
-                <TabsTrigger value="blocks" className="flex-1 rounded-none text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <Blocks className="h-3.5 w-3.5 mr-1" /> Blocks
-                </TabsTrigger>
-                <TabsTrigger value="layers" className="flex-1 rounded-none text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <Layers className="h-3.5 w-3.5 mr-1" /> Layers
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="blocks" className="flex-1 overflow-auto mt-0">
-                <BlockPalette />
-              </TabsContent>
-              <TabsContent value="layers" className="flex-1 overflow-auto mt-0">
-                <LayersPanel />
-              </TabsContent>
-            </Tabs>
-          </div>
+          {/* Collapsible left panel */}
+          {leftPanelOpen ? (
+            <div className="w-56 border-r border-border bg-card shrink-0 overflow-hidden flex flex-col">
+              <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
+                <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0">
+                  <TabsTrigger value="blocks" className="flex-1 rounded-none text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                    <Blocks className="h-3.5 w-3.5 mr-1" /> Blocks
+                  </TabsTrigger>
+                  <TabsTrigger value="layers" className="flex-1 rounded-none text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                    <Layers className="h-3.5 w-3.5 mr-1" /> Layers
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="blocks" className="flex-1 overflow-auto mt-0">
+                  <BlockPalette />
+                </TabsContent>
+                <TabsContent value="layers" className="flex-1 overflow-auto mt-0">
+                  <LayersPanel />
+                </TabsContent>
+              </Tabs>
+              <button
+                onClick={() => setLeftPanelOpen(false)}
+                className="flex items-center justify-center gap-1 py-2 border-t border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <PanelLeftClose className="h-3.5 w-3.5" /> Collapse
+              </button>
+            </div>
+          ) : (
+            <div className="border-r border-border bg-card shrink-0 flex flex-col items-center py-2 px-1 gap-1">
+              <button
+                onClick={() => setLeftPanelOpen(true)}
+                className="p-2 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                title="Expand panel"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
           <BuilderCanvas />
 
