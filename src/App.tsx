@@ -32,7 +32,6 @@ import AdminBlogEdit from "@/pages/admin/AdminBlogEdit";
 import AdminMedia from "@/pages/admin/AdminMedia";
 import AdminGallery from "@/pages/admin/AdminGallery";
 import AdminReviews from "@/pages/admin/AdminReviews";
-import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
@@ -88,7 +87,6 @@ const App = () => (
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/reset-password" element={<AdminResetPassword />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="settings" element={<AdminSettings />} />
