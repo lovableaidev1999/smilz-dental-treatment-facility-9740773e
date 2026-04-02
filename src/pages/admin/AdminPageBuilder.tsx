@@ -21,7 +21,7 @@ import LayersPanel from '@/components/builder/LayersPanel';
 import BuilderCanvas from '@/components/builder/BuilderCanvas';
 import PropertiesPanel from '@/components/builder/PropertiesPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Blocks, Layers } from 'lucide-react';
+import { Blocks, Layers, PanelLeftClose, PanelLeft } from 'lucide-react';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
