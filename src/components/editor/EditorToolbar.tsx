@@ -1,0 +1,155 @@
+import { type Editor } from "@tiptap/react";
+import { Button } from "@/components/ui/button";
+import {
+  Bold, Italic, Strikethrough, List, ListOrdered, Heading1, Heading2, Heading3,
+  Link, Quote, Minus, Undo, Redo, ImagePlus, MousePointerClick, HelpCircle,
+} from "lucide-react";
+import { useState } from "react";
+
+interface Props {
+  editor: Editor;
+}
+
+const ToolBtn = ({
+  active,
+  onClick,
+  children,
+  title,
+}: {
+  active?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  title: string;
+}) => (
+  <Button
+    type="button"
+    variant={active ? "secondary" : "ghost"}
+    size="icon"
+    className="h-8 w-8"
+    onClick={onClick}
+    title={title}
+  >
+    {children}
+  </Button>
+);
+
+const EditorToolbar = ({ editor }: Props) => {
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+
+  const setLink = () => {
+    if (linkUrl) {
+      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl, target: "_blank" }).run();
+    } else {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    }
+    setShowLinkInput(false);
+    setLinkUrl("");
+  };
+
+  const insertBlock = (type: string) => {
+    const chain = editor.chain().focus();
+    switch (type) {
+      case "media":
+        chain.insertContent({ type: "mediaBlock", attrs: { src: "", alt: "", caption: "" } }).run();
+        break;
+      case "cta":
+        chain.insertContent({ type: "ctaBlock", attrs: { text: "Book Appointment", url: "/contact", style: "navy" } }).run();
+        break;
+      case "faq":
+        chain.insertContent({ type: "faqBlock", attrs: { items: [{ question: "", answer: "" }] } }).run();
+        break;
+    }
+  };
+
+  return (
+    <div className="border-b border-border bg-card px-2 py-1.5 flex flex-wrap items-center gap-0.5">
+      {/* Text formatting */}
+      <ToolBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold">
+        <Bold className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Italic">
+        <Italic className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
+        <Strikethrough className="h-4 w-4" />
+      </ToolBtn>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Headings */}
+      <ToolBtn active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} title="Heading 1">
+        <Heading1 className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Heading 2">
+        <Heading2 className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="Heading 3">
+        <Heading3 className="h-4 w-4" />
+      </ToolBtn>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Lists */}
+      <ToolBtn active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Bullet List">
+        <List className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Numbered List">
+        <ListOrdered className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Blockquote">
+        <Quote className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
+        <Minus className="h-4 w-4" />
+      </ToolBtn>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Link */}
+      <div className="relative">
+        <ToolBtn active={editor.isActive("link")} onClick={() => setShowLinkInput(!showLinkInput)} title="Link">
+          <Link className="h-4 w-4" />
+        </ToolBtn>
+        {showLinkInput && (
+          <div className="absolute top-full left-0 mt-1 z-50 bg-card border border-border rounded-lg shadow-elevated p-2 flex gap-2">
+            <input
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://..."
+              className="text-xs px-2 py-1 border border-input rounded bg-background w-48"
+              onKeyDown={(e) => e.key === "Enter" && setLink()}
+              autoFocus
+            />
+            <Button size="sm" className="h-7 text-xs" onClick={setLink}>Set</Button>
+          </div>
+        )}
+      </div>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Dental Blocks */}
+      <ToolBtn onClick={() => insertBlock("media")} title="Insert Media Block">
+        <ImagePlus className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn onClick={() => insertBlock("cta")} title="Insert CTA Block">
+        <MousePointerClick className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn onClick={() => insertBlock("faq")} title="Insert FAQ Block">
+        <HelpCircle className="h-4 w-4" />
+      </ToolBtn>
+
+      <div className="flex-1" />
+
+      {/* Undo / Redo */}
+      <ToolBtn onClick={() => editor.chain().focus().undo().run()} title="Undo">
+        <Undo className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().redo().run()} title="Redo">
+        <Redo className="h-4 w-4" />
+      </ToolBtn>
+    </div>
+  );
+};
+
+export default EditorToolbar;
