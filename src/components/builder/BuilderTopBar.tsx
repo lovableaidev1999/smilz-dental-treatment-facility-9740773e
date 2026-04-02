@@ -23,7 +23,7 @@ const devices: { mode: DeviceMode; icon: React.FC<any>; label: string; width: st
   { mode: 'mobile', icon: Smartphone, label: 'Mobile', width: '375px' },
 ];
 
-const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, saving }: Props) => {
+const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, onUndo, onRedo, canUndo, canRedo, saving }: Props) => {
   const { state, dispatch } = useBuilder();
 
   return (
