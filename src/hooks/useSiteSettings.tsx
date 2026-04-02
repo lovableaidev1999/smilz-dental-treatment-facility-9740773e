@@ -72,6 +72,37 @@ const DEFAULT_SETTINGS: SiteSettings = {
   links: { website: "https://www.smilz.net", google_maps_url: "https://maps.google.com/?cid=5056757662094737709", facebook: "", instagram: "", youtube: "" },
   seo: { default_title: "Best Dental Clinic in Garia, South Kolkata", default_description: "Smilz Dental Treatment Facility - Trusted dental clinic in Garia Park, Kolkata since 1999.", default_keywords: "dental clinic Garia Kolkata, dentist South Kolkata" },
   appearance: { font_family: "Poppins", logo_url: "", default_banner_image: "", footer_text: "" },
+  header: {
+    show_top_bar: true,
+    nav_links: [
+      { label: "Home", path: "/" },
+      { label: "Services", path: "/services" },
+      { label: "About Us", path: "/about" },
+      { label: "Gallery", path: "/gallery" },
+      { label: "Insights", path: "/blog" },
+      { label: "Contact", path: "/contact" },
+    ],
+    cta_text: "Book Appointment",
+    cta_message: "Hi, I would like to book an appointment.",
+    logo_max_height: 48,
+  },
+  footer: {
+    show_quick_links: true,
+    show_services: true,
+    show_contact: true,
+    quick_links: [
+      { label: "Home", path: "/" },
+      { label: "About Us", path: "/about" },
+      { label: "Services", path: "/services" },
+      { label: "Gallery", path: "/gallery" },
+      { label: "Blog", path: "/blog" },
+      { label: "Contact", path: "/contact" },
+      { label: "Referral Registration", path: "/referral" },
+    ],
+    custom_copyright: "",
+    layout: "standard",
+    show_social_icons: true,
+  },
   coordinates: { lat: 22.4625, lng: 88.3942 },
 };
 
