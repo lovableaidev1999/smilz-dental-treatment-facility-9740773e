@@ -246,18 +246,22 @@ const AdminBlogEdit = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader><CardTitle>Publish</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} className="rounded" />
-                <label className="text-sm">Published</label>
-              </div>
+            <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Publish Date</label>
                 <Input type="date" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} />
               </div>
-              <Button onClick={() => saveMutation.mutate()} className="w-full gap-2" disabled={saveMutation.isPending}>
-                <Save className="h-4 w-4" /> {isNew ? "Create Post" : "Save & Publish"}
+              <Button onClick={() => saveMutation.mutate(false)} className="w-full gap-2" disabled={saveMutation.isPending}>
+                <Save className="h-4 w-4" /> {isNew ? "Create & Publish" : "Save & Publish"}
               </Button>
+              <Button variant="outline" onClick={() => saveMutation.mutate(true)} className="w-full gap-2" disabled={saveMutation.isPending}>
+                <FileText className="h-4 w-4" /> Save as Draft
+              </Button>
+              {!isNew && (
+                <Button variant="destructive" onClick={() => { if (confirm("Delete this post permanently?")) deleteMutation.mutate(); }} className="w-full gap-2" disabled={deleteMutation.isPending}>
+                  <Trash2 className="h-4 w-4" /> Delete Post
+                </Button>
+              )}
             </CardContent>
           </Card>
 
