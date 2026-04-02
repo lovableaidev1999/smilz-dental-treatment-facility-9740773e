@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 const CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
@@ -30,6 +31,25 @@ const AdminBlogEdit = () => {
     published_at: new Date().toISOString().split("T")[0],
   });
   const [tagsInput, setTagsInput] = useState("");
+  const imgRef = useRef<HTMLInputElement>(null);
+  const { compress, isCompressing } = useImageUpload();
+
+  const handleFeaturedUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { file: compressed } = await compress(file);
+      const path = `blog/${Date.now()}-${compressed.name}`;
+      const { error } = await supabase.storage.from("media").upload(path, compressed, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("media").getPublicUrl(path);
+      setForm((p) => ({ ...p, featured_image: data.publicUrl }));
+      toast({ title: "Featured image uploaded & compressed!" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    e.target.value = "";
+  };
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["admin_blog_post", id],
@@ -162,8 +182,15 @@ const AdminBlogEdit = () => {
                 <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Featured Image URL</label>
-                <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} />
+                <label className="text-sm font-medium mb-1.5 block">Featured Image</label>
+                <div className="flex gap-2">
+                  <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} placeholder="URL or upload →" className="flex-1" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => imgRef.current?.click()} disabled={isCompressing}>
+                    {isCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
+                  <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={handleFeaturedUpload} />
+                </div>
+                {form.featured_image && <img src={form.featured_image} alt="Preview" className="mt-2 rounded-md max-h-32 object-cover" />}
               </div>
             </CardContent>
           </Card>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Trash2, Copy, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 const AdminMedia = () => {
   const qc = useQueryClient();
@@ -13,6 +14,7 @@ const AdminMedia = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [folder, setFolder] = useState("general");
+  const { compress, isCompressing } = useImageUpload();
 
   const { data: media, isLoading } = useQuery({
     queryKey: ["admin_media"],
@@ -29,21 +31,22 @@ const AdminMedia = () => {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       setUploading(true);
-      const ext = file.name.split(".").pop();
-      const path = `${folder}/${Date.now()}-${file.name}`;
+      // Compress image before upload
+      const { file: compressedFile } = await compress(file);
+      const path = `${folder}/${Date.now()}-${compressedFile.name}`;
 
-      const { error: uploadError } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from("media").upload(path, compressedFile, { upsert: true });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
 
       const { error: dbError } = await supabase.from("media_library").insert({
-        file_name: file.name,
+        file_name: compressedFile.name,
         file_url: urlData.publicUrl,
-        file_type: file.type.startsWith("image") ? "image" : "file",
-        alt_text: file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+        file_type: compressedFile.type.startsWith("image") ? "image" : "file",
+        alt_text: compressedFile.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
         folder,
-        file_size: file.size,
+        file_size: compressedFile.size,
       });
       if (dbError) console.warn("Could not save to media_library:", dbError.message);
 
@@ -107,9 +110,9 @@ const AdminMedia = () => {
             <option value="gallery">Gallery</option>
             <option value="banners">Banners</option>
           </select>
-          <Button onClick={() => fileRef.current?.click()} className="gap-2" disabled={uploading}>
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Upload
+          <Button onClick={() => fileRef.current?.click()} className="gap-2" disabled={uploading || isCompressing}>
+            {(uploading || isCompressing) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {isCompressing ? "Compressing..." : "Upload"}
           </Button>
           <input ref={fileRef} type="file" multiple accept="image/*,video/*,.pdf" className="hidden" onChange={handleFileChange} />
         </div>
