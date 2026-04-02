@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
-import { getBlockDefinition, getBlockIcon } from './block-registry';
+import { getBlockDefinition, getBlockIcon, LAYOUT_PRESETS } from './block-registry';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
