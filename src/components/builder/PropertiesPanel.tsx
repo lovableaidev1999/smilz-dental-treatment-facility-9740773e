@@ -15,6 +15,7 @@ import type { DeviceMode, ResponsiveProps } from '@/types/visual-builder';
 const PropertiesPanel = () => {
   const { state, dispatch, findNode } = useBuilder();
   const { selectedBlockId, deviceMode } = state;
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   if (!selectedBlockId) {
     return (
