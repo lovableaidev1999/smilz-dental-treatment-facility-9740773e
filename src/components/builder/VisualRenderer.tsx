@@ -1,0 +1,365 @@
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import type { LayoutNode, DeviceMode } from '@/types/visual-builder';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+
+interface Props {
+  layout: LayoutNode[];
+  className?: string;
+}
+
+// ─── Responsive styles ──────────────────────────────────
+// For public rendering we use desktop by default
+const getStyles = (node: LayoutNode): React.CSSProperties => {
+  const r = node.responsive?.desktop || {};
+  return {
+    padding: r.padding || undefined,
+    margin: r.margin || undefined,
+    fontSize: r.fontSize || undefined,
+    lineHeight: r.lineHeight || undefined,
+    textAlign: r.textAlign || undefined,
+    display: r.display || undefined,
+    gap: r.gap || undefined,
+    flexDirection: r.flexDirection as any || undefined,
+    alignItems: r.alignItems || undefined,
+    justifyContent: r.justifyContent || undefined,
+  };
+};
+
+// ─── Responsive CSS classes for tablet/mobile ───────────
+const getResponsiveClasses = (node: LayoutNode): string => {
+  const classes: string[] = [];
+  if (node.responsive?.tablet?.display === 'none') classes.push('md:hidden');
+  if (node.responsive?.mobile?.display === 'none') classes.push('max-md:hidden');
+  if (node.responsive?.desktop?.display === 'none') classes.push('lg:hidden');
+  return classes.join(' ');
+};
+
+// ─── Blog Loop Widget ──────────────────────────────────
+const BlogLoopWidget = ({ props }: { props: any }) => {
+  const { data: posts } = useQuery({
+    queryKey: ['blog_posts_loop', props.category, props.count],
+    queryFn: async () => {
+      let q = supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(props.count || 3);
+      if (props.category) q = q.eq('category', props.category);
+      const { data } = await q;
+      return data || [];
+    },
+  });
+
+  const cols = props.columns || 3;
+
+  return (
+    <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+      {(posts || []).map((post: any) => (
+        <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
+          <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow">
+            {props.showImage && post.featured_image && (
+              <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />
+            )}
+            <div className="p-4">
+              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
+              {props.showExcerpt && post.excerpt && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
+              )}
+              {props.showDate && post.published_at && (
+                <p className="text-xs text-muted-foreground mt-2">{new Date(post.published_at).toLocaleDateString()}</p>
+              )}
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+// ─── Service Loop Widget ────────────────────────────────
+const ServiceLoopWidget = ({ props }: { props: any }) => {
+  const { data: services } = useQuery({
+    queryKey: ['services_loop', props.count],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order')
+        .limit(props.count || 6);
+      return data || [];
+    },
+  });
+
+  const cols = props.columns || 3;
+
+  return (
+    <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+      {(services || []).map((svc: any) => (
+        <Link key={svc.id} to={`/services/${svc.slug}`} className="group block">
+          <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow">
+            {props.showImage && svc.image_url && (
+              <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />
+            )}
+            <div className="p-4">
+              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
+              {props.showDescription && svc.short_description && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>
+              )}
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+// ─── Recursive renderer ─────────────────────────────────
+const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
+  const key = `${node.type}-${node.id}`;
+  const baseStyles = getStyles(node);
+  const rClasses = getResponsiveClasses(node);
+
+  switch (node.type) {
+    case 'section': {
+      const sectionStyle: React.CSSProperties = {
+        ...baseStyles,
+        display: baseStyles.display === 'none' ? 'none' : 'flex',
+        flexDirection: baseStyles.flexDirection || 'row',
+        background: node.props.background || undefined,
+        backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      };
+      return (
+        <section key={key} className={`w-full ${rClasses}`} style={sectionStyle}>
+          <div
+            className="w-full mx-auto"
+            style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '1280px') }}
+          >
+            <div className="flex flex-wrap" style={{ gap: baseStyles.gap, alignItems: baseStyles.alignItems, justifyContent: baseStyles.justifyContent }}>
+              {node.children?.map((child, i) => renderNode(child, i))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    case 'column': {
+      const colStyle: React.CSSProperties = {
+        ...baseStyles,
+        width: node.props.width || '100%',
+        display: baseStyles.display === 'none' ? 'none' : 'flex',
+        flexDirection: 'column',
+      };
+      return (
+        <div key={key} className={`${rClasses}`} style={colStyle}>
+          {node.children?.map((child, i) => renderNode(child, i))}
+        </div>
+      );
+    }
+
+    case 'heading': {
+      const Tag = `h${node.props.level || 2}` as keyof JSX.IntrinsicElements;
+      const sizes: Record<number, string> = {
+        1: 'text-3xl md:text-4xl font-bold',
+        2: 'text-2xl md:text-3xl font-bold',
+        3: 'text-xl md:text-2xl font-semibold',
+      };
+      return (
+        <Tag
+          key={key}
+          className={`font-heading text-foreground ${sizes[node.props.level] || sizes[2]} ${rClasses}`}
+          style={{ ...baseStyles, color: node.props.color || undefined, textAlign: node.props.align || baseStyles.textAlign }}
+        >
+          {node.props.text}
+        </Tag>
+      );
+    }
+
+    case 'text':
+      return (
+        <p
+          key={key}
+          className={`text-muted-foreground leading-relaxed ${rClasses}`}
+          style={{ ...baseStyles, color: node.props.color || undefined, textAlign: node.props.align || baseStyles.textAlign }}
+        >
+          {node.props.text}
+        </p>
+      );
+
+    case 'image':
+      return node.props.src ? (
+        <figure key={key} className={rClasses} style={baseStyles}>
+          <img
+            src={node.props.src}
+            alt={node.props.alt || ''}
+            className="w-full object-cover"
+            style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit }}
+            loading="lazy"
+          />
+          {node.props.caption && (
+            <figcaption className="text-sm text-muted-foreground text-center mt-2 italic">{node.props.caption}</figcaption>
+          )}
+        </figure>
+      ) : null;
+
+    case 'button': {
+      const btnStyles: Record<string, string> = {
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        gold: 'bg-[hsl(40,80%,55%)] text-foreground hover:opacity-90',
+        outline: 'border-2 border-primary text-primary hover:bg-primary/10',
+      };
+      return (
+        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align || 'left' }}>
+          <Link
+            to={node.props.url || '/contact'}
+            className={`inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${
+              btnStyles[node.props.style] || btnStyles.primary
+            }`}
+          >
+            {node.props.text}
+          </Link>
+        </div>
+      );
+    }
+
+    case 'spacer':
+      return <div key={key} className={rClasses} style={{ ...baseStyles, height: node.props.height }} />;
+
+    case 'divider':
+      return (
+        <hr
+          key={key}
+          className={`border-border ${rClasses}`}
+          style={{
+            ...baseStyles,
+            borderColor: node.props.color || undefined,
+            borderWidth: node.props.thickness,
+            width: node.props.width,
+          }}
+        />
+      );
+
+    case 'blog-loop':
+      return <BlogLoopWidget key={key} props={node.props} />;
+
+    case 'service-loop':
+      return <ServiceLoopWidget key={key} props={node.props} />;
+
+    case 'faq': {
+      const items = node.props.items || [];
+      return (
+        <div key={key} className={rClasses} style={baseStyles}>
+          <Accordion type="single" collapsible className="w-full">
+            {items.map((item: { question: string; answer: string }, i: number) => (
+              <AccordionItem key={i} value={`faq-${node.id}-${i}`}>
+                <AccordionTrigger className="text-foreground font-medium text-left">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">{item.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: items
+                  .filter((it: any) => it.question && it.answer)
+                  .map((it: any) => ({
+                    '@type': 'Question',
+                    name: it.question,
+                    acceptedAnswer: { '@type': 'Answer', text: it.answer },
+                  })),
+              }),
+            }}
+          />
+        </div>
+      );
+    }
+
+    case 'testimonial':
+      return (
+        <blockquote key={key} className={`border-l-4 border-primary pl-4 my-4 ${rClasses}`} style={baseStyles}>
+          <p className="text-muted-foreground italic">"{node.props.quote}"</p>
+          <footer className="mt-2 text-sm font-medium text-foreground">
+            — {node.props.author}
+            {node.props.role && <span className="text-muted-foreground ml-1">({node.props.role})</span>}
+          </footer>
+        </blockquote>
+      );
+
+    case 'contact-form':
+      return (
+        <form key={key} className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={e => e.preventDefault()}>
+          {(node.props.fields || []).map((field: any, i: number) => (
+            <div key={i}>
+              <label className="block text-sm font-medium text-foreground mb-1">{field.label}</label>
+              {field.type === 'textarea' ? (
+                <textarea className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" rows={4} required={field.required} />
+              ) : (
+                <input type={field.type} className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" required={field.required} />
+              )}
+            </div>
+          ))}
+          <button type="submit" className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors">
+            {node.props.submitText || 'Submit'}
+          </button>
+        </form>
+      );
+
+    case 'icon-list':
+      return (
+        <ul key={key} className={`space-y-2 ${rClasses}`} style={baseStyles}>
+          {(node.props.items || []).map((item: any, i: number) => (
+            <li key={i} className="flex items-center gap-2 text-muted-foreground">
+              <span className="text-primary">✓</span>
+              <span>{item.text}</span>
+            </li>
+          ))}
+        </ul>
+      );
+
+    case 'html-embed':
+      return (
+        <div
+          key={key}
+          className={rClasses}
+          style={baseStyles}
+          dangerouslySetInnerHTML={{ __html: node.props.html || '' }}
+        />
+      );
+
+    case 'legacy-content':
+      return (
+        <div
+          key={key}
+          className={`prose prose-lg max-w-none ${rClasses}`}
+          style={baseStyles}
+          dangerouslySetInnerHTML={{ __html: node.props.html || '' }}
+        />
+      );
+
+    default:
+      return null;
+  }
+};
+
+const VisualRenderer = ({ layout, className }: Props) => {
+  return (
+    <div className={className}>
+      {layout.map((node, i) => renderNode(node, i))}
+    </div>
+  );
+};
+
+export default VisualRenderer;

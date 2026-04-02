@@ -1,0 +1,344 @@
+import { useBuilder } from '@/hooks/useBuilderState';
+import { getBlockDefinition, getBlockIcon } from './block-registry';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Trash2, Copy } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import type { DeviceMode, ResponsiveProps } from '@/types/visual-builder';
+
+const PropertiesPanel = () => {
+  const { state, dispatch, findNode } = useBuilder();
+  const { selectedBlockId, deviceMode } = state;
+
+  if (!selectedBlockId) {
+    return (
+      <div className="p-4 text-center text-muted-foreground text-xs">
+        <p>Select a block to edit its properties</p>
+      </div>
+    );
+  }
+
+  const node = findNode(selectedBlockId);
+  if (!node) return null;
+
+  const def = getBlockDefinition(node.type);
+  const Icon = def ? getBlockIcon(def) : null;
+
+  const updateProp = (key: string, value: any) => {
+    dispatch({ type: 'UPDATE_BLOCK_PROPS', payload: { blockId: selectedBlockId, props: { [key]: value } } });
+  };
+
+  const updateResponsive = (key: keyof ResponsiveProps, value: any) => {
+    dispatch({
+      type: 'UPDATE_RESPONSIVE',
+      payload: { blockId: selectedBlockId, device: deviceMode, props: { [key]: value } },
+    });
+  };
+
+  const responsiveValue = (key: keyof ResponsiveProps) =>
+    node.responsive?.[deviceMode]?.[key] ?? '';
+
+  return (
+    <div className="p-3 space-y-4 overflow-y-auto h-full">
+      {/* Block header */}
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className="h-4 w-4 text-primary" />}
+        <span className="text-sm font-semibold text-foreground">{def?.label || node.type}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}
+        >
+          <Copy className="h-3 w-3 mr-1" /> Duplicate
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}
+        >
+          <Trash2 className="h-3 w-3 mr-1" /> Delete
+        </Button>
+      </div>
+
+      <Separator />
+
+      {/* Content Props */}
+      <div className="space-y-3">
+        <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Content</p>
+        {renderContentProps(node, updateProp)}
+      </div>
+
+      <Separator />
+
+      {/* Responsive Style Props */}
+      <div className="space-y-3">
+        <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">
+          Style ({deviceMode})
+        </p>
+        <div className="space-y-2">
+          <PropField label="Padding" value={responsiveValue('padding')} onChange={v => updateResponsive('padding', v)} placeholder="e.g. 1rem 2rem" />
+          <PropField label="Margin" value={responsiveValue('margin')} onChange={v => updateResponsive('margin', v)} placeholder="e.g. 0 auto" />
+          <PropField label="Font Size" value={responsiveValue('fontSize')} onChange={v => updateResponsive('fontSize', v)} placeholder="e.g. 1.5rem" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Text Align</Label>
+            <Select value={responsiveValue('textAlign') as string || ''} onValueChange={v => updateResponsive('textAlign', v as any)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Left</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="right">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Visibility</Label>
+            <Select value={responsiveValue('display') as string || 'block'} onValueChange={v => updateResponsive('display', v as any)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="block">Visible</SelectItem>
+                <SelectItem value="none">Hidden</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {(node.type === 'section' || node.type === 'column') && (
+            <>
+              <PropField label="Gap" value={responsiveValue('gap')} onChange={v => updateResponsive('gap', v)} placeholder="e.g. 1rem" />
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Direction</Label>
+                <Select value={responsiveValue('flexDirection') as string || ''} onValueChange={v => updateResponsive('flexDirection', v as any)}>
+                  <SelectTrigger className="h-7 w-24 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="row">Row</SelectItem>
+                    <SelectItem value="column">Column</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Align Items</Label>
+                <Select value={responsiveValue('alignItems') as string || ''} onValueChange={v => updateResponsive('alignItems', v as any)}>
+                  <SelectTrigger className="h-7 w-24 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="flex-start">Start</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="flex-end">End</SelectItem>
+                    <SelectItem value="stretch">Stretch</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Justify</Label>
+                <Select value={responsiveValue('justifyContent') as string || ''} onValueChange={v => updateResponsive('justifyContent', v as any)}>
+                  <SelectTrigger className="h-7 w-24 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="flex-start">Start</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="flex-end">End</SelectItem>
+                    <SelectItem value="space-between">Space Between</SelectItem>
+                    <SelectItem value="space-around">Space Around</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Simple field helper
+const PropField = ({ label, value, onChange, placeholder, multiline }: {
+  label: string; value: any; onChange: (v: string) => void; placeholder?: string; multiline?: boolean;
+}) => (
+  <div className="space-y-1">
+    <Label className="text-xs">{label}</Label>
+    {multiline ? (
+      <Textarea value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="text-xs min-h-[60px]" />
+    ) : (
+      <Input value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="h-7 text-xs" />
+    )}
+  </div>
+);
+
+// Render content-specific props per block type
+function renderContentProps(node: any, updateProp: (k: string, v: any) => void) {
+  const { type, props } = node;
+
+  switch (type) {
+    case 'heading':
+      return (
+        <>
+          <PropField label="Text" value={props.text} onChange={v => updateProp('text', v)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Level</Label>
+            <Select value={String(props.level)} onValueChange={v => updateProp('level', parseInt(v))}>
+              <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">H1</SelectItem>
+                <SelectItem value="2">H2</SelectItem>
+                <SelectItem value="3">H3</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <PropField label="Color" value={props.color} onChange={v => updateProp('color', v)} placeholder="CSS color" />
+        </>
+      );
+
+    case 'text':
+      return (
+        <>
+          <PropField label="Text" value={props.text} onChange={v => updateProp('text', v)} multiline />
+          <PropField label="Color" value={props.color} onChange={v => updateProp('color', v)} placeholder="CSS color" />
+        </>
+      );
+
+    case 'image':
+      return (
+        <>
+          <PropField label="Image URL" value={props.src} onChange={v => updateProp('src', v)} placeholder="https://..." />
+          <PropField label="Alt Text" value={props.alt} onChange={v => updateProp('alt', v)} />
+          <PropField label="Caption" value={props.caption} onChange={v => updateProp('caption', v)} />
+          <PropField label="Border Radius" value={props.borderRadius} onChange={v => updateProp('borderRadius', v)} />
+        </>
+      );
+
+    case 'button':
+      return (
+        <>
+          <PropField label="Text" value={props.text} onChange={v => updateProp('text', v)} />
+          <PropField label="URL" value={props.url} onChange={v => updateProp('url', v)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Style</Label>
+            <Select value={props.style} onValueChange={v => updateProp('style', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="primary">Navy</SelectItem>
+                <SelectItem value="gold">Gold</SelectItem>
+                <SelectItem value="outline">Outline</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      );
+
+    case 'spacer':
+      return <PropField label="Height" value={props.height} onChange={v => updateProp('height', v)} placeholder="e.g. 40px" />;
+
+    case 'divider':
+      return (
+        <>
+          <PropField label="Thickness" value={props.thickness} onChange={v => updateProp('thickness', v)} />
+          <PropField label="Width" value={props.width} onChange={v => updateProp('width', v)} />
+          <PropField label="Color" value={props.color} onChange={v => updateProp('color', v)} placeholder="CSS color" />
+        </>
+      );
+
+    case 'section':
+      return (
+        <>
+          <PropField label="Background" value={props.background} onChange={v => updateProp('background', v)} placeholder="CSS color or gradient" />
+          <PropField label="Background Image" value={props.backgroundImage} onChange={v => updateProp('backgroundImage', v)} placeholder="URL" />
+          <PropField label="Max Width" value={props.maxWidth} onChange={v => updateProp('maxWidth', v)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Full Width</Label>
+            <Switch checked={props.fullWidth} onCheckedChange={v => updateProp('fullWidth', v)} />
+          </div>
+        </>
+      );
+
+    case 'column':
+      return <PropField label="Width" value={props.width} onChange={v => updateProp('width', v)} placeholder="e.g. 50% or 1fr" />;
+
+    case 'blog-loop':
+      return (
+        <>
+          <PropField label="Count" value={String(props.count)} onChange={v => updateProp('count', parseInt(v) || 3)} />
+          <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <PropField label="Category" value={props.category} onChange={v => updateProp('category', v)} placeholder="Filter by category" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Image</Label>
+            <Switch checked={props.showImage} onCheckedChange={v => updateProp('showImage', v)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Excerpt</Label>
+            <Switch checked={props.showExcerpt} onCheckedChange={v => updateProp('showExcerpt', v)} />
+          </div>
+        </>
+      );
+
+    case 'service-loop':
+      return (
+        <>
+          <PropField label="Count" value={String(props.count)} onChange={v => updateProp('count', parseInt(v) || 6)} />
+          <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Image</Label>
+            <Switch checked={props.showImage} onCheckedChange={v => updateProp('showImage', v)} />
+          </div>
+        </>
+      );
+
+    case 'faq':
+      return (
+        <div className="space-y-2">
+          {(props.items || []).map((item: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <PropField label={`Q${i + 1}`} value={item.question} onChange={v => {
+                const items = [...props.items];
+                items[i] = { ...items[i], question: v };
+                updateProp('items', items);
+              }} />
+              <PropField label={`A${i + 1}`} value={item.answer} onChange={v => {
+                const items = [...props.items];
+                items[i] = { ...items[i], answer: v };
+                updateProp('items', items);
+              }} multiline />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                const items = props.items.filter((_: any, idx: number) => idx !== i);
+                updateProp('items', items);
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('items', [...(props.items || []), { question: '', answer: '' }]);
+          }}>+ Add FAQ Item</Button>
+        </div>
+      );
+
+    case 'testimonial':
+      return (
+        <>
+          <PropField label="Quote" value={props.quote} onChange={v => updateProp('quote', v)} multiline />
+          <PropField label="Author" value={props.author} onChange={v => updateProp('author', v)} />
+          <PropField label="Role" value={props.role} onChange={v => updateProp('role', v)} />
+        </>
+      );
+
+    case 'html-embed':
+      return <PropField label="HTML" value={props.html} onChange={v => updateProp('html', v)} multiline />;
+
+    case 'legacy-content':
+      return (
+        <>
+          <PropField label="HTML Content" value={props.html} onChange={v => updateProp('html', v)} multiline />
+          <PropField label="Source Table" value={props.sourceTable} onChange={v => updateProp('sourceTable', v)} placeholder="e.g. blog_posts" />
+          <PropField label="Source ID" value={props.sourceId} onChange={v => updateProp('sourceId', v)} />
+        </>
+      );
+
+    default:
+      return <p className="text-xs text-muted-foreground">No editable properties</p>;
+  }
+}
+
+export default PropertiesPanel;
