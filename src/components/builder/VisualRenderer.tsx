@@ -240,6 +240,48 @@ const ContactFormWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; r
   );
 };
 
+// ─── Tabs Widget (needs hooks) ──────────────────────────
+const TabsWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
+  const [activeTab, setActiveTab] = useState(0);
+  const items = node.props.items || [];
+  return (
+    <div className={rClasses} style={baseStyles}>
+      <div className="flex border-b border-border">
+        {items.map((item: any, i: number) => (
+          <button key={i} onClick={() => setActiveTab(i)} className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${i === activeTab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+            {item.title}
+          </button>
+        ))}
+      </div>
+      <div className="p-4 text-muted-foreground">{items[activeTab]?.content}</div>
+    </div>
+  );
+};
+
+// ─── Image Carousel Widget (needs hooks) ────────────────
+const ImageCarouselWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
+  const [current, setCurrent] = useState(0);
+  const imgs = (node.props.images || []).filter((img: any) => img.src);
+  useEffect(() => {
+    if (!node.props.autoplay || imgs.length <= 1) return;
+    const t = setInterval(() => setCurrent(c => (c + 1) % imgs.length), node.props.interval || 3000);
+    return () => clearInterval(t);
+  }, [imgs.length, node.props.autoplay, node.props.interval]);
+  if (!imgs.length) return <div className="bg-muted rounded-lg h-48 flex items-center justify-center text-muted-foreground">Add images to carousel</div>;
+  return (
+    <div className={`relative overflow-hidden rounded-lg ${rClasses}`} style={baseStyles}>
+      <img src={imgs[current]?.src} alt={imgs[current]?.alt || ''} className="w-full h-64 object-cover transition-opacity" loading="lazy" />
+      {imgs.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {imgs.map((_: any, i: number) => (
+            <button key={i} onClick={() => setCurrent(i)} className={`w-2 h-2 rounded-full transition-colors ${i === current ? 'bg-primary' : 'bg-background/60'}`} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Recursive renderer ─────────────────────────────────
 const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
   const key = `${node.type}-${node.id}`;
