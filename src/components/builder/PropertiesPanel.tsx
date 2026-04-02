@@ -152,6 +152,42 @@ const PropertiesPanel = () => {
           )}
         </div>
       </div>
+
+      <Separator />
+
+      {/* Animation Props */}
+      <div className="space-y-3">
+        <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Animation</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Entrance</Label>
+            <Select value={node.props.animation || ''} onValueChange={v => updateProp('animation', v)}>
+              <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="fade-in">Fade In</SelectItem>
+                <SelectItem value="slide-up">Slide Up</SelectItem>
+                <SelectItem value="slide-left">Slide Left</SelectItem>
+                <SelectItem value="slide-right">Slide Right</SelectItem>
+                <SelectItem value="scale-in">Scale In</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <PropField label="Delay (ms)" value={node.props.animationDelay || ''} onChange={v => updateProp('animationDelay', v)} placeholder="e.g. 200" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Hover Effect</Label>
+            <Select value={node.props.hoverEffect || ''} onValueChange={v => updateProp('hoverEffect', v)}>
+              <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="lift">Lift</SelectItem>
+                <SelectItem value="glow">Glow</SelectItem>
+                <SelectItem value="scale">Scale</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
