@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 const CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
