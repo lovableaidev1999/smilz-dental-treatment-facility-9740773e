@@ -92,6 +92,13 @@ const App = () => (
                 <Route path="/referral" element={<Referral />} />
               </Route>
 
+              {/* WordPress date-based URL redirects */}
+              <Route path="/:year/:month/:slug" element={<WpDateRedirect />} />
+              <Route path="/:year/:month/:day/:slug" element={<WpDateRedirect />} />
+
+              {/* Sitemap */}
+              <Route path="/sitemap.xml" element={<Sitemap />} />
+
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
