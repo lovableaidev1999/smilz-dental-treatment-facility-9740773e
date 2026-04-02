@@ -170,6 +170,28 @@ function builderReducer(state: BuilderState, action: BuilderAction): BuilderStat
     case 'SET_DEVICE':
       return { ...state, deviceMode: action.payload };
 
+    case 'COPY_BLOCK': {
+      const node = findNodeById(state.layout, action.payload);
+      if (!node) return state;
+      return { ...state, clipboardBlock: deepClone(node) };
+    }
+
+    case 'PASTE_BLOCK': {
+      if (!state.clipboardBlock) return state;
+      const reassignIds = (n: LayoutNode): LayoutNode => ({
+        ...n,
+        id: generateId(),
+        children: n.children?.map(reassignIds),
+      });
+      const pasted = reassignIds(deepClone(state.clipboardBlock));
+      return {
+        ...state,
+        layout: insertNode(state.layout, pasted, action.payload.parentId, action.payload.index),
+        isDirty: true,
+        selectedBlockId: pasted.id,
+      };
+    }
+
     case 'TOGGLE_LAYERS':
       return { ...state, showLayers: !state.showLayers };
 

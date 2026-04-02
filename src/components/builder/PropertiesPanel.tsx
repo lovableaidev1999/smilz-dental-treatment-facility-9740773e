@@ -54,20 +54,23 @@ const PropertiesPanel = () => {
 
       {/* Actions */}
       <div className="flex gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}
-        >
+        <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}>
           <Copy className="h-3 w-3 mr-1" /> Duplicate
         </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}
-        >
+        <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'COPY_BLOCK', payload: selectedBlockId })}>
+          <Clipboard className="h-3 w-3 mr-1" /> Copy
+        </Button>
+      </div>
+      <div className="flex gap-1">
+        <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
+          disabled={!state.clipboardBlock}
+          onClick={() => dispatch({ type: 'PASTE_BLOCK', payload: { parentId: null } })}>
+          <Clipboard className="h-3 w-3 mr-1" /> Paste
+        </Button>
+        <Button variant="destructive" size="sm" className="flex-1 text-xs h-7"
+          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}>
           <Trash2 className="h-3 w-3 mr-1" /> Delete
         </Button>
       </div>
