@@ -21,7 +21,7 @@ import LayersPanel from '@/components/builder/LayersPanel';
 import BuilderCanvas from '@/components/builder/BuilderCanvas';
 import PropertiesPanel from '@/components/builder/PropertiesPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Blocks, Layers, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight } from 'lucide-react';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
@@ -37,6 +37,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
   const [pageTitle, setPageTitle] = useState(initialTitle);
   const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const undoRedo = useUndoRedo();
   const prevLayoutRef = useRef<string>('');
 
@@ -202,14 +203,32 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
           <BuilderCanvas />
 
-          <div className="w-64 border-l border-border bg-card shrink-0 overflow-hidden">
-            <div className="h-9 border-b border-border flex items-center px-3">
-              <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
+          {rightPanelOpen ? (
+            <div className="w-64 border-l border-border bg-card shrink-0 overflow-hidden flex flex-col">
+              <div className="h-9 border-b border-border flex items-center px-3">
+                <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <PropertiesPanel />
+              </div>
+              <button
+                onClick={() => setRightPanelOpen(false)}
+                className="flex items-center justify-center gap-1 py-2 border-t border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <PanelRightClose className="h-3.5 w-3.5" /> Collapse
+              </button>
             </div>
-            <div className="overflow-y-auto" style={{ height: 'calc(100% - 36px)' }}>
-              <PropertiesPanel />
+          ) : (
+            <div className="border-l border-border bg-card shrink-0 flex flex-col items-center py-2 px-1 gap-1">
+              <button
+                onClick={() => setRightPanelOpen(true)}
+                className="p-2 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                title="Expand properties"
+              >
+                <PanelRight className="h-4 w-4" />
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
