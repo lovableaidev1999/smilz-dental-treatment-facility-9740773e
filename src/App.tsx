@@ -113,6 +113,7 @@ const App = () => (
                 <Route path="media" element={<AdminMedia />} />
                 <Route path="gallery" element={<AdminGallery />} />
                 <Route path="reviews" element={<AdminReviews />} />
+                <Route path="migrate" element={<AdminMigrateImages />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
