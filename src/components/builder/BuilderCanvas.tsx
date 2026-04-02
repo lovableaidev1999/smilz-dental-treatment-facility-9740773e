@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -8,12 +8,12 @@ import { getBlockDefinition, getBlockIcon } from './block-registry';
 import { CONTAINER_TYPES } from '@/types/visual-builder';
 import type { LayoutNode, DeviceMode } from '@/types/visual-builder';
 import InlineEditable from './InlineEditable';
+import SectionLayoutPicker from './SectionLayoutPicker';
 
 // ─── Resolve responsive styles ─────────────────────────
 const getResponsiveStyles = (node: LayoutNode, device: DeviceMode): React.CSSProperties => {
   const r = node.responsive;
   if (!r) return {};
-  // Cascade: mobile inherits from tablet inherits from desktop
   const merged = {
     ...r.desktop,
     ...(device !== 'desktop' ? r.tablet : {}),
@@ -160,42 +160,53 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
     data: { fromPalette: false, blockId: node.id, parentId },
   });
 
+  const rStyles = getResponsiveStyles(node, state.deviceMode);
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
-    ...getResponsiveStyles(node, state.deviceMode),
   };
 
-  // Container-specific styles
+  // Section uses CSS Grid
   if (node.type === 'section') {
-    style.display = style.display === 'none' ? 'none' : 'flex';
-    style.flexDirection = style.flexDirection || 'row';
+    const layoutMode = node.props.layoutMode || 'grid';
     style.background = node.props.background || undefined;
     if (node.props.backgroundImage) {
       style.backgroundImage = `url(${node.props.backgroundImage})`;
       style.backgroundSize = 'cover';
       style.backgroundPosition = 'center';
     }
+    style.padding = rStyles.padding;
+    style.margin = rStyles.margin;
   }
+
+  // Grid block uses CSS Grid
+  if (node.type === 'grid') {
+    style.padding = rStyles.padding;
+    style.margin = rStyles.margin;
+  }
+
+  // Column styling
   if (node.type === 'column') {
-    style.width = node.props.width || '100%';
     style.minHeight = '60px';
-    style.display = style.display === 'none' ? 'none' : 'flex';
+    style.display = rStyles.display === 'none' ? 'none' : 'flex';
     style.flexDirection = 'column';
+    style.justifyContent = node.props.verticalAlign || 'flex-start';
+    style.padding = rStyles.padding;
+    style.margin = rStyles.margin;
   }
+
+  const outlineClass = isSelected
+    ? 'ring-2 ring-primary ring-offset-1'
+    : isHovered
+      ? 'ring-1 ring-primary/40'
+      : (isContainer ? 'ring-1 ring-transparent hover:ring-border' : '');
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group/block relative ${
-        isContainer ? 'min-h-[60px]' : ''
-      } ${
-        isSelected ? 'ring-2 ring-primary ring-offset-1' : isHovered ? 'ring-1 ring-primary/40' : ''
-      } ${
-        isDragging ? 'z-50' : ''
-      }`}
+      className={`group/block relative ${isContainer ? 'min-h-[60px]' : ''} ${outlineClass} ${isDragging ? 'z-50' : ''}`}
       onClick={e => { e.stopPropagation(); dispatch({ type: 'SELECT_BLOCK', payload: node.id }); }}
       onMouseEnter={e => { e.stopPropagation(); dispatch({ type: 'HOVER_BLOCK', payload: node.id }); }}
       onMouseLeave={e => { e.stopPropagation(); dispatch({ type: 'HOVER_BLOCK', payload: null }); }}
@@ -236,14 +247,40 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
   );
 };
 
-// ─── Container drop zone with sortable context ──────────
+// ─── Container drop zone with grid/flex layout ──────────
 const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: React.ReactNode }) => {
   const { setNodeRef } = useDroppable({ id: `container-${node.id}`, data: { containerId: node.id } });
   const childIds = node.children?.map(c => c.id) || [];
 
+  // Determine grid or flex layout
+  let containerStyle: React.CSSProperties = {};
+  let containerClass = 'min-h-[60px] w-full p-2';
+
+  if (node.type === 'section') {
+    const gridColumns = node.props.gridColumns || '1fr';
+    containerStyle = {
+      display: 'grid',
+      gridTemplateColumns: gridColumns,
+      columnGap: node.props.columnGap || '1.5rem',
+      rowGap: node.props.rowGap || '1.5rem',
+    };
+    containerClass += ' rounded-lg';
+  } else if (node.type === 'grid') {
+    const cols = node.props.gridCols || 2;
+    containerStyle = {
+      display: 'grid',
+      gridTemplateColumns: `repeat(${cols}, 1fr)`,
+      columnGap: node.props.columnGap || '1rem',
+      rowGap: node.props.rowGap || '1rem',
+    };
+  } else {
+    // Column: vertical flex
+    containerStyle = { display: 'flex', flexDirection: 'column', gap: '0.5rem' };
+  }
+
   return (
     <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
-      <div ref={setNodeRef} className="flex flex-col gap-2 p-2 min-h-[60px] w-full">
+      <div ref={setNodeRef} className={containerClass} style={containerStyle}>
         {children}
       </div>
     </SortableContext>
@@ -255,11 +292,24 @@ const DropPlaceholder = ({ parentId, onAdd }: { parentId: string; onAdd: (type: 
   <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center text-muted-foreground min-h-[60px]">
     <Plus className="h-5 w-5 mb-1" />
     <p className="text-xs">Drop blocks here</p>
-    <div className="flex gap-1 mt-2">
+    <div className="flex gap-1 mt-2 flex-wrap justify-center">
       <button onClick={() => onAdd('heading')} className="text-[10px] px-2 py-0.5 rounded bg-muted hover:bg-primary/10">+ Heading</button>
       <button onClick={() => onAdd('text')} className="text-[10px] px-2 py-0.5 rounded bg-muted hover:bg-primary/10">+ Text</button>
       <button onClick={() => onAdd('image')} className="text-[10px] px-2 py-0.5 rounded bg-muted hover:bg-primary/10">+ Image</button>
     </div>
+  </div>
+);
+
+// ─── Add Section Button ─────────────────────────────────
+const AddSectionButton = ({ onOpen }: { onOpen: () => void }) => (
+  <div className="flex justify-center py-3">
+    <button
+      onClick={onOpen}
+      className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
+    >
+      <Plus className="h-4 w-4" />
+      Add Section
+    </button>
   </div>
 );
 
@@ -273,6 +323,7 @@ const DEVICE_WIDTHS: Record<DeviceMode, string> = {
 const BuilderCanvas = () => {
   const { state, dispatch, addBlock } = useBuilder();
   const { layout, deviceMode } = state;
+  const [showLayoutPicker, setShowLayoutPicker] = useState(false);
 
   const { setNodeRef: setCanvasRef } = useDroppable({
     id: 'canvas-root',
@@ -290,16 +341,19 @@ const BuilderCanvas = () => {
         <SortableContext items={topLevelIds} strategy={verticalListSortingStrategy}>
           <div ref={setCanvasRef} className="min-h-[70vh] p-4 space-y-2">
             {layout.length > 0 ? (
-              layout.map(node => (
-                <SortableBlock key={node.id} node={node} parentId={null} />
-              ))
+              <>
+                {layout.map(node => (
+                  <SortableBlock key={node.id} node={node} parentId={null} />
+                ))}
+                <AddSectionButton onOpen={() => setShowLayoutPicker(true)} />
+              </>
             ) : (
               <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground">
                 <Plus className="h-10 w-10 mb-3 text-primary/30" />
                 <p className="text-sm font-medium">Start building your page</p>
-                <p className="text-xs mt-1">Drag blocks from the left panel or click below</p>
+                <p className="text-xs mt-1">Choose a section layout to get started</p>
                 <button
-                  onClick={() => addBlock('section', null)}
+                  onClick={() => setShowLayoutPicker(true)}
                   className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   + Add Section
@@ -309,6 +363,11 @@ const BuilderCanvas = () => {
           </div>
         </SortableContext>
       </div>
+
+      <SectionLayoutPicker
+        open={showLayoutPicker}
+        onClose={() => setShowLayoutPicker(false)}
+      />
     </div>
   );
 };
