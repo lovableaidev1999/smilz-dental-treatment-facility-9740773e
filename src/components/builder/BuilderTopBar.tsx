@@ -1,4 +1,4 @@
-import { Monitor, Tablet, Smartphone, Save, Eye, Upload, ArrowLeft, Undo2, Redo2, Layers } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, Save, Eye, Upload, ArrowLeft, Undo2, Redo2, Layers, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBuilder } from '@/hooks/useBuilderState';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
