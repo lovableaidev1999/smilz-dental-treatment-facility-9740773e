@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Heading1, Heading2, Heading3,
   Link, Quote, Minus, Undo, Redo, ImagePlus, MousePointerClick, HelpCircle,
+  AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import { useState } from "react";
 
