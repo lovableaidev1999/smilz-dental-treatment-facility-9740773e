@@ -88,6 +88,12 @@ const BuilderTopBar = ({ pageTitle, pageSlug, onSave, onPublish, onPreview, onBa
           <Eye className="h-3.5 w-3.5 mr-1" />
           Preview
         </Button>
+        {onView && (
+          <Button variant="ghost" size="sm" onClick={onView} className="h-8 text-xs">
+            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+            View
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
