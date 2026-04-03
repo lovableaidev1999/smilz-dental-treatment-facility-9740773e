@@ -150,6 +150,140 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
           )}
         </div>
       );
+    case 'video': {
+      const url = props.url || '';
+      const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+      const getYoutubeId = (u: string) => {
+        const m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&?/]+)/);
+        return m?.[1] || '';
+      };
+      if (isYoutube) {
+        return (
+          <div style={{ aspectRatio: props.aspectRatio || '16/9' }}>
+            <iframe src={`https://www.youtube.com/embed/${getYoutubeId(url)}?autoplay=0`} className="w-full h-full rounded-lg" allow="encrypted-media" allowFullScreen />
+          </div>
+        );
+      }
+      return url ? (
+        <div style={{ aspectRatio: props.aspectRatio || '16/9' }}>
+          <video src={url} muted controls className="w-full h-full rounded-lg object-cover" />
+        </div>
+      ) : (
+        <div className="h-32 bg-muted rounded-lg flex items-center justify-center text-muted-foreground text-sm">🎬 No video URL set</div>
+      );
+    }
+    case 'google-map':
+      return (
+        <div className="border border-dashed border-primary/30 rounded-lg p-4 text-center">
+          <p className="text-sm text-primary font-medium">📍 Google Map</p>
+          <p className="text-xs text-muted-foreground">{props.address || 'No address'}</p>
+        </div>
+      );
+    case 'icon': {
+      const IconMap: Record<string, string> = { Star: '★', Heart: '♥', Check: '✓', Phone: '☎', Mail: '✉', Home: '⌂', ArrowRight: '→' };
+      return (
+        <div style={{ textAlign: (props.align || 'center') as any }}>
+          <span style={{ fontSize: props.size || '48px', color: props.color || 'hsl(var(--primary))' }}>
+            {IconMap[props.icon] || '★'}
+          </span>
+        </div>
+      );
+    }
+    case 'tabs':
+      return (
+        <div className="space-y-1">
+          <div className="flex border-b border-border">
+            {(props.items || []).map((item: any, i: number) => (
+              <span key={i} className={`px-3 py-1 text-xs font-medium border-b-2 ${i === 0 ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}>{item.title}</span>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground p-2">{(props.items || [])[0]?.content || 'Tab content'}</p>
+        </div>
+      );
+    case 'accordion':
+      return (
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">Accordion ({(props.items || []).length} items)</p>
+          {(props.items || []).slice(0, 2).map((it: any, i: number) => (
+            <div key={i} className="text-xs text-muted-foreground border-l-2 border-primary/30 pl-2">{it.title}</div>
+          ))}
+        </div>
+      );
+    case 'image-box':
+      return (
+        <div style={{ textAlign: (props.align || 'center') as any }}>
+          {props.src ? (
+            <img src={props.src} alt={props.title || ''} className="w-full rounded-lg mb-2" style={{ objectFit: 'contain' }} />
+          ) : (
+            <div className="h-24 bg-muted rounded-lg flex items-center justify-center text-muted-foreground text-xs mb-2">No image</div>
+          )}
+          <h4 className="text-sm font-semibold text-foreground">{props.title}</h4>
+          <p className="text-xs text-muted-foreground mt-0.5">{props.description}</p>
+        </div>
+      );
+    case 'icon-box': {
+      const IMap: Record<string, string> = { Star: '★', Heart: '♥', Check: '✓', Phone: '☎', Mail: '✉', Home: '⌂', ArrowRight: '→' };
+      return (
+        <div style={{ textAlign: (props.align || 'center') as any }}>
+          <span className="inline-block mb-1" style={{ fontSize: '32px', color: props.iconColor || 'hsl(var(--primary))' }}>
+            {IMap[props.icon] || '★'}
+          </span>
+          <h4 className="text-sm font-semibold text-foreground">{props.title}</h4>
+          <p className="text-xs text-muted-foreground mt-0.5">{props.description}</p>
+        </div>
+      );
+    }
+    case 'image-carousel': {
+      const imgs = (props.images || []).filter((img: any) => img.src);
+      return (
+        <div className="border border-dashed border-primary/30 rounded-lg p-4 text-center">
+          <p className="text-sm text-primary font-medium">🖼️ Image Carousel / Slideshow</p>
+          <p className="text-xs text-muted-foreground">{imgs.length} images · {props.autoplay ? 'Autoplay' : 'Manual'} · {props.interval || 3000}ms</p>
+          {imgs.length > 0 && <img src={imgs[0].src} alt={imgs[0].alt || ''} className="w-full max-h-32 object-contain rounded mt-2" />}
+        </div>
+      );
+    }
+    case 'gallery': {
+      const imgs = (props.images || []).filter((img: any) => img.src);
+      return (
+        <div className="border border-dashed border-primary/30 rounded-lg p-4 text-center">
+          <p className="text-sm text-primary font-medium">🖼️ Gallery</p>
+          <p className="text-xs text-muted-foreground">{imgs.length} images · {props.columns || 3} columns</p>
+          {imgs.length > 0 && (
+            <div className="flex gap-1 mt-2 justify-center">
+              {imgs.slice(0, 3).map((img: any, i: number) => (
+                <img key={i} src={img.src} alt={img.alt || ''} className="w-16 h-16 object-cover rounded" />
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    case 'social-icons': {
+      const platformIcons: Record<string, string> = { facebook: 'f', instagram: '📷', youtube: '▶', twitter: '𝕏', linkedin: 'in', whatsapp: '💬' };
+      return (
+        <div style={{ textAlign: (props.align || 'center') as any }}>
+          <div className="inline-flex gap-2">
+            {(props.icons || []).map((s: any, i: number) => (
+              <span key={i} className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-xs">
+                {platformIcons[s.platform] || '?'}
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    case 'icon-list':
+      return (
+        <ul className="space-y-1">
+          {(props.items || []).map((item: any, i: number) => (
+            <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-primary">✓</span>
+              <span>{item.text}</span>
+            </li>
+          ))}
+        </ul>
+      );
     default:
       return <div className="text-xs text-muted-foreground">Unknown block: {type}</div>;
   }

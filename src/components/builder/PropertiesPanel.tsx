@@ -460,6 +460,277 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
         </>
       );
 
+    case 'video':
+      return (
+        <>
+          <PropField label="Video URL" value={props.url} onChange={v => updateProp('url', v)} placeholder="YouTube, Vimeo, or direct URL" />
+          <PropField label="Aspect Ratio" value={props.aspectRatio} onChange={v => updateProp('aspectRatio', v)} placeholder="16/9" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Autoplay</Label>
+            <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Loop</Label>
+            <Switch checked={props.loop} onCheckedChange={v => updateProp('loop', v)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Muted</Label>
+            <Switch checked={props.muted} onCheckedChange={v => updateProp('muted', v)} />
+          </div>
+        </>
+      );
+
+    case 'icon':
+      return (
+        <>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Icon</Label>
+            <Select value={props.icon || 'Star'} onValueChange={v => updateProp('icon', v)}>
+              <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {['Star', 'Heart', 'Check', 'Phone', 'Mail', 'Home', 'ArrowRight'].map(ic => (
+                  <SelectItem key={ic} value={ic}>{ic}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <PropField label="Size" value={props.size} onChange={v => updateProp('size', v)} placeholder="48px" />
+          <PropField label="Color" value={props.color} onChange={v => updateProp('color', v)} placeholder="CSS color" />
+        </>
+      );
+
+    case 'google-map':
+      return (
+        <>
+          <PropField label="Address" value={props.address} onChange={v => updateProp('address', v)} />
+          <PropField label="Zoom" value={String(props.zoom)} onChange={v => updateProp('zoom', parseInt(v) || 14)} />
+          <PropField label="Height" value={props.height} onChange={v => updateProp('height', v)} placeholder="300px" />
+        </>
+      );
+
+    case 'tabs':
+      return (
+        <div className="space-y-2">
+          {(props.items || []).map((item: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <PropField label={`Tab ${i + 1} Title`} value={item.title} onChange={v => {
+                const items = [...props.items]; items[i] = { ...items[i], title: v }; updateProp('items', items);
+              }} />
+              <PropField label={`Content`} value={item.content} onChange={v => {
+                const items = [...props.items]; items[i] = { ...items[i], content: v }; updateProp('items', items);
+              }} multiline />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('items', props.items.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('items', [...(props.items || []), { title: 'New Tab', content: '' }]);
+          }}>+ Add Tab</Button>
+        </div>
+      );
+
+    case 'accordion':
+      return (
+        <div className="space-y-2">
+          {(props.items || []).map((item: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <PropField label={`Title ${i + 1}`} value={item.title} onChange={v => {
+                const items = [...props.items]; items[i] = { ...items[i], title: v }; updateProp('items', items);
+              }} />
+              <PropField label={`Content`} value={item.content} onChange={v => {
+                const items = [...props.items]; items[i] = { ...items[i], content: v }; updateProp('items', items);
+              }} multiline />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('items', props.items.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('items', [...(props.items || []), { title: 'New Item', content: '' }]);
+          }}>+ Add Item</Button>
+        </div>
+      );
+
+    case 'image-box':
+      return (
+        <>
+          <div className="space-y-1">
+            <Label className="text-xs">Image URL</Label>
+            <div className="flex gap-1">
+              <Input value={props.src || ''} onChange={e => updateProp('src', e.target.value)} placeholder="https://..." className="h-7 text-xs flex-1" />
+              <Button variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={extra?.onOpenMediaPicker}>
+                <ImageIcon className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+          <PropField label="Title" value={props.title} onChange={v => updateProp('title', v)} />
+          <PropField label="Description" value={props.description} onChange={v => updateProp('description', v)} multiline />
+        </>
+      );
+
+    case 'icon-box':
+      return (
+        <>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Icon</Label>
+            <Select value={props.icon || 'Star'} onValueChange={v => updateProp('icon', v)}>
+              <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {['Star', 'Heart', 'Check', 'Phone', 'Mail', 'Home', 'ArrowRight'].map(ic => (
+                  <SelectItem key={ic} value={ic}>{ic}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <PropField label="Icon Color" value={props.iconColor} onChange={v => updateProp('iconColor', v)} placeholder="CSS color" />
+          <PropField label="Title" value={props.title} onChange={v => updateProp('title', v)} />
+          <PropField label="Description" value={props.description} onChange={v => updateProp('description', v)} multiline />
+        </>
+      );
+
+    case 'image-carousel':
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Autoplay</Label>
+            <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
+          </div>
+          <PropField label="Interval (ms)" value={String(props.interval || 3000)} onChange={v => updateProp('interval', parseInt(v) || 3000)} />
+          {(props.images || []).map((img: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <div className="flex gap-1">
+                <Input value={img.src || ''} onChange={e => {
+                  const images = [...props.images]; images[i] = { ...images[i], src: e.target.value }; updateProp('images', images);
+                }} placeholder="Image URL" className="h-7 text-xs flex-1" />
+              </div>
+              <Input value={img.alt || ''} onChange={e => {
+                const images = [...props.images]; images[i] = { ...images[i], alt: e.target.value }; updateProp('images', images);
+              }} placeholder="Alt text" className="h-7 text-xs" />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('images', props.images.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('images', [...(props.images || []), { src: '', alt: '' }]);
+          }}>+ Add Image</Button>
+        </div>
+      );
+
+    case 'gallery':
+      return (
+        <div className="space-y-2">
+          <PropField label="Columns" value={String(props.columns || 3)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <PropField label="Gap" value={props.gap} onChange={v => updateProp('gap', v)} placeholder="0.5rem" />
+          {(props.images || []).map((img: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <Input value={img.src || ''} onChange={e => {
+                const images = [...props.images]; images[i] = { ...images[i], src: e.target.value }; updateProp('images', images);
+              }} placeholder="Image URL" className="h-7 text-xs" />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('images', props.images.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('images', [...(props.images || []), { src: '', alt: '' }]);
+          }}>+ Add Image</Button>
+        </div>
+      );
+
+    case 'social-icons':
+      return (
+        <div className="space-y-2">
+          <PropField label="Icon Size" value={props.size} onChange={v => updateProp('size', v)} placeholder="24px" />
+          {(props.icons || []).map((s: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Platform</Label>
+                <Select value={s.platform} onValueChange={v => {
+                  const icons = [...props.icons]; icons[i] = { ...icons[i], platform: v }; updateProp('icons', icons);
+                }}>
+                  <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['facebook', 'instagram', 'youtube', 'twitter', 'linkedin', 'whatsapp'].map(p => (
+                      <SelectItem key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input value={s.url || ''} onChange={e => {
+                const icons = [...props.icons]; icons[i] = { ...icons[i], url: e.target.value }; updateProp('icons', icons);
+              }} placeholder="URL" className="h-7 text-xs" />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('icons', props.icons.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('icons', [...(props.icons || []), { platform: 'facebook', url: '#' }]);
+          }}>+ Add Social Icon</Button>
+        </div>
+      );
+
+    case 'icon-list':
+      return (
+        <div className="space-y-2">
+          {(props.items || []).map((item: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <PropField label={`Item ${i + 1}`} value={item.text} onChange={v => {
+                const items = [...props.items]; items[i] = { ...items[i], text: v }; updateProp('items', items);
+              }} />
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('items', props.items.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('items', [...(props.items || []), { icon: 'Check', text: 'New item' }]);
+          }}>+ Add Item</Button>
+        </div>
+      );
+
+    case 'contact-form':
+      return (
+        <div className="space-y-2">
+          <PropField label="Submit Button Text" value={props.submitText} onChange={v => updateProp('submitText', v)} />
+          {(props.fields || []).map((field: any, i: number) => (
+            <div key={i} className="border border-border rounded p-2 space-y-1">
+              <PropField label="Label" value={field.label} onChange={v => {
+                const fields = [...props.fields]; fields[i] = { ...fields[i], label: v }; updateProp('fields', fields);
+              }} />
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Type</Label>
+                <Select value={field.type} onValueChange={v => {
+                  const fields = [...props.fields]; fields[i] = { ...fields[i], type: v }; updateProp('fields', fields);
+                }}>
+                  <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="tel">Phone</SelectItem>
+                    <SelectItem value="textarea">Textarea</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Required</Label>
+                <Switch checked={field.required} onCheckedChange={v => {
+                  const fields = [...props.fields]; fields[i] = { ...fields[i], required: v }; updateProp('fields', fields);
+                }} />
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
+                updateProp('fields', props.fields.filter((_: any, idx: number) => idx !== i));
+              }}>Remove</Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
+            updateProp('fields', [...(props.fields || []), { type: 'text', label: 'New Field', required: false }]);
+          }}>+ Add Field</Button>
+        </div>
+      );
+
     default:
       return <p className="text-xs text-muted-foreground">No editable properties</p>;
   }
