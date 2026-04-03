@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid, Wand2 } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
 import type { JSONContent } from "@tiptap/core";
 import type { LayoutNode, BlockType } from "@/types/visual-builder";
-import { wrapLegacyContent } from "@/lib/legacyMigration";
+import { wrapLegacyContent, convertHtmlToVisualLayout } from "@/lib/legacyMigration";
 import {
   createVisualLayoutFallbackContent,
   getStoredVisualLayout,
@@ -415,13 +415,29 @@ const AdminBlogEdit = () => {
                 />
               )}
               {editorMode === "html" && (
-                <Textarea
-                  value={legacyHtml}
-                  onChange={(e) => setLegacyHtml(e.target.value)}
-                  rows={15}
-                  className="font-mono text-xs"
-                  placeholder="Legacy HTML content…"
-                />
+                <div className="space-y-3">
+                  <Textarea
+                    value={legacyHtml}
+                    onChange={(e) => setLegacyHtml(e.target.value)}
+                    rows={15}
+                    className="font-mono text-xs"
+                    placeholder="Legacy HTML content…"
+                  />
+                  {legacyHtml && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => {
+                        const layout = convertHtmlToVisualLayout(legacyHtml);
+                        setVisualLayout(layout);
+                        setEditorMode("visual");
+                        toast({ title: "Converted!", description: `Legacy HTML split into ${layout[0]?.children?.[0]?.children?.length || 0} structured blocks.` });
+                      }}
+                    >
+                      <Wand2 className="h-4 w-4" /> Convert to Visual Layout
+                    </Button>
+                  )}
+                </div>
               )}
               {editorMode === "preview" && contentJson && (
                 <div className="border border-border rounded-lg p-6 bg-background min-h-[400px]">
