@@ -38,8 +38,9 @@ import {
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 // ─── Inner blog builder with DnD ────────────────────────
-const BlogBuilderInner = ({ title, onBack, onSave, isSaving }: {
+const BlogBuilderInner = ({ title, slug, onBack, onSave, isSaving }: {
   title: string;
+  slug: string;
   onBack: () => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
