@@ -241,6 +241,7 @@ const AdminBlogEdit = () => {
     mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       const isPublished = asDraft === true ? false : form.is_published;
+      const layoutToSave = visualLayoutJson || visualLayout;
       const payload: any = {
         ...form,
         is_published: isPublished,
@@ -251,8 +252,8 @@ const AdminBlogEdit = () => {
         content_json: contentJson,
         content: legacyHtml || "",
       };
-      if (visualLayoutJson) {
-        payload.visual_layout_json = visualLayoutJson;
+      if (layoutToSave && layoutToSave.length > 0) {
+        payload.visual_layout_json = layoutToSave;
       }
 
       const persistPost = async (data: any) => {
