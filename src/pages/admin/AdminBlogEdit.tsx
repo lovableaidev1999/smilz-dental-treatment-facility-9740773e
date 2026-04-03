@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid, Wand2, ExternalLink } from "lucide-react";
+import ImageUrlInput from "@/components/admin/ImageUrlInput";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
@@ -521,11 +522,7 @@ const AdminBlogEdit = () => {
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Featured Image</label>
                 <div className="flex gap-2">
-                  <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} placeholder="URL or upload →" className="flex-1" />
-                  <Button type="button" variant="outline" size="icon" onClick={() => imgRef.current?.click()} disabled={isCompressing}>
-                    {isCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  </Button>
-                  <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={handleFeaturedUpload} />
+                  <ImageUrlInput value={form.featured_image} onChange={(url) => setForm({ ...form, featured_image: url })} placeholder="URL or pick from media" />
                 </div>
                 {form.featured_image && <img src={form.featured_image} alt="Preview" className="mt-2 rounded-md max-h-32 object-cover" />}
               </div>

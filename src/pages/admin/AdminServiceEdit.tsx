@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
+import ImageUrlInput from "@/components/admin/ImageUrlInput";
 
 const AdminServiceEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -130,7 +131,7 @@ const AdminServiceEdit = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Featured Image URL</label>
-                  <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} />
+                  <ImageUrlInput value={form.featured_image} onChange={(url) => setForm({ ...form, featured_image: url })} />
                 </div>
               </div>
             </CardContent>
