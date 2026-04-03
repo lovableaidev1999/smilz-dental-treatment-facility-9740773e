@@ -16,6 +16,7 @@ const PropertiesPanel = () => {
   const { state, dispatch, findNode } = useBuilder();
   const { selectedBlockId, deviceMode } = state;
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<{ type: 'prop'; key: string } | { type: 'array-item'; key: string; index: number } | null>(null);
 
   if (!selectedBlockId) {
     return (
@@ -81,7 +82,16 @@ const PropertiesPanel = () => {
       {/* Content Props */}
       <div className="space-y-3">
         <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Content</p>
-        {renderContentProps(node, updateProp, { onOpenMediaPicker: () => setShowMediaPicker(true) })}
+        {renderContentProps(node, updateProp, {
+          onOpenMediaPicker: () => {
+            setMediaPickerTarget({ type: 'prop', key: 'src' });
+            setShowMediaPicker(true);
+          },
+          onOpenMediaPickerForArray: (key: string, index: number) => {
+            setMediaPickerTarget({ type: 'array-item', key, index });
+            setShowMediaPicker(true);
+          },
+        })}
       </div>
 
       <Separator />
@@ -198,8 +208,17 @@ const PropertiesPanel = () => {
       {/* Media Picker for image blocks */}
       <MediaPickerDialog
         open={showMediaPicker}
-        onClose={() => setShowMediaPicker(false)}
-        onSelect={(url) => updateProp('src', url)}
+        onClose={() => { setShowMediaPicker(false); setMediaPickerTarget(null); }}
+        onSelect={(url) => {
+          if (mediaPickerTarget?.type === 'array-item') {
+            const arr = [...(node.props[mediaPickerTarget.key] || [])];
+            arr[mediaPickerTarget.index] = { ...arr[mediaPickerTarget.index], src: url };
+            updateProp(mediaPickerTarget.key, arr);
+          } else {
+            updateProp('src', url);
+          }
+          setMediaPickerTarget(null);
+        }}
       />
     </div>
   );
@@ -220,7 +239,7 @@ const PropField = ({ label, value, onChange, placeholder, multiline }: {
 );
 
 // Render content-specific props per block type
-function renderContentProps(node: any, updateProp: (k: string, v: any) => void, extra?: { onOpenMediaPicker?: () => void }) {
+function renderContentProps(node: any, updateProp: (k: string, v: any) => void, extra?: { onOpenMediaPicker?: () => void; onOpenMediaPickerForArray?: (key: string, index: number) => void }) {
   const { type, props } = node;
 
   switch (type) {
@@ -464,7 +483,19 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Video URL" value={props.url} onChange={v => updateProp('url', v)} placeholder="YouTube, Vimeo, or direct URL" />
-          <PropField label="Aspect Ratio" value={props.aspectRatio} onChange={v => updateProp('aspectRatio', v)} placeholder="16/9" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Aspect Ratio</Label>
+            <Select value={props.aspectRatio || '16/9'} onValueChange={v => updateProp('aspectRatio', v)}>
+              <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="16/9">16:9 (Widescreen)</SelectItem>
+                <SelectItem value="4/3">4:3 (Standard)</SelectItem>
+                <SelectItem value="1/1">1:1 (Square)</SelectItem>
+                <SelectItem value="21/9">21:9 (Ultra Wide)</SelectItem>
+                <SelectItem value="9/16">9:16 (Vertical)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center justify-between">
             <Label className="text-xs">Autoplay</Label>
             <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
@@ -487,10 +518,31 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
             <Label className="text-xs">Icon</Label>
             <Select value={props.icon || 'Star'} onValueChange={v => updateProp('icon', v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['Star', 'Heart', 'Check', 'Phone', 'Mail', 'Home', 'ArrowRight'].map(ic => (
-                  <SelectItem key={ic} value={ic}>{ic}</SelectItem>
-                ))}
+              <SelectContent className="max-h-60">
+                <SelectItem value="Star">⭐ Star</SelectItem>
+                <SelectItem value="Heart">❤️ Heart</SelectItem>
+                <SelectItem value="Check">✓ Check</SelectItem>
+                <SelectItem value="Phone">📞 Phone</SelectItem>
+                <SelectItem value="Mail">✉️ Mail</SelectItem>
+                <SelectItem value="Home">🏠 Home</SelectItem>
+                <SelectItem value="ArrowRight">→ Arrow</SelectItem>
+                <SelectItem value="Tooth">🦷 Tooth</SelectItem>
+                <SelectItem value="Smile">😊 Smile</SelectItem>
+                <SelectItem value="Shield">🛡️ Shield</SelectItem>
+                <SelectItem value="Clock">🕐 Clock</SelectItem>
+                <SelectItem value="Calendar">📅 Calendar</SelectItem>
+                <SelectItem value="Sparkles">✨ Sparkles</SelectItem>
+                <SelectItem value="Syringe">💉 Syringe</SelectItem>
+                <SelectItem value="Stethoscope">🩺 Stethoscope</SelectItem>
+                <SelectItem value="Award">🏆 Award</SelectItem>
+                <SelectItem value="Users">👥 Users</SelectItem>
+                <SelectItem value="MapPin">📍 Location</SelectItem>
+                <SelectItem value="ThumbsUp">👍 Thumbs Up</SelectItem>
+                <SelectItem value="Eye">👁️ Eye</SelectItem>
+                <SelectItem value="Baby">👶 Baby</SelectItem>
+                <SelectItem value="Pill">💊 Pill</SelectItem>
+                <SelectItem value="Xray">🔬 X-Ray</SelectItem>
+                <SelectItem value="Clipboard">📋 Clipboard</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -576,10 +628,31 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
             <Label className="text-xs">Icon</Label>
             <Select value={props.icon || 'Star'} onValueChange={v => updateProp('icon', v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['Star', 'Heart', 'Check', 'Phone', 'Mail', 'Home', 'ArrowRight'].map(ic => (
-                  <SelectItem key={ic} value={ic}>{ic}</SelectItem>
-                ))}
+              <SelectContent className="max-h-60">
+                <SelectItem value="Star">⭐ Star</SelectItem>
+                <SelectItem value="Heart">❤️ Heart</SelectItem>
+                <SelectItem value="Check">✓ Check</SelectItem>
+                <SelectItem value="Phone">📞 Phone</SelectItem>
+                <SelectItem value="Mail">✉️ Mail</SelectItem>
+                <SelectItem value="Home">🏠 Home</SelectItem>
+                <SelectItem value="ArrowRight">→ Arrow</SelectItem>
+                <SelectItem value="Tooth">🦷 Tooth</SelectItem>
+                <SelectItem value="Smile">😊 Smile</SelectItem>
+                <SelectItem value="Shield">🛡️ Shield</SelectItem>
+                <SelectItem value="Clock">🕐 Clock</SelectItem>
+                <SelectItem value="Calendar">📅 Calendar</SelectItem>
+                <SelectItem value="Sparkles">✨ Sparkles</SelectItem>
+                <SelectItem value="Syringe">💉 Syringe</SelectItem>
+                <SelectItem value="Stethoscope">🩺 Stethoscope</SelectItem>
+                <SelectItem value="Award">🏆 Award</SelectItem>
+                <SelectItem value="Users">👥 Users</SelectItem>
+                <SelectItem value="MapPin">📍 Location</SelectItem>
+                <SelectItem value="ThumbsUp">👍 Thumbs Up</SelectItem>
+                <SelectItem value="Eye">👁️ Eye</SelectItem>
+                <SelectItem value="Baby">👶 Baby</SelectItem>
+                <SelectItem value="Pill">💊 Pill</SelectItem>
+                <SelectItem value="Xray">🔬 X-Ray</SelectItem>
+                <SelectItem value="Clipboard">📋 Clipboard</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -603,6 +676,9 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
                 <Input value={img.src || ''} onChange={e => {
                   const images = [...props.images]; images[i] = { ...images[i], src: e.target.value }; updateProp('images', images);
                 }} placeholder="Image URL" className="h-7 text-xs flex-1" />
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => extra?.onOpenMediaPickerForArray?.('images', i)}>
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
               </div>
               <Input value={img.alt || ''} onChange={e => {
                 const images = [...props.images]; images[i] = { ...images[i], alt: e.target.value }; updateProp('images', images);
@@ -625,9 +701,14 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
           <PropField label="Gap" value={props.gap} onChange={v => updateProp('gap', v)} placeholder="0.5rem" />
           {(props.images || []).map((img: any, i: number) => (
             <div key={i} className="border border-border rounded p-2 space-y-1">
-              <Input value={img.src || ''} onChange={e => {
-                const images = [...props.images]; images[i] = { ...images[i], src: e.target.value }; updateProp('images', images);
-              }} placeholder="Image URL" className="h-7 text-xs" />
+              <div className="flex gap-1">
+                <Input value={img.src || ''} onChange={e => {
+                  const images = [...props.images]; images[i] = { ...images[i], src: e.target.value }; updateProp('images', images);
+                }} placeholder="Image URL" className="h-7 text-xs flex-1" />
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => extra?.onOpenMediaPickerForArray?.('images', i)}>
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
+              </div>
               <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
                 updateProp('images', props.images.filter((_: any, idx: number) => idx !== i));
               }}>Remove</Button>
