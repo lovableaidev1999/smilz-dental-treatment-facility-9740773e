@@ -258,6 +258,17 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Alignment</Label>
+            <Select value={props.align || 'left'} onValueChange={v => updateProp('align', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Left</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="right">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <PropField label="Color" value={props.color} onChange={v => updateProp('color', v)} placeholder="CSS color" />
         </>
       );
@@ -266,6 +277,17 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Text" value={props.text} onChange={v => updateProp('text', v)} multiline />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Alignment</Label>
+            <Select value={props.align || 'left'} onValueChange={v => updateProp('align', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Left</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="right">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <PropField label="Color" value={props.color} onChange={v => updateProp('color', v)} placeholder="CSS color" />
         </>
       );
