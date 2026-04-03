@@ -16,6 +16,7 @@ import Contact from "@/pages/Contact";
 import Gallery from "@/pages/Gallery";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
+import BlogPreview from "@/pages/BlogPreview";
 import Referral from "@/pages/Referral";
 import NotFound from "@/pages/NotFound";
 import Sitemap from "@/pages/Sitemap";
