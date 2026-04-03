@@ -48,7 +48,7 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
           value={props.text}
           tag={tag}
           className={`${sizes[props.level] || sizes[2]} text-foreground`}
-          style={{ color: props.color || undefined }}
+          style={{ color: props.color || undefined, textAlign: (props.align as any) || undefined }}
         />
       );
     }
@@ -60,7 +60,7 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
           value={props.text}
           tag="p"
           className="text-muted-foreground leading-relaxed"
-          style={{ color: props.color || undefined }}
+          style={{ color: props.color || undefined, textAlign: (props.align as any) || undefined }}
         />
       );
     case 'image':
