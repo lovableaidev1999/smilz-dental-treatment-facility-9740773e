@@ -28,7 +28,17 @@ const BlogPreview = () => {
     );
   }
 
-  if (error || !post) return <NotFound />;
+  if (error) return <NotFound />;
+  if (!post) {
+    return (
+      <div className="section-padding">
+        <div className="container-narrow mx-auto max-w-3xl text-center py-20">
+          <p className="text-lg font-semibold text-foreground">Preview not ready yet</p>
+          <p className="text-muted-foreground mt-2">This draft preview can take a moment to become available after saving. Please try again from the editor.</p>
+        </div>
+      </div>
+    );
+  }
 
   const related = (relatedPosts ?? []).filter((p) => p.id !== post.id && p.category === post.category).slice(0, 3);
   const visualLayout = getStoredVisualLayout(post as any);

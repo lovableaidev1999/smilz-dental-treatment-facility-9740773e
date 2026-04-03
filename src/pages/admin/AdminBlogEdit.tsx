@@ -41,7 +41,7 @@ import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-reg
 const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
   title: string;
   postId?: string;
-  onBack: () => void;
+  onBack: (layout: LayoutNode[]) => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
 }) => {
