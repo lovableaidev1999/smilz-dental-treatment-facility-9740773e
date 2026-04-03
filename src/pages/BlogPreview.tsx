@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, ChevronRight, ArrowLeft, User } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPostById, useBlogPosts } from "@/integrations/supabase/hooks";
 import BlockRenderer from "@/components/BlockRenderer";
@@ -12,19 +13,20 @@ import NotFound from "./NotFound";
 
 const BlogPreview = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: post, isLoading, error, refetch } = useBlogPostById(id ?? "");
+  const { loading: authLoading } = useAuth();
+  const { data: post, isLoading, error, refetch } = useBlogPostById(id ?? "", !authLoading);
   const { data: relatedPosts } = useBlogPosts();
   const { data: settings } = useSiteSettings();
   const links = settings?.links;
 
   useEffect(() => {
-    if (!post && id) {
+    if (!authLoading && !post && id) {
       const timer = window.setTimeout(() => refetch(), 800);
       return () => window.clearTimeout(timer);
     }
-  }, [id, post, refetch]);
+  }, [authLoading, id, post, refetch]);
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="section-padding">
         <div className="container-narrow mx-auto max-w-3xl animate-pulse space-y-6">
