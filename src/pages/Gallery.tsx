@@ -3,13 +3,15 @@ import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useGallery } from "@/integrations/supabase/hooks";
+import DynamicSections from "@/components/DynamicSections";
 
 const Gallery = () => {
   const { data: galleryItems, isLoading } = useGallery();
   const { data: settings } = useSiteSettings();
-  const { getSection } = usePageContent("gallery");
+  const { sections, getSection } = usePageContent("gallery");
   const links = settings?.links;
   const hero = getSection("hero");
+  const KNOWN_IDS = ["hero"];
 
   return (
     <>
@@ -49,6 +51,8 @@ const Gallery = () => {
           )}
         </div>
       </section>
+
+      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
     </>
   );
 };

@@ -6,16 +6,7 @@ import { usePageContent } from "@/hooks/usePageContent";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
-
-const renderBodyParagraphs = (bodyText?: string | null) => {
-  if (!bodyText) return null;
-
-  return bodyText
-    .split("\n")
-    .map((para) => para.trim())
-    .filter(Boolean)
-    .map((para, i) => <p key={`${para}-${i}`}>{para}</p>);
-};
+import DynamicSections from "@/components/DynamicSections";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
@@ -30,9 +21,7 @@ const About = () => {
   const heroSection = getSection("hero");
   const doctorSection = getSection("doctor");
   const ctaSection = getSection("cta");
-  const extraSections = sections.filter(
-    (section) => !["hero", "doctor", "cta"].includes(section.section_id),
-  );
+  const KNOWN_IDS = ["hero", "doctor", "cta"];
 
   return (
     <>
@@ -79,7 +68,9 @@ const About = () => {
                 {doctorSection?.heading ?? `Meet ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}`}
               </h2>
               <div className="space-y-4 text-muted-foreground">
-                {renderBodyParagraphs(doctorSection?.body_text) ?? (
+                {doctorSection?.body_text ? (
+                  doctorSection.body_text.split("\n").map(p => p.trim()).filter(Boolean).map((para, i) => <p key={i}>{para}</p>)
+                ) : (
                   <>
                     <p>
                       With over 25 years of experience in dentistry, {general?.doctor_name ?? "Dr. Dibyendu Dutta"} founded{" "}
@@ -95,65 +86,6 @@ const About = () => {
               </div>
             </motion.div>
           </div>
-
-          {extraSections.map((section, index) => {
-            const paragraphs = renderBodyParagraphs(section.body_text);
-
-            return (
-              <div key={section.id} className="grid md:grid-cols-2 gap-12 items-center mb-20 last:mb-0">
-                <motion.div
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className={index % 2 === 1 ? "md:order-2" : undefined}
-                >
-                  {section.image_url ? (
-                    <img
-                      src={section.image_url}
-                      alt={section.section_title || section.heading || "About section image"}
-                      className="rounded-2xl shadow-elevated w-full"
-                      loading="lazy"
-                      width={800}
-                      height={1024}
-                    />
-                  ) : (
-                    <div className="rounded-2xl border border-border bg-secondary/40 min-h-[320px]" />
-                  )}
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: index % 2 === 0 ? 30 : -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className={index % 2 === 1 ? "md:order-1" : undefined}
-                >
-                  {section.section_title && (
-                    <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">
-                      {section.section_title}
-                    </p>
-                  )}
-                  {section.heading && (
-                    <h2 className="text-3xl font-heading font-bold text-foreground mb-4">
-                      {section.heading}
-                    </h2>
-                  )}
-                  {section.subheading && (
-                    <p className="text-lg text-foreground/80 mb-4">{section.subheading}</p>
-                  )}
-                  {paragraphs && paragraphs.length > 0 ? (
-                    <div className="space-y-4 text-muted-foreground">{paragraphs}</div>
-                  ) : null}
-                  {section.button_text && section.button_link ? (
-                    <div className="mt-6">
-                      <Button asChild>
-                        <Link to={section.button_link}>{section.button_text}</Link>
-                      </Button>
-                    </div>
-                  ) : null}
-                </motion.div>
-              </div>
-            );
-          })}
 
           {/* Values Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -235,6 +167,8 @@ const About = () => {
           </motion.div>
         </div>
       </section>
+
+      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
 
       {/* CTA Section */}
       <section className="section-padding bg-gradient-primary text-primary-foreground">
