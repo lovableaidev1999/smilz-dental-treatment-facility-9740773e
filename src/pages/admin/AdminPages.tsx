@@ -134,7 +134,7 @@ const AdminPages = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium mb-1.5 block">Image URL</label>
-            <Input value={local.image_url ?? ""} onChange={(e) => setLocal({ ...local, image_url: e.target.value })} placeholder="https://..." />
+            <ImageUrlInput value={local.image_url ?? ""} onChange={(url) => setLocal({ ...local, image_url: url })} />
           </div>
           <div>
             <label className="text-sm font-medium mb-1.5 block">Sort Order</label>
