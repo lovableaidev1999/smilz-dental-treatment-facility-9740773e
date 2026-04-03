@@ -489,7 +489,7 @@ const AdminBlogEdit = () => {
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
               {!isNew && id && (
-                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/preview/blog/${id}`, 'blog-preview')}>
+                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/preview/blog/${id}?t=${Date.now()}`, 'blog-preview')}>
                   <ExternalLink className="h-4 w-4" /> View Post
                 </Button>
               )}

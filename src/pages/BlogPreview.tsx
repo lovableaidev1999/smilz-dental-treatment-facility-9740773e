@@ -16,6 +16,13 @@ const BlogPreview = () => {
   const { data: settings } = useSiteSettings();
   const links = settings?.links;
 
+  useEffect(() => {
+    if (!post && id) {
+      const timer = window.setTimeout(() => refetch(), 800);
+      return () => window.clearTimeout(timer);
+    }
+  }, [id, post, refetch]);
+
   if (isLoading) {
     return (
       <div className="section-padding">

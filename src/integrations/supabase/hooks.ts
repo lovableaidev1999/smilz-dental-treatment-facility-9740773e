@@ -81,11 +81,13 @@ export const useBlogPostById = (id: string) =>
         .from("blog_posts")
         .select("*")
         .eq("id", id)
-        .single();
-      if (error) throw error;
+        .maybeSingle();
+      if (error && error.code !== 'PGRST116') throw error;
       return data;
     },
     enabled: !!id,
+    retry: 3,
+    retryDelay: 500,
   });
 
 export const useGallery = () =>
