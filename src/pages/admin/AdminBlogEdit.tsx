@@ -194,15 +194,25 @@ const AdminBlogEdit = () => {
       // Load visual layout if present
       if ((post as any).visual_layout_json && Array.isArray((post as any).visual_layout_json) && (post as any).visual_layout_json.length > 0) {
         setVisualLayout((post as any).visual_layout_json);
-        setEditorMode("visual");
-      } else if (post.content_json) {
+      }
+      if (post.content_json) {
         setContentJson(post.content_json as JSONContent);
-        setEditorMode("blocks");
+        if ((post as any).visual_layout_json?.length > 0) {
+          setEditorMode("visual");
+        } else {
+          setEditorMode("blocks");
+        }
       } else if (post.content) {
         setLegacyHtml(post.content);
         // Auto-generate a visual layout wrapping the legacy HTML
-        setVisualLayout(wrapLegacyContent(post.content));
-        setEditorMode("html");
+        if (!(post as any).visual_layout_json?.length) {
+          setVisualLayout(wrapLegacyContent(post.content));
+        }
+        if ((post as any).visual_layout_json?.length > 0) {
+          setEditorMode("visual");
+        } else {
+          setEditorMode("html");
+        }
       }
     }
   }, [post]);
