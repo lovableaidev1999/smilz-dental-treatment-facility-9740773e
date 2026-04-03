@@ -90,7 +90,7 @@ const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="fixed inset-0 z-50 bg-background flex flex-col">
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
+          <Button variant="ghost" size="sm" onClick={() => onBack(state.layout)} className="gap-1">
             <ArrowLeft className="h-4 w-4" /> Back to Editor
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
