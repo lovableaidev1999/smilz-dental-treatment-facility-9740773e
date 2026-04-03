@@ -506,10 +506,31 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
             <Label className="text-xs">Icon</Label>
             <Select value={props.icon || 'Star'} onValueChange={v => updateProp('icon', v)}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {['Star', 'Heart', 'Check', 'Phone', 'Mail', 'Home', 'ArrowRight'].map(ic => (
-                  <SelectItem key={ic} value={ic}>{ic}</SelectItem>
-                ))}
+              <SelectContent className="max-h-60">
+                <SelectItem value="Star">⭐ Star</SelectItem>
+                <SelectItem value="Heart">❤️ Heart</SelectItem>
+                <SelectItem value="Check">✓ Check</SelectItem>
+                <SelectItem value="Phone">📞 Phone</SelectItem>
+                <SelectItem value="Mail">✉️ Mail</SelectItem>
+                <SelectItem value="Home">🏠 Home</SelectItem>
+                <SelectItem value="ArrowRight">→ Arrow</SelectItem>
+                <SelectItem value="Tooth">🦷 Tooth</SelectItem>
+                <SelectItem value="Smile">😊 Smile</SelectItem>
+                <SelectItem value="Shield">🛡️ Shield</SelectItem>
+                <SelectItem value="Clock">🕐 Clock</SelectItem>
+                <SelectItem value="Calendar">📅 Calendar</SelectItem>
+                <SelectItem value="Sparkles">✨ Sparkles</SelectItem>
+                <SelectItem value="Syringe">💉 Syringe</SelectItem>
+                <SelectItem value="Stethoscope">🩺 Stethoscope</SelectItem>
+                <SelectItem value="Award">🏆 Award</SelectItem>
+                <SelectItem value="Users">👥 Users</SelectItem>
+                <SelectItem value="MapPin">📍 Location</SelectItem>
+                <SelectItem value="ThumbsUp">👍 Thumbs Up</SelectItem>
+                <SelectItem value="Eye">👁️ Eye</SelectItem>
+                <SelectItem value="Baby">👶 Baby</SelectItem>
+                <SelectItem value="Pill">💊 Pill</SelectItem>
+                <SelectItem value="Xray">🔬 X-Ray</SelectItem>
+                <SelectItem value="Clipboard">📋 Clipboard</SelectItem>
               </SelectContent>
             </Select>
           </div>
