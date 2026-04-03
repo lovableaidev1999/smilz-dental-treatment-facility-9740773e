@@ -11,6 +11,20 @@ import ImageUrlInput from "@/components/admin/ImageUrlInput";
 
 const PAGES = ["home", "about", "contact", "services", "gallery", "blog"];
 
+const PAGE_ROUTES: Record<string, string> = {
+  home: "/",
+  about: "/about",
+  contact: "/contact",
+  services: "/services",
+  gallery: "/gallery",
+  blog: "/blog",
+};
+
+const openPagePreview = (page: string) => {
+  const route = PAGE_ROUTES[page] || `/${page}`;
+  window.open(`${route}?t=${Date.now()}`, "_blank");
+};
+
 const AdminPages = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
