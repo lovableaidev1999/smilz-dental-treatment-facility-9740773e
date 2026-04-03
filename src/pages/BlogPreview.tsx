@@ -11,7 +11,7 @@ import NotFound from "./NotFound";
 
 const BlogPreview = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: post, isLoading, error } = useBlogPostById(id ?? "");
+  const { data: post, isLoading, error, refetch } = useBlogPostById(id ?? "");
   const { data: relatedPosts } = useBlogPosts();
   const { data: settings } = useSiteSettings();
   const links = settings?.links;
