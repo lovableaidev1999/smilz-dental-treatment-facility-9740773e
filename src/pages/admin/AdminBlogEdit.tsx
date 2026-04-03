@@ -478,7 +478,11 @@ const AdminBlogEdit = () => {
               <Button variant="outline" onClick={() => saveMutation.mutate({ asDraft: true })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
-              {!isNew && (
+              {!isNew && form.slug && (
+                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/blog/${form.slug}`, '_blank')}>
+                  <ExternalLink className="h-4 w-4" /> View Live Post
+                </Button>
+              )}
                 <Button variant="destructive" onClick={() => { if (confirm("Delete this post permanently?")) deleteMutation.mutate(); }} className="w-full gap-2" disabled={deleteMutation.isPending}>
                   <Trash2 className="h-4 w-4" /> Delete Post
                 </Button>
