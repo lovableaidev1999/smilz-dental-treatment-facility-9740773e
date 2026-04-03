@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import Layout from "@/components/Layout";
+import ScrollToTop from "@/components/ScrollToTop";
 import Home from "@/pages/Home";
 import ServicesPage from "@/pages/Services";
 import ServiceDetail from "@/pages/ServiceDetail";
