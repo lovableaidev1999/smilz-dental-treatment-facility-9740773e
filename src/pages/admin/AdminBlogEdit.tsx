@@ -337,7 +337,18 @@ const AdminBlogEdit = () => {
                     Blocks
                   </button>
                   <button
-                    onClick={() => setEditorMode("visual")}
+                    onClick={() => {
+                      // Auto-generate visual layout from legacy content if none exists
+                      if (!visualLayout || visualLayout.length === 0) {
+                        if (legacyHtml) {
+                          setVisualLayout(wrapLegacyContent(legacyHtml));
+                        } else {
+                          // Empty layout — user starts fresh
+                          setVisualLayout([]);
+                        }
+                      }
+                      setEditorMode("visual");
+                    }}
                     className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${(editorMode as string) === "visual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     <LayoutGrid className="h-3 w-3" /> Visual Builder

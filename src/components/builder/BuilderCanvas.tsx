@@ -66,7 +66,7 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
     case 'image':
       return props.src ? (
         <figure>
-          <img src={props.src} alt={props.alt || ''} className="w-full rounded-lg object-cover max-h-48" style={{ borderRadius: props.borderRadius }} />
+          <img src={props.src} alt={props.alt || ''} className="w-full rounded-lg" style={{ borderRadius: props.borderRadius, objectFit: props.objectFit || 'contain' }} />
           {props.caption && <figcaption className="text-xs text-muted-foreground text-center mt-1">{props.caption}</figcaption>}
         </figure>
       ) : (

@@ -580,7 +580,7 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
     case 'image-box':
       return (
         <div key={key} className={`text-${node.props.align || 'center'} ${rClasses}`} style={baseStyles}>
-          {node.props.src && <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3 object-cover" loading="lazy" />}
+          {node.props.src && <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3" style={{ objectFit: 'contain' }} loading="lazy" />}
           <h4 className="text-lg font-semibold text-foreground">{node.props.title}</h4>
           <p className="text-sm text-muted-foreground mt-1">{node.props.description}</p>
         </div>

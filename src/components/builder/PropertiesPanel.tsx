@@ -266,6 +266,18 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
           <PropField label="Alt Text" value={props.alt} onChange={v => updateProp('alt', v)} />
           <PropField label="Caption" value={props.caption} onChange={v => updateProp('caption', v)} />
           <PropField label="Border Radius" value={props.borderRadius} onChange={v => updateProp('borderRadius', v)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Fit Mode</Label>
+            <Select value={props.objectFit || 'contain'} onValueChange={v => updateProp('objectFit', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="contain">Contain</SelectItem>
+                <SelectItem value="cover">Cover</SelectItem>
+                <SelectItem value="fill">Fill</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </>
       );
 
