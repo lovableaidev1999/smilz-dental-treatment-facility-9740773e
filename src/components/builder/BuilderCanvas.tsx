@@ -180,7 +180,7 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
         </div>
       );
     case 'icon': {
-      const IconMap: Record<string, string> = { Star: '★', Heart: '♥', Check: '✓', Phone: '☎', Mail: '✉', Home: '⌂', ArrowRight: '→' };
+      const IconMap: Record<string, string> = { Star: '⭐', Heart: '❤️', Check: '✓', Phone: '📞', Mail: '✉️', Home: '🏠', ArrowRight: '→', Tooth: '🦷', Smile: '😊', Shield: '🛡️', Clock: '🕐', Calendar: '📅', Sparkles: '✨', Syringe: '💉', Stethoscope: '🩺', Award: '🏆', Users: '👥', MapPin: '📍', ThumbsUp: '👍', Eye: '👁️', Baby: '👶', Pill: '💊', Xray: '🔬', Clipboard: '📋' };
       return (
         <div style={{ textAlign: (props.align || 'center') as any }}>
           <span style={{ fontSize: props.size || '48px', color: props.color || 'hsl(var(--primary))' }}>
