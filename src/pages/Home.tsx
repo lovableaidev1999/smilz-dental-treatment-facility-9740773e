@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-dental.jpg";
 import doctorImg from "@/assets/doctor.jpg";
-
+import DynamicSections from "@/components/DynamicSections";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -22,7 +22,7 @@ const fadeUp = {
 
 const Home = () => {
   const { data: settings } = useSiteSettings();
-  const { getSection } = usePageContent("home");
+  const { sections, getSection } = usePageContent("home");
   const { data: services, isLoading: servicesLoading } = useServices();
 
   const { data: reviews } = useQuery({
@@ -43,6 +43,7 @@ const Home = () => {
   const aboutSection = getSection("about");
   const reviewSection = getSection("reviews");
   const ctaSection = getSection("cta");
+  const KNOWN_IDS = ["hero", "services", "about", "reviews", "cta"];
 
   return (
     <>
@@ -161,6 +162,8 @@ const Home = () => {
           <GoogleReviewSlider reviews={reviews ?? []} />
         </div>
       </section>
+
+      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
 
       {/* CTA Section */}
       <section className="relative py-20 overflow-hidden">

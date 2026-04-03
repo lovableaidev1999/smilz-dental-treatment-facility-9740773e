@@ -4,6 +4,7 @@ import { Phone, MessageCircle, Mail, MapPin, Clock, Send } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
+import DynamicSections from "@/components/DynamicSections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 const Contact = () => {
   const { toast } = useToast();
   const { data: settings } = useSiteSettings();
-  const { getSection } = usePageContent("contact");
+  const { sections, getSection } = usePageContent("contact");
   const [form, setForm] = useState({ name: "", email: "", mobile: "", message: "" });
 
   const contact = settings?.contact;
@@ -20,6 +21,7 @@ const Contact = () => {
   const links = settings?.links;
   const coordinates = settings?.coordinates;
   const hero = getSection("hero");
+  const KNOWN_IDS = ["hero"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +113,8 @@ const Contact = () => {
           </div>
         </div>
       </section>
+
+      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
     </>
   );
 };

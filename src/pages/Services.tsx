@@ -5,6 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
+import DynamicSections from "@/components/DynamicSections";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -17,13 +18,14 @@ const fadeUp = {
 const ServicesPage = () => {
   const { data: services, isLoading } = useServices();
   const { data: settings } = useSiteSettings();
-  const { getSection } = usePageContent("services");
+  const { sections, getSection } = usePageContent("services");
 
   const general = settings?.general;
   const contact = settings?.contact;
   const links = settings?.links;
   const hero = getSection("hero");
   const ctaSection = getSection("cta");
+  const KNOWN_IDS = ["hero", "cta"];
 
   const serviceFaqs = [
     { q: "How often should I have a dental check-up?", a: "Generally, it's recommended to have a check-up every six months. However, your dentist may suggest more frequent visits based on your individual needs." },
@@ -186,6 +188,8 @@ const ServicesPage = () => {
           </div>
         </div>
       </section>
+
+      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
 
       {/* CTA Section */}
       <section className="relative py-20 overflow-hidden">

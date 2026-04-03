@@ -6,6 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useBlogPosts } from "@/integrations/supabase/hooks";
+import DynamicSections from "@/components/DynamicSections";
 
 const CATEGORY_TABS = [
   { slug: "", label: "All" },
@@ -30,9 +31,10 @@ const Blog = () => {
   const [activeTab, setActiveTab] = useState("");
   const { data: allPosts, isLoading } = useBlogPosts();
   const { data: settings } = useSiteSettings();
-  const { getSection } = usePageContent("blog");
+  const { sections, getSection } = usePageContent("blog");
   const links = settings?.links;
   const hero = getSection("hero");
+  const KNOWN_IDS = ["hero"];
 
   const filteredPosts = activeTab
     ? (allPosts ?? []).filter((p) => categoryToTab[p.category] === activeTab || p.category === activeTab)
@@ -97,6 +99,8 @@ const Blog = () => {
           )}
         </div>
       </section>
+
+      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
     </>
   );
 };
