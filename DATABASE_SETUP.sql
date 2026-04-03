@@ -73,6 +73,39 @@ CREATE POLICY "Auth can manage page_content"
   TO authenticated
   USING (true) WITH CHECK (true);
 
+
+-- 2B. VISUAL PAGE LAYOUTS TABLE
+CREATE TABLE IF NOT EXISTS public.page_layouts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  page_slug text NOT NULL UNIQUE,
+  page_title text NOT NULL,
+  layout_json jsonb NOT NULL DEFAULT '[]',
+  is_published boolean DEFAULT false,
+  is_template boolean DEFAULT false,
+  template_type text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.page_layouts ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='page_layouts' AND policyname='Anyone can read published page_layouts') THEN
+    CREATE POLICY "Anyone can read published page_layouts"
+      ON public.page_layouts FOR SELECT
+      TO anon, authenticated
+      USING (is_published = true OR auth.role() = 'authenticated');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='page_layouts' AND policyname='Auth can manage page_layouts') THEN
+    CREATE POLICY "Auth can manage page_layouts"
+      ON public.page_layouts FOR ALL
+      TO authenticated
+      USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
 -- Seed home page sections
 INSERT INTO public.page_content (page_name, section_id, section_title, heading, subheading, body_text, button_text, button_link, sort_order) VALUES
   ('home', 'hero', 'Hero Section', 'Your Trusted Dental Partner in South Kolkata', 'Comprehensive, affordable dental care since 1999. From routine check-ups to advanced treatments, we deliver exceptional results with a gentle touch.', NULL, 'Book Appointment', '/contact', 1),
@@ -143,6 +176,10 @@ END $$;
 -- Ensure blog_posts has proper RLS for admin
 DO $$
 BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='blog_posts' AND column_name='visual_layout_json') THEN
+    ALTER TABLE public.blog_posts ADD COLUMN visual_layout_json jsonb;
+  END IF;
+
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='blog_posts' AND policyname='Auth can manage blog_posts') THEN
     CREATE POLICY "Auth can manage blog_posts" ON public.blog_posts FOR ALL TO authenticated USING (true) WITH CHECK (true);
   END IF;

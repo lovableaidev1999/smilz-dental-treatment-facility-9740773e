@@ -6,6 +6,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
 import BlockRenderer from "@/components/BlockRenderer";
 import VisualRenderer from "@/components/builder/VisualRenderer";
+import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
@@ -30,6 +31,8 @@ const BlogPost = () => {
   if (error || !post) return <NotFound />;
 
   const related = (relatedPosts ?? []).filter((p) => p.slug !== slug && p.category === post.category).slice(0, 3);
+  const visualLayout = getStoredVisualLayout(post as any);
+  const hasBlockContent = !!post.content_json && !isVisualLayoutFallbackContent(post.content_json);
 
   return (
     <>
@@ -75,9 +78,9 @@ const BlogPost = () => {
         <div className="container-narrow mx-auto max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             {post.featured_image && <img src={post.featured_image} alt={`${post.title} - dental health article by ${post.author || "Dr. Dibyendu Dutta"}`} className="w-full rounded-2xl mb-8 shadow-card" loading="lazy" width={800} height={450} />}
-            {(post as any).visual_layout_json && Array.isArray((post as any).visual_layout_json) && (post as any).visual_layout_json.length > 0 ? (
-              <VisualRenderer layout={(post as any).visual_layout_json} className="mb-8" />
-            ) : post.content_json ? (
+            {visualLayout ? (
+              <VisualRenderer layout={visualLayout} className="mb-8" />
+            ) : hasBlockContent ? (
               <BlockRenderer content={post.content_json} className="mb-8" />
             ) : (
               <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: post.content }} />

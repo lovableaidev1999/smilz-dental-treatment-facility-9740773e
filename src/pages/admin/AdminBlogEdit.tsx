@@ -14,6 +14,12 @@ import BlockRenderer from "@/components/BlockRenderer";
 import type { JSONContent } from "@tiptap/core";
 import type { LayoutNode, BlockType } from "@/types/visual-builder";
 import { wrapLegacyContent } from "@/lib/legacyMigration";
+import {
+  createVisualLayoutFallbackContent,
+  getStoredVisualLayout,
+  isMissingVisualLayoutColumnError,
+  isVisualLayoutFallbackContent,
+} from "@/lib/visualLayoutStorage";
 import { BuilderProvider, useBuilder } from "@/hooks/useBuilderState";
 import BuilderCanvas from "@/components/builder/BuilderCanvas";
 import BlockPalette from "@/components/builder/BlockPalette";
@@ -178,6 +184,10 @@ const AdminBlogEdit = () => {
 
   useEffect(() => {
     if (post) {
+      const storedVisualLayout = getStoredVisualLayout(post as any);
+      const hasStoredVisualLayout = !!storedVisualLayout?.length;
+      const usesVisualFallback = isVisualLayoutFallbackContent(post.content_json);
+
       setForm({
         title: post.title ?? "", slug: post.slug ?? "",
         excerpt: post.excerpt ?? "",
@@ -191,28 +201,38 @@ const AdminBlogEdit = () => {
         published_at: post.published_at ? post.published_at.split("T")[0] : "",
       });
       setTagsInput(Array.isArray(post.tags) ? post.tags.join(", ") : "");
-      // Load visual layout if present
-      if ((post as any).visual_layout_json && Array.isArray((post as any).visual_layout_json) && (post as any).visual_layout_json.length > 0) {
-        setVisualLayout((post as any).visual_layout_json);
+
+      if (hasStoredVisualLayout) {
+        setVisualLayout(storedVisualLayout);
       }
+
+      if (usesVisualFallback) {
+        setContentJson(null);
+        setLegacyHtml(post.content ?? "");
+        setEditorMode("visual");
+        return;
+      }
+
       if (post.content_json) {
         setContentJson(post.content_json as JSONContent);
-        if ((post as any).visual_layout_json?.length > 0) {
+        if (hasStoredVisualLayout) {
           setEditorMode("visual");
         } else {
           setEditorMode("blocks");
         }
       } else if (post.content) {
         setLegacyHtml(post.content);
-        // Auto-generate a visual layout wrapping the legacy HTML
-        if (!(post as any).visual_layout_json?.length) {
+        if (!hasStoredVisualLayout) {
           setVisualLayout(wrapLegacyContent(post.content));
         }
-        if ((post as any).visual_layout_json?.length > 0) {
+        if (hasStoredVisualLayout) {
           setEditorMode("visual");
         } else {
           setEditorMode("html");
         }
+      } else if (hasStoredVisualLayout) {
+        setLegacyHtml(post.content ?? "");
+        setEditorMode("visual");
       }
     }
   }, [post]);
@@ -231,18 +251,36 @@ const AdminBlogEdit = () => {
         content_json: contentJson,
         content: legacyHtml || "",
       };
-      // Include visual layout if provided (from visual builder mode)
       if (visualLayoutJson) {
         payload.visual_layout_json = visualLayoutJson;
       }
-      if (isNew) {
-        payload.created_at = new Date().toISOString();
-        const { error } = await supabase.from("blog_posts").insert(payload);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("blog_posts").update(payload).eq("id", id);
-        if (error) throw error;
+
+      const persistPost = async (data: any) => {
+        if (isNew) {
+          const { error } = await supabase
+            .from("blog_posts")
+            .insert({ ...data, created_at: new Date().toISOString() });
+          return error;
+        }
+
+        const { error } = await supabase.from("blog_posts").update(data).eq("id", id);
+        return error;
+      };
+
+      let error = await persistPost(payload);
+
+      if (error && visualLayoutJson && isMissingVisualLayoutColumnError(error)) {
+        const fallbackPayload = {
+          ...payload,
+          content_json: createVisualLayoutFallbackContent(visualLayoutJson),
+        };
+
+        delete fallbackPayload.visual_layout_json;
+        error = await persistPost(fallbackPayload);
       }
+
+      if (error) throw error;
+
       return asDraft;
     },
     onSuccess: (asDraft) => {
