@@ -208,8 +208,17 @@ const PropertiesPanel = () => {
       {/* Media Picker for image blocks */}
       <MediaPickerDialog
         open={showMediaPicker}
-        onClose={() => setShowMediaPicker(false)}
-        onSelect={(url) => updateProp('src', url)}
+        onClose={() => { setShowMediaPicker(false); setMediaPickerTarget(null); }}
+        onSelect={(url) => {
+          if (mediaPickerTarget?.type === 'array-item') {
+            const arr = [...(node.props[mediaPickerTarget.key] || [])];
+            arr[mediaPickerTarget.index] = { ...arr[mediaPickerTarget.index], src: url };
+            updateProp(mediaPickerTarget.key, arr);
+          } else {
+            updateProp('src', url);
+          }
+          setMediaPickerTarget(null);
+        }}
       />
     </div>
   );
