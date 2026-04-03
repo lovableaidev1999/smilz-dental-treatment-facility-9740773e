@@ -73,6 +73,21 @@ export const useBlogPost = (slug: string) =>
     enabled: !!slug,
   });
 
+export const useBlogPostById = (id: string) =>
+  useQuery({
+    queryKey: ["blog_posts", "id", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
 export const useGallery = () =>
   useQuery({
     queryKey: ["gallery"],

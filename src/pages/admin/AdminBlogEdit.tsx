@@ -38,9 +38,9 @@ import {
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 // ─── Inner blog builder with DnD ────────────────────────
-const BlogBuilderInner = ({ title, slug, onBack, onSave, isSaving }: {
+const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
   title: string;
-  slug: string;
+  postId?: string;
   onBack: () => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
@@ -95,9 +95,11 @@ const BlogBuilderInner = ({ title, slug, onBack, onSave, isSaving }: {
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
           <div className="ml-auto flex gap-2">
-            <Button variant="secondary" size="sm" onClick={() => window.open(`/blog/${slug}`, '_blank')} className="gap-1">
-              <ExternalLink className="h-4 w-4" /> View
-            </Button>
+            {postId && (
+              <Button variant="secondary" size="sm" onClick={() => window.open(`/preview/blog/${postId}`, 'blog-preview')} className="gap-1">
+                <ExternalLink className="h-4 w-4" /> View
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => onSave(state.layout, true)} disabled={isSaving}>
               <FileText className="h-4 w-4 mr-1" /> Save Draft
             </Button>
@@ -323,7 +325,7 @@ const AdminBlogEdit = () => {
       <BuilderProvider initialLayout={visualLayout || []}>
         <BlogBuilderInner
           title={form.title}
-          slug={form.slug}
+          postId={isNew ? undefined : id}
           onBack={() => setEditorMode("blocks")}
           onSave={(layout, asDraft) => {
             setVisualLayout(layout);
@@ -483,9 +485,9 @@ const AdminBlogEdit = () => {
               <Button variant="outline" onClick={() => saveMutation.mutate({ asDraft: true })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
-              {!isNew && form.slug && (
-                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/blog/${form.slug}`, '_blank')}>
-                  <ExternalLink className="h-4 w-4" /> View Live Post
+              {!isNew && id && (
+                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/preview/blog/${id}`, 'blog-preview')}>
+                  <ExternalLink className="h-4 w-4" /> View Post
                 </Button>
               )}
               {!isNew && (
