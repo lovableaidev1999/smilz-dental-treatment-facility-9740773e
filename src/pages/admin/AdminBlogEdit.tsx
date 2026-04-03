@@ -95,9 +95,11 @@ const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
           <div className="ml-auto flex gap-2">
-            <Button variant="secondary" size="sm" onClick={() => window.open(`/blog/${slug}`, '_blank')} className="gap-1">
-              <ExternalLink className="h-4 w-4" /> View
-            </Button>
+            {postId && (
+              <Button variant="secondary" size="sm" onClick={() => window.open(`/preview/blog/${postId}`, 'blog-preview')} className="gap-1">
+                <ExternalLink className="h-4 w-4" /> View
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => onSave(state.layout, true)} disabled={isSaving}>
               <FileText className="h-4 w-4 mr-1" /> Save Draft
             </Button>
