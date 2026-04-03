@@ -6,10 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Eye, EyeOff, ChevronRight, Plus, Trash2, GripVertical } from "lucide-react";
+import { Save, Eye, EyeOff, ExternalLink, Plus, Trash2, GripVertical } from "lucide-react";
 import ImageUrlInput from "@/components/admin/ImageUrlInput";
 
 const PAGES = ["home", "about", "contact", "services", "gallery", "blog"];
+
+const PAGE_ROUTES: Record<string, string> = {
+  home: "/",
+  about: "/about",
+  contact: "/contact",
+  services: "/services",
+  gallery: "/gallery",
+  blog: "/blog",
+};
+
+const openPagePreview = (page: string) => {
+  const route = PAGE_ROUTES[page] || `/${page}`;
+  window.open(`${route}?t=${Date.now()}`, "_blank");
+};
 
 const AdminPages = () => {
   const qc = useQueryClient();
@@ -153,8 +167,18 @@ const AdminPages = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => onSave(local)} className="gap-2" disabled={saveMutation.isPending}>
-            <Save className="h-4 w-4" /> {isNew ? "Create Section" : "Save Section"}
+          <Button
+            onClick={() => {
+              onSave(local);
+              setTimeout(() => openPagePreview(local.page_name || activePage), 600);
+            }}
+            className="gap-2"
+            disabled={saveMutation.isPending}
+          >
+            <Save className="h-4 w-4" /> {isNew ? "Create & Preview" : "Save & Preview"}
+          </Button>
+          <Button onClick={() => onSave(local)} variant="secondary" className="gap-2" disabled={saveMutation.isPending}>
+            <Save className="h-4 w-4" /> {isNew ? "Create" : "Save"}
           </Button>
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
@@ -166,17 +190,27 @@ const AdminPages = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-heading font-bold text-foreground">Page Sections</h1>
-        <Button
-          onClick={() => {
-            setShowNewForm(!showNewForm);
-            setEditingSection(null);
-            setNewForm((f: any) => ({ ...f, page_name: activePage, sort_order: (sections?.length ?? 0) + 1 }));
-          }}
-          className="gap-2"
-          size="sm"
-        >
-          <Plus className="h-4 w-4" /> Add Section
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => openPagePreview(activePage)}
+          >
+            <ExternalLink className="h-4 w-4" /> Preview Page
+          </Button>
+          <Button
+            onClick={() => {
+              setShowNewForm(!showNewForm);
+              setEditingSection(null);
+              setNewForm((f: any) => ({ ...f, page_name: activePage, sort_order: (sections?.length ?? 0) + 1 }));
+            }}
+            className="gap-2"
+            size="sm"
+          >
+            <Plus className="h-4 w-4" /> Add Section
+          </Button>
+        </div>
       </div>
 
       {/* Page tabs */}
