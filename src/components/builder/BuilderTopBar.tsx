@@ -6,8 +6,10 @@ import type { DeviceMode } from '@/types/visual-builder';
 
 interface Props {
   pageTitle: string;
+  pageSlug?: string;
   onSave: () => void;
   onPublish: () => void;
+  onView?: () => void;
   onPreview: () => void;
   onBack: () => void;
   onUndo?: () => void;
