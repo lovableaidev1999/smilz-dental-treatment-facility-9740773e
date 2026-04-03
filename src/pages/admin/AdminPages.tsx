@@ -85,8 +85,39 @@ const AdminPages = () => {
     sort_order: 99,
     is_active: true,
   });
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
 
-  const { data: sections, isLoading } = useQuery({
+  const reorderMutation = useMutation({
+    mutationFn: async (items: { id: string; sort_order: number }[]) => {
+      for (const item of items) {
+        const { error } = await supabase.from("page_content").update({ sort_order: item.sort_order }).eq("id", item.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin_page_content"] });
+      qc.invalidateQueries({ queryKey: ["page_content"] });
+      toast({ title: "Order updated!" });
+    },
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !sections) return;
+    const oldIndex = sections.findIndex((s) => s.id === active.id);
+    const newIndex = sections.findIndex((s) => s.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = [...sections];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+    const updates = reordered.map((s, i) => ({ id: s.id, sort_order: i + 1 }));
+    reorderMutation.mutate(updates);
+  };
+
+
     queryKey: ["admin_page_content", activePage],
     queryFn: async () => {
       const { data, error } = await supabase
