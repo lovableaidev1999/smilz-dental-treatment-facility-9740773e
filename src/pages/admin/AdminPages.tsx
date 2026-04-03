@@ -29,7 +29,44 @@ const openPagePreview = (page: string) => {
   window.open(`${route}?t=${Date.now()}`, "_blank");
 };
 
-const AdminPages = () => {
+const SortableSectionCard = ({ section, isEditing, onEdit, onSave, onCancelEdit, onToggleActive, onDelete, savePending, activePage, SectionForm }: any) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 10 : undefined, opacity: isDragging ? 0.8 : undefined };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={!section.is_active ? "opacity-50" : ""}>
+        <CardContent className="p-0">
+          {isEditing ? (
+            <SectionForm data={section} onSave={onSave} onCancel={onCancelEdit} />
+          ) : (
+            <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={onEdit}>
+              <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none">
+                <GripVertical className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground">{section.section_title || section.section_id}</p>
+                <p className="text-sm text-muted-foreground truncate">{section.heading || "(no heading)"}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">#{section.sort_order}</span>
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded font-mono">{section.section_id}</span>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onToggleActive(); }}>
+                  {section.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+
   const qc = useQueryClient();
   const { toast } = useToast();
   const [activePage, setActivePage] = useState("home");
