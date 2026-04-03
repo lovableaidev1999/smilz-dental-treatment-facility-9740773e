@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, ChevronRight, ArrowLeft, User } from "lucide-react";
@@ -11,10 +12,17 @@ import NotFound from "./NotFound";
 
 const BlogPreview = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: post, isLoading, error } = useBlogPostById(id ?? "");
+  const { data: post, isLoading, error, refetch } = useBlogPostById(id ?? "");
   const { data: relatedPosts } = useBlogPosts();
   const { data: settings } = useSiteSettings();
   const links = settings?.links;
+
+  useEffect(() => {
+    if (!post && id) {
+      const timer = window.setTimeout(() => refetch(), 800);
+      return () => window.clearTimeout(timer);
+    }
+  }, [id, post, refetch]);
 
   if (isLoading) {
     return (
@@ -28,7 +36,17 @@ const BlogPreview = () => {
     );
   }
 
-  if (error || !post) return <NotFound />;
+  if (error) return <NotFound />;
+  if (!post) {
+    return (
+      <div className="section-padding">
+        <div className="container-narrow mx-auto max-w-3xl text-center py-20">
+          <p className="text-lg font-semibold text-foreground">Preview not ready yet</p>
+          <p className="text-muted-foreground mt-2">This draft preview can take a moment to become available after saving. Please try again from the editor.</p>
+        </div>
+      </div>
+    );
+  }
 
   const related = (relatedPosts ?? []).filter((p) => p.id !== post.id && p.category === post.category).slice(0, 3);
   const visualLayout = getStoredVisualLayout(post as any);

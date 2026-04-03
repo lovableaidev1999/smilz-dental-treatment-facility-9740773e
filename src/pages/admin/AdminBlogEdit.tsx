@@ -41,7 +41,7 @@ import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-reg
 const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
   title: string;
   postId?: string;
-  onBack: () => void;
+  onBack: (layout: LayoutNode[]) => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
 }) => {
@@ -90,13 +90,13 @@ const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
     <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="fixed inset-0 z-50 bg-background flex flex-col">
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
+          <Button variant="ghost" size="sm" onClick={() => onBack(state.layout)} className="gap-1">
             <ArrowLeft className="h-4 w-4" /> Back to Editor
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
           <div className="ml-auto flex gap-2">
             {postId && (
-              <Button variant="secondary" size="sm" onClick={() => window.open(`/preview/blog/${postId}`, 'blog-preview')} className="gap-1">
+              <Button variant="secondary" size="sm" onClick={() => window.open(`/preview/blog/${postId}?t=${Date.now()}`, 'blog-preview')} className="gap-1">
                 <ExternalLink className="h-4 w-4" /> View
               </Button>
             )}
@@ -326,7 +326,10 @@ const AdminBlogEdit = () => {
         <BlogBuilderInner
           title={form.title}
           postId={isNew ? undefined : id}
-          onBack={() => setEditorMode("blocks")}
+          onBack={(layout) => {
+            setVisualLayout(layout);
+            setEditorMode("blocks");
+          }}
           onSave={(layout, asDraft) => {
             setVisualLayout(layout);
             saveMutation.mutate({ asDraft, visualLayoutJson: layout });
@@ -486,7 +489,7 @@ const AdminBlogEdit = () => {
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
               {!isNew && id && (
-                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/preview/blog/${id}`, 'blog-preview')}>
+                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/preview/blog/${id}?t=${Date.now()}`, 'blog-preview')}>
                   <ExternalLink className="h-4 w-4" /> View Post
                 </Button>
               )}
