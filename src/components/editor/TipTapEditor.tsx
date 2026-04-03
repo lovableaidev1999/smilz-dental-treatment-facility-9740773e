@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
 import { MediaBlock } from "./extensions/MediaBlockExtension";
 import { CTABlock } from "./extensions/CTABlockExtension";
 import { FAQBlock } from "./extensions/FAQBlockExtension";
@@ -24,6 +25,9 @@ const TipTapEditor = ({ content, onChange, placeholder = "Start writing your con
       LinkExtension.configure({
         openOnClick: false,
         HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" },
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
       }),
       Placeholder.configure({ placeholder }),
       MediaBlock,

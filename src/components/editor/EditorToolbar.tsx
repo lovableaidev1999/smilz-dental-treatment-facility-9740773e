@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Heading1, Heading2, Heading3,
   Link, Quote, Minus, Undo, Redo, ImagePlus, MousePointerClick, HelpCircle,
+  AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -102,6 +103,19 @@ const EditorToolbar = ({ editor }: Props) => {
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Divider">
         <Minus className="h-4 w-4" />
+      </ToolBtn>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Alignment */}
+      <ToolBtn active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()} title="Align Left">
+        <AlignLeft className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()} title="Align Center">
+        <AlignCenter className="h-4 w-4" />
+      </ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} title="Align Right">
+        <AlignRight className="h-4 w-4" />
       </ToolBtn>
 
       <div className="w-px h-6 bg-border mx-1" />
