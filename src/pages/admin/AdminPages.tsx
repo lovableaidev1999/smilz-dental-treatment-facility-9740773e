@@ -117,7 +117,7 @@ const AdminPages = () => {
     reorderMutation.mutate(updates);
   };
 
-
+  const { data: sections, isLoading } = useQuery({
     queryKey: ["admin_page_content", activePage],
     queryFn: async () => {
       const { data, error } = await supabase
