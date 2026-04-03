@@ -415,13 +415,29 @@ const AdminBlogEdit = () => {
                 />
               )}
               {editorMode === "html" && (
-                <Textarea
-                  value={legacyHtml}
-                  onChange={(e) => setLegacyHtml(e.target.value)}
-                  rows={15}
-                  className="font-mono text-xs"
-                  placeholder="Legacy HTML content…"
-                />
+                <div className="space-y-3">
+                  <Textarea
+                    value={legacyHtml}
+                    onChange={(e) => setLegacyHtml(e.target.value)}
+                    rows={15}
+                    className="font-mono text-xs"
+                    placeholder="Legacy HTML content…"
+                  />
+                  {legacyHtml && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => {
+                        const layout = convertHtmlToVisualLayout(legacyHtml);
+                        setVisualLayout(layout);
+                        setEditorMode("visual");
+                        toast({ title: "Converted!", description: `Legacy HTML split into ${layout[0]?.children?.[0]?.children?.length || 0} structured blocks.` });
+                      }}
+                    >
+                      <Wand2 className="h-4 w-4" /> Convert to Visual Layout
+                    </Button>
+                  )}
+                </div>
               )}
               {editorMode === "preview" && contentJson && (
                 <div className="border border-border rounded-lg p-6 bg-background min-h-[400px]">
