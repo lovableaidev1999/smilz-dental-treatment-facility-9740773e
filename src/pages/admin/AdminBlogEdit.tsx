@@ -325,7 +325,7 @@ const AdminBlogEdit = () => {
       <BuilderProvider initialLayout={visualLayout || []}>
         <BlogBuilderInner
           title={form.title}
-          slug={form.slug}
+          postId={isNew ? undefined : id}
           onBack={() => setEditorMode("blocks")}
           onSave={(layout, asDraft) => {
             setVisualLayout(layout);
