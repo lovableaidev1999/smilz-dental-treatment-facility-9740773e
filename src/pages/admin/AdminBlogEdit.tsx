@@ -485,9 +485,9 @@ const AdminBlogEdit = () => {
               <Button variant="outline" onClick={() => saveMutation.mutate({ asDraft: true })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
-              {!isNew && form.slug && (
-                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/blog/${form.slug}`, '_blank')}>
-                  <ExternalLink className="h-4 w-4" /> View Live Post
+              {!isNew && id && (
+                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/preview/blog/${id}`, 'blog-preview')}>
+                  <ExternalLink className="h-4 w-4" /> View Post
                 </Button>
               )}
               {!isNew && (
