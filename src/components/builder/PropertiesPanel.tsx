@@ -483,7 +483,19 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Video URL" value={props.url} onChange={v => updateProp('url', v)} placeholder="YouTube, Vimeo, or direct URL" />
-          <PropField label="Aspect Ratio" value={props.aspectRatio} onChange={v => updateProp('aspectRatio', v)} placeholder="16/9" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Aspect Ratio</Label>
+            <Select value={props.aspectRatio || '16/9'} onValueChange={v => updateProp('aspectRatio', v)}>
+              <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="16/9">16:9 (Widescreen)</SelectItem>
+                <SelectItem value="4/3">4:3 (Standard)</SelectItem>
+                <SelectItem value="1/1">1:1 (Square)</SelectItem>
+                <SelectItem value="21/9">21:9 (Ultra Wide)</SelectItem>
+                <SelectItem value="9/16">9:16 (Vertical)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center justify-between">
             <Label className="text-xs">Autoplay</Label>
             <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
