@@ -8,6 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Eye, EyeOff, ExternalLink, Plus, Trash2, GripVertical } from "lucide-react";
 import ImageUrlInput from "@/components/admin/ImageUrlInput";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 const PAGES = ["home", "about", "contact", "services", "gallery", "blog"];
 
