@@ -13,6 +13,7 @@ import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
 import type { JSONContent } from "@tiptap/core";
 import type { LayoutNode, BlockType } from "@/types/visual-builder";
+import { wrapLegacyContent } from "@/lib/legacyMigration";
 import { BuilderProvider, useBuilder } from "@/hooks/useBuilderState";
 import BuilderCanvas from "@/components/builder/BuilderCanvas";
 import BlockPalette from "@/components/builder/BlockPalette";
