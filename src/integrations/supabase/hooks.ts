@@ -73,21 +73,21 @@ export const useBlogPost = (slug: string) =>
     enabled: !!slug,
   });
 
-export const useBlogPostById = (id: string) =>
+export const useBlogPostById = (id: string, enabled = true) =>
   useQuery({
     queryKey: ["blog_posts", "id", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
+        .eq("id", id);
+      if (error) throw error;
+      return data?.[0] ?? null;
     },
-    enabled: !!id,
+    enabled: !!id && enabled,
     retry: 3,
     retryDelay: 500,
+    refetchOnMount: "always",
   });
 
 export const useGallery = () =>

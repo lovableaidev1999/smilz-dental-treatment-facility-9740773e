@@ -276,10 +276,10 @@ const AdminBlogEdit = () => {
 
       let error = await persistPost(payload);
 
-      if (error && visualLayoutJson && isMissingVisualLayoutColumnError(error)) {
+      if (error && layoutToSave && layoutToSave.length > 0 && isMissingVisualLayoutColumnError(error)) {
         const fallbackPayload = {
           ...payload,
-          content_json: createVisualLayoutFallbackContent(visualLayoutJson),
+          content_json: createVisualLayoutFallbackContent(layoutToSave),
         };
 
         delete fallbackPayload.visual_layout_json;
