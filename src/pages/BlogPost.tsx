@@ -5,6 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
 import BlockRenderer from "@/components/BlockRenderer";
+import VisualRenderer from "@/components/builder/VisualRenderer";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
