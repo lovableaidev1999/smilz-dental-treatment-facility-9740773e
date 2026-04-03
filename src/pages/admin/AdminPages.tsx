@@ -65,8 +65,7 @@ const SortableSectionCard = ({ section, isEditing, onEdit, onSave, onCancelEdit,
     </div>
   );
 };
-
-
+const AdminPages = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [activePage, setActivePage] = useState("home");
