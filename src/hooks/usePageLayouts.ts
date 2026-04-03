@@ -38,7 +38,7 @@ export const usePageLayout = (pageSlug: string) => {
     if (!pageSlug) return;
 
     const channel = supabase
-      .channel(`page-layout-${pageSlug}`)
+      .channel(`page-layout-${pageSlug}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         'postgres_changes',
         {

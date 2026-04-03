@@ -134,8 +134,9 @@ export const useSiteSettings = () => {
   });
 
   useEffect(() => {
+    const id = Math.random().toString(36).slice(2, 8);
     const channel = supabase
-      .channel("site-settings-live")
+      .channel(`site-settings-live-${id}`)
       .on(
         "postgres_changes",
         {

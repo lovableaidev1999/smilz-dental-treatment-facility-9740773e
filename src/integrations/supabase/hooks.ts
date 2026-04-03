@@ -6,8 +6,9 @@ const useLiveTableInvalidation = (table: string, queryKey: readonly unknown[]) =
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const id = Math.random().toString(36).slice(2, 8);
     const channel = supabase
-      .channel(`${table}-${JSON.stringify(queryKey)}`)
+      .channel(`${table}-live-${id}`)
       .on(
         "postgres_changes",
         {
@@ -24,7 +25,8 @@ const useLiveTableInvalidation = (table: string, queryKey: readonly unknown[]) =
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, queryKey, table]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryClient, table]);
 };
 
 export const useSiteContent = (category?: string) => {

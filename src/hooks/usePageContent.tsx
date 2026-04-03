@@ -44,8 +44,9 @@ export const usePageContent = (pageName: string) => {
   });
 
   useEffect(() => {
+    const id = Math.random().toString(36).slice(2, 8);
     const channel = supabase
-      .channel(`page-content-${pageName}`)
+      .channel(`page-content-${pageName}-${id}`)
       .on(
         "postgres_changes",
         {
