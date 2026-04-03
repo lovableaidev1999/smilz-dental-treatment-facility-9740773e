@@ -1,4 +1,4 @@
-import { Monitor, Tablet, Smartphone, Save, Eye, Upload, ArrowLeft, Undo2, Redo2, Layers } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, Save, Eye, Upload, ArrowLeft, Undo2, Redo2, Layers, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBuilder } from '@/hooks/useBuilderState';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -6,8 +6,10 @@ import type { DeviceMode } from '@/types/visual-builder';
 
 interface Props {
   pageTitle: string;
+  pageSlug?: string;
   onSave: () => void;
   onPublish: () => void;
+  onView?: () => void;
   onPreview: () => void;
   onBack: () => void;
   onUndo?: () => void;
@@ -23,7 +25,7 @@ const devices: { mode: DeviceMode; icon: React.FC<any>; label: string; width: st
   { mode: 'mobile', icon: Smartphone, label: 'Mobile', width: '375px' },
 ];
 
-const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, onUndo, onRedo, canUndo, canRedo, saving }: Props) => {
+const BuilderTopBar = ({ pageTitle, pageSlug, onSave, onPublish, onPreview, onBack, onView, onUndo, onRedo, canUndo, canRedo, saving }: Props) => {
   const { state, dispatch } = useBuilder();
 
   return (
@@ -86,6 +88,12 @@ const BuilderTopBar = ({ pageTitle, onSave, onPublish, onPreview, onBack, onUndo
           <Eye className="h-3.5 w-3.5 mr-1" />
           Preview
         </Button>
+        {onView && (
+          <Button variant="ghost" size="sm" onClick={onView} className="h-8 text-xs">
+            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+            View
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"

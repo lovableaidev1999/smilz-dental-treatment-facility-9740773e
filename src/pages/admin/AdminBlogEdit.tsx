@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid, Wand2 } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid, Wand2, ExternalLink } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
@@ -38,8 +38,9 @@ import {
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 // ─── Inner blog builder with DnD ────────────────────────
-const BlogBuilderInner = ({ title, onBack, onSave, isSaving }: {
+const BlogBuilderInner = ({ title, slug, onBack, onSave, isSaving }: {
   title: string;
+  slug: string;
   onBack: () => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
@@ -94,6 +95,9 @@ const BlogBuilderInner = ({ title, onBack, onSave, isSaving }: {
           </Button>
           <span className="text-sm font-medium text-foreground">Visual Builder — {title || 'Untitled'}</span>
           <div className="ml-auto flex gap-2">
+            <Button variant="secondary" size="sm" onClick={() => window.open(`/blog/${slug}`, '_blank')} className="gap-1">
+              <ExternalLink className="h-4 w-4" /> View
+            </Button>
             <Button variant="outline" size="sm" onClick={() => onSave(state.layout, true)} disabled={isSaving}>
               <FileText className="h-4 w-4 mr-1" /> Save Draft
             </Button>
@@ -241,6 +245,7 @@ const AdminBlogEdit = () => {
     mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       const isPublished = asDraft === true ? false : form.is_published;
+      const layoutToSave = visualLayoutJson || visualLayout;
       const payload: any = {
         ...form,
         is_published: isPublished,
@@ -251,8 +256,8 @@ const AdminBlogEdit = () => {
         content_json: contentJson,
         content: legacyHtml || "",
       };
-      if (visualLayoutJson) {
-        payload.visual_layout_json = visualLayoutJson;
+      if (layoutToSave && layoutToSave.length > 0) {
+        payload.visual_layout_json = layoutToSave;
       }
 
       const persistPost = async (data: any) => {
@@ -318,6 +323,7 @@ const AdminBlogEdit = () => {
       <BuilderProvider initialLayout={visualLayout || []}>
         <BlogBuilderInner
           title={form.title}
+          slug={form.slug}
           onBack={() => setEditorMode("blocks")}
           onSave={(layout, asDraft) => {
             setVisualLayout(layout);
@@ -477,6 +483,11 @@ const AdminBlogEdit = () => {
               <Button variant="outline" onClick={() => saveMutation.mutate({ asDraft: true })} className="w-full gap-2" disabled={saveMutation.isPending}>
                 <FileText className="h-4 w-4" /> Save as Draft
               </Button>
+              {!isNew && form.slug && (
+                <Button variant="secondary" className="w-full gap-2" onClick={() => window.open(`/blog/${form.slug}`, '_blank')}>
+                  <ExternalLink className="h-4 w-4" /> View Live Post
+                </Button>
+              )}
               {!isNew && (
                 <Button variant="destructive" onClick={() => { if (confirm("Delete this post permanently?")) deleteMutation.mutate(); }} className="w-full gap-2" disabled={deleteMutation.isPending}>
                   <Trash2 className="h-4 w-4" /> Delete Post

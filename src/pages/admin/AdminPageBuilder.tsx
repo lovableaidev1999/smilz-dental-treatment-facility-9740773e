@@ -151,9 +151,11 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         <BuilderTopBar
           pageTitle={pageTitle}
+          pageSlug={pageSlug}
           onSave={() => handleSave(false)}
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
+          onView={() => window.open(`/p/${pageSlug}`, '_blank')}
           onBack={() => navigate('/admin/pages')}
           onUndo={handleUndo}
           onRedo={handleRedo}
