@@ -676,6 +676,9 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
                 <Input value={img.src || ''} onChange={e => {
                   const images = [...props.images]; images[i] = { ...images[i], src: e.target.value }; updateProp('images', images);
                 }} placeholder="Image URL" className="h-7 text-xs flex-1" />
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => extra?.onOpenMediaPickerForArray?.('images', i)}>
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
               </div>
               <Input value={img.alt || ''} onChange={e => {
                 const images = [...props.images]; images[i] = { ...images[i], alt: e.target.value }; updateProp('images', images);
