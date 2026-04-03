@@ -256,51 +256,31 @@ const AdminPages = () => {
           No sections found for this page. Click "Add Section" to create one.
         </p>
       ) : (
-        <div className="space-y-3">
-          {(sections ?? []).map((section) => (
-            <Card key={section.id} className={!section.is_active ? "opacity-50" : ""}>
-              <CardContent className="p-0">
-                {editingSection === section.id ? (
-                  <SectionForm
-                    data={section}
-                    onSave={(data: any) => saveMutation.mutate(data)}
-                    onCancel={() => setEditingSection(null)}
-                  />
-                ) : (
-                  <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={() => startEditing(section)}>
-                    <GripVertical className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">{section.section_title || section.section_id}</p>
-                      <p className="text-sm text-muted-foreground truncate">{section.heading || "(no heading)"}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">#{section.sort_order}</span>
-                      <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded font-mono">{section.section_id}</span>
-                      <Button
-                        variant="ghost" size="icon"
-                        onClick={(e) => { e.stopPropagation(); toggleActive.mutate({ id: section.id, is_active: !section.is_active }); }}
-                      >
-                        {section.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost" size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete "${section.section_title || section.section_id}" section?`)) {
-                            deleteMutation.mutate(section.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
+          <SortableContext items={(sections ?? []).map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-3">
+              {(sections ?? []).map((section) => (
+                <SortableSectionCard
+                  key={section.id}
+                  section={section}
+                  isEditing={editingSection === section.id}
+                  onEdit={() => startEditing(section)}
+                  onSave={(data: any) => saveMutation.mutate(data)}
+                  onCancelEdit={() => setEditingSection(null)}
+                  onToggleActive={() => toggleActive.mutate({ id: section.id, is_active: !section.is_active })}
+                  onDelete={() => {
+                    if (confirm(`Delete "${section.section_title || section.section_id}" section?`)) {
+                      deleteMutation.mutate(section.id);
+                    }
+                  }}
+                  savePending={saveMutation.isPending}
+                  activePage={activePage}
+                  SectionForm={SectionForm}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );
