@@ -23,7 +23,7 @@ const getPasswordResetRedirectUrl = () => {
 };
 
 const AdminLogin = () => {
-  const { user, loading, signIn } = useAuth();
+  const { user, loading, signIn, signInWithGoogle } = useAuth();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
