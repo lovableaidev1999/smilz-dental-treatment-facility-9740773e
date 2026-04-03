@@ -387,8 +387,8 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
           <img
             src={node.props.src}
             alt={node.props.alt || ''}
-            className="w-full object-cover"
-            style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit }}
+            className="w-full"
+            style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit || 'contain' }}
             loading="lazy"
           />
           {node.props.caption && (
