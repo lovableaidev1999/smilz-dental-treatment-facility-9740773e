@@ -326,7 +326,10 @@ const AdminBlogEdit = () => {
         <BlogBuilderInner
           title={form.title}
           postId={isNew ? undefined : id}
-          onBack={() => setEditorMode("blocks")}
+          onBack={(layout) => {
+            setVisualLayout(layout);
+            setEditorMode("blocks");
+          }}
           onSave={(layout, asDraft) => {
             setVisualLayout(layout);
             saveMutation.mutate({ asDraft, visualLayoutJson: layout });
