@@ -190,17 +190,27 @@ const AdminPages = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-heading font-bold text-foreground">Page Sections</h1>
-        <Button
-          onClick={() => {
-            setShowNewForm(!showNewForm);
-            setEditingSection(null);
-            setNewForm((f: any) => ({ ...f, page_name: activePage, sort_order: (sections?.length ?? 0) + 1 }));
-          }}
-          className="gap-2"
-          size="sm"
-        >
-          <Plus className="h-4 w-4" /> Add Section
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => openPagePreview(activePage)}
+          >
+            <ExternalLink className="h-4 w-4" /> Preview Page
+          </Button>
+          <Button
+            onClick={() => {
+              setShowNewForm(!showNewForm);
+              setEditingSection(null);
+              setNewForm((f: any) => ({ ...f, page_name: activePage, sort_order: (sections?.length ?? 0) + 1 }));
+            }}
+            className="gap-2"
+            size="sm"
+          >
+            <Plus className="h-4 w-4" /> Add Section
+          </Button>
+        </div>
       </div>
 
       {/* Page tabs */}
