@@ -6,7 +6,8 @@ import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useBlogPosts } from "@/integrations/supabase/hooks";
-import DynamicSections from "@/components/DynamicSections";
+import { GenericSection } from "@/components/DynamicSections";
+import type { PageSection } from "@/hooks/usePageContent";
 
 const CATEGORY_TABS = [
   { slug: "", label: "All" },
@@ -31,14 +32,35 @@ const Blog = () => {
   const [activeTab, setActiveTab] = useState("");
   const { data: allPosts, isLoading } = useBlogPosts();
   const { data: settings } = useSiteSettings();
-  const { sections, getSection } = usePageContent("blog");
+  const { sections } = usePageContent("blog");
   const links = settings?.links;
-  const hero = getSection("hero");
   const KNOWN_IDS = ["hero"];
 
   const filteredPosts = activeTab
     ? (allPosts ?? []).filter((p) => categoryToTab[p.category] === activeTab || p.category === activeTab)
     : (allPosts ?? []);
+
+  let dynamicIndex = 0;
+
+  const renderSection = (section: PageSection) => {
+    switch (section.section_id) {
+      case "hero":
+        return (
+          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
+            <div className="container-narrow mx-auto text-center">
+              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{section.heading ?? "Dental Insights"}</h1>
+              <p className="text-primary-foreground/85 max-w-xl mx-auto">{section.subheading ?? "Expert articles on oral health, dental procedures, and wellness tips from our team."}</p>
+            </div>
+          </section>
+        );
+
+      default: {
+        const imageFirst = dynamicIndex % 2 === 0;
+        dynamicIndex++;
+        return <GenericSection key={section.id} section={section} imageFirst={imageFirst} />;
+      }
+    }
+  };
 
   return (
     <>
@@ -53,12 +75,7 @@ const Blog = () => {
         ]}
       />
 
-      <section className="bg-gradient-primary text-primary-foreground section-padding">
-        <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{hero?.heading ?? "Dental Insights"}</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">{hero?.subheading ?? "Expert articles on oral health, dental procedures, and wellness tips from our team."}</p>
-        </div>
-      </section>
+      {sections.map(renderSection)}
 
       <section className="section-padding">
         <div className="container-narrow mx-auto">
@@ -99,8 +116,6 @@ const Blog = () => {
           )}
         </div>
       </section>
-
-      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
     </>
   );
 };

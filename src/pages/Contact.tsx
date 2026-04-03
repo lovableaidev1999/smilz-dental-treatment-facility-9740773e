@@ -4,24 +4,26 @@ import { Phone, MessageCircle, Mail, MapPin, Clock, Send } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
-import DynamicSections from "@/components/DynamicSections";
+import { GenericSection } from "@/components/DynamicSections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import type { PageSection } from "@/hooks/usePageContent";
 
 const Contact = () => {
   const { toast } = useToast();
   const { data: settings } = useSiteSettings();
-  const { sections, getSection } = usePageContent("contact");
+  const { sections } = usePageContent("contact");
   const [form, setForm] = useState({ name: "", email: "", mobile: "", message: "" });
 
   const contact = settings?.contact;
   const hours = settings?.hours;
   const links = settings?.links;
   const coordinates = settings?.coordinates;
-  const hero = getSection("hero");
   const KNOWN_IDS = ["hero"];
+
+  let dynamicIndex = 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +32,26 @@ const Contact = () => {
     );
     window.open(`https://wa.me/${contact?.whatsapp ?? "918961775554"}?text=${msg}`, "_blank");
     toast({ title: "Redirecting to WhatsApp", description: "Your message is ready to send." });
+  };
+
+  const renderSection = (section: PageSection) => {
+    switch (section.section_id) {
+      case "hero":
+        return (
+          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
+            <div className="container-narrow mx-auto text-center">
+              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{section.heading ?? "Contact Us"}</h1>
+              <p className="text-primary-foreground/85 max-w-xl mx-auto">{section.subheading ?? "We'd love to hear from you. Book an appointment or reach out with any questions."}</p>
+            </div>
+          </section>
+        );
+
+      default: {
+        const imageFirst = dynamicIndex % 2 === 0;
+        dynamicIndex++;
+        return <GenericSection key={section.id} section={section} imageFirst={imageFirst} />;
+      }
+    }
   };
 
   return (
@@ -45,12 +67,7 @@ const Contact = () => {
         ]}
       />
 
-      <section className="bg-gradient-primary text-primary-foreground section-padding">
-        <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{hero?.heading ?? "Contact Us"}</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">{hero?.subheading ?? "We'd love to hear from you. Book an appointment or reach out with any questions."}</p>
-        </div>
-      </section>
+      {sections.map(renderSection)}
 
       <section className="section-padding">
         <div className="container-narrow mx-auto">
@@ -113,8 +130,6 @@ const Contact = () => {
           </div>
         </div>
       </section>
-
-      <DynamicSections sections={sections} excludeIds={KNOWN_IDS} />
     </>
   );
 };
