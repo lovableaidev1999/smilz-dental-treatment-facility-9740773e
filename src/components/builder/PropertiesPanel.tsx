@@ -16,6 +16,7 @@ const PropertiesPanel = () => {
   const { state, dispatch, findNode } = useBuilder();
   const { selectedBlockId, deviceMode } = state;
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<{ type: 'prop'; key: string } | { type: 'array-item'; key: string; index: number } | null>(null);
 
   if (!selectedBlockId) {
     return (
