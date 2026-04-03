@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { LayoutNode } from '@/types/visual-builder';
@@ -25,10 +26,40 @@ export const usePageLayouts = () =>
       if (error) throw error;
       return (data || []) as PageLayoutRow[];
     },
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
-export const usePageLayout = (pageSlug: string) =>
-  useQuery({
+export const usePageLayout = (pageSlug: string) => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!pageSlug) return;
+
+    const channel = supabase
+      .channel(`page-layout-${pageSlug}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'page_layouts',
+          filter: `page_slug=eq.${pageSlug}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['page_layouts', pageSlug] });
+          queryClient.invalidateQueries({ queryKey: ['page_layouts'] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pageSlug, queryClient]);
+
+  return useQuery({
     queryKey: ['page_layouts', pageSlug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,7 +72,11 @@ export const usePageLayout = (pageSlug: string) =>
       return data as PageLayoutRow | null;
     },
     enabled: !!pageSlug,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
+};
 
 export const usePageLayoutById = (id: string) =>
   useQuery({
@@ -56,6 +91,9 @@ export const usePageLayoutById = (id: string) =>
       return data as PageLayoutRow;
     },
     enabled: !!id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
 export const useSavePageLayout = () => {

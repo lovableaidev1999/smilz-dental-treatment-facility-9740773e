@@ -1,8 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
 
-export const useSiteContent = (category?: string) =>
-  useQuery({
+const useLiveTableInvalidation = (table: string, queryKey: readonly unknown[]) => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`${table}-${JSON.stringify(queryKey)}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: queryKey as unknown[] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, queryKey, table]);
+};
+
+export const useSiteContent = (category?: string) => {
+  useLiveTableInvalidation("site_content", ["site_content", category]);
+
+  return useQuery({
     queryKey: ["site_content", category],
     queryFn: async () => {
       let query = supabase.from("site_content").select("*");
@@ -11,10 +39,16 @@ export const useSiteContent = (category?: string) =>
       if (error) throw error;
       return data;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
 
-export const useServices = () =>
-  useQuery({
+export const useServices = () => {
+  useLiveTableInvalidation("services", ["services"]);
+
+  return useQuery({
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,10 +59,16 @@ export const useServices = () =>
       if (error) throw error;
       return data;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
 
-export const useService = (slug: string) =>
-  useQuery({
+export const useService = (slug: string) => {
+  useLiveTableInvalidation("services", ["services", slug]);
+
+  return useQuery({
     queryKey: ["services", slug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,10 +80,16 @@ export const useService = (slug: string) =>
       return data;
     },
     enabled: !!slug,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
 
-export const useBlogPosts = (category?: string) =>
-  useQuery({
+export const useBlogPosts = (category?: string) => {
+  useLiveTableInvalidation("blog_posts", ["blog_posts", category]);
+
+  return useQuery({
     queryKey: ["blog_posts", category],
     queryFn: async () => {
       let query = supabase
@@ -56,10 +102,16 @@ export const useBlogPosts = (category?: string) =>
       if (error) throw error;
       return data;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
 
-export const useBlogPost = (slug: string) =>
-  useQuery({
+export const useBlogPost = (slug: string) => {
+  useLiveTableInvalidation("blog_posts", ["blog_posts", slug]);
+
+  return useQuery({
     queryKey: ["blog_posts", slug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -71,10 +123,16 @@ export const useBlogPost = (slug: string) =>
       return data;
     },
     enabled: !!slug,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
 
-export const useBlogPostById = (id: string, enabled = true) =>
-  useQuery({
+export const useBlogPostById = (id: string, enabled = true) => {
+  useLiveTableInvalidation("blog_posts", ["blog_posts", "id", id]);
+
+  return useQuery({
     queryKey: ["blog_posts", "id", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,10 +146,15 @@ export const useBlogPostById = (id: string, enabled = true) =>
     retry: 3,
     retryDelay: 500,
     refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
+};
 
-export const useGallery = () =>
-  useQuery({
+export const useGallery = () => {
+  useLiveTableInvalidation("gallery", ["gallery"]);
+
+  return useQuery({
     queryKey: ["gallery"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -102,4 +165,8 @@ export const useGallery = () =>
       if (error) throw error;
       return data;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
