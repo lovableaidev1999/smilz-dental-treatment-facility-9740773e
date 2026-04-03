@@ -167,8 +167,18 @@ const AdminPages = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => onSave(local)} className="gap-2" disabled={saveMutation.isPending}>
-            <Save className="h-4 w-4" /> {isNew ? "Create Section" : "Save Section"}
+          <Button
+            onClick={() => {
+              onSave(local);
+              setTimeout(() => openPagePreview(local.page_name || activePage), 600);
+            }}
+            className="gap-2"
+            disabled={saveMutation.isPending}
+          >
+            <Save className="h-4 w-4" /> {isNew ? "Create & Preview" : "Save & Preview"}
+          </Button>
+          <Button onClick={() => onSave(local)} variant="secondary" className="gap-2" disabled={saveMutation.isPending}>
+            <Save className="h-4 w-4" /> {isNew ? "Create" : "Save"}
           </Button>
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
