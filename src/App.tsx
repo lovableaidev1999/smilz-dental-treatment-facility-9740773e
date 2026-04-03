@@ -114,7 +114,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+            <BrowserRouter>
+            <ScrollToTop />
             <RecoveryRouteHandler />
             <Routes>
               {/* Public routes */}
