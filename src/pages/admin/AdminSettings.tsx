@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
+import ImageUrlInput from "@/components/admin/ImageUrlInput";
 
 const FONT_OPTIONS = [
   "Playfair Display", "Lora", "Merriweather", "Cormorant Garamond",
