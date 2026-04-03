@@ -138,8 +138,16 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
       );
     case 'legacy-content':
       return (
-        <div className="border border-dashed border-muted-foreground/30 rounded p-3 text-center">
-          <p className="text-sm text-muted-foreground">📄 Legacy Content Block</p>
+        <div className="border border-dashed border-muted-foreground/30 rounded p-3">
+          <p className="text-xs font-medium text-primary mb-2">📄 Legacy Content Block</p>
+          {props.html ? (
+            <div
+              className="prose prose-sm max-w-none max-h-48 overflow-hidden text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: props.html }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground text-center">No legacy content</p>
+          )}
         </div>
       );
     default:

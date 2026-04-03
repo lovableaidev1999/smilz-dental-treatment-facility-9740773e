@@ -199,6 +199,8 @@ const AdminBlogEdit = () => {
         setEditorMode("blocks");
       } else if (post.content) {
         setLegacyHtml(post.content);
+        // Auto-generate a visual layout wrapping the legacy HTML
+        setVisualLayout(wrapLegacyContent(post.content));
         setEditorMode("html");
       }
     }
