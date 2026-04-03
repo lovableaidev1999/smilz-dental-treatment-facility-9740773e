@@ -69,7 +69,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: 'image', label: 'Image', icon: 'ImageIcon', category: 'basic',
     canHaveChildren: false,
-    defaultProps: { src: '', alt: '', caption: '', objectFit: 'cover', borderRadius: '0.5rem' },
+    defaultProps: { src: '', alt: '', caption: '', objectFit: 'contain', borderRadius: '0.5rem' },
   },
   {
     type: 'video', label: 'Video', icon: 'Video', category: 'basic',
