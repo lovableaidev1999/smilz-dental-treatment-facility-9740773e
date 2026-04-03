@@ -130,7 +130,7 @@ const AdminServiceEdit = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Featured Image URL</label>
-                  <Input value={form.featured_image} onChange={(e) => setForm({ ...form, featured_image: e.target.value })} />
+                  <ImageUrlInput value={form.featured_image} onChange={(url) => setForm({ ...form, featured_image: url })} />
                 </div>
               </div>
             </CardContent>

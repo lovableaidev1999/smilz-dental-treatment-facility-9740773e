@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Eye, EyeOff, ChevronRight, Plus, Trash2, GripVertical } from "lucide-react";
+import ImageUrlInput from "@/components/admin/ImageUrlInput";
 
 const PAGES = ["home", "about", "contact", "services", "gallery", "blog"];
 

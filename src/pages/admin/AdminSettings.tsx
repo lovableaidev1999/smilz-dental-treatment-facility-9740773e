@@ -40,11 +40,14 @@ const AdminSettings = () => {
     const onChange = (val: string) => {
       setForm((p: any) => ({ ...p, [section]: { ...p[section], [field]: type === "number" ? Number(val) : val } }));
     };
+    const isImageField = field.includes('image') || field.includes('logo') || field === 'og_image';
     return (
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">{label}</label>
         {textarea ? (
           <Textarea value={value} onChange={(e) => onChange(e.target.value)} rows={3} />
+        ) : isImageField ? (
+          <ImageUrlInput value={value} onChange={onChange} />
         ) : (
           <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
         )}
