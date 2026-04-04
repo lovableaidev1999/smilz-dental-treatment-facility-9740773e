@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-dental.jpg";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
+import ServicesCarousel from "@/components/ServicesCarousel";
 import type { PageSection } from "@/hooks/usePageContent";
 import {
   Accordion,
