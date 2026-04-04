@@ -167,14 +167,14 @@ const SEOHead = ({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:site_name" content={clinicName} />
-      {ogImage && <meta property="og:image" content={ogImage} />}
-      {ogImage && <meta property="og:image:width" content="1200" />}
-      {ogImage && <meta property="og:image:height" content="630" />}
+      <meta property="og:image" content={ogImage || "https://smilz.net/og-image.jpg"} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:locale" content="en_IN" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      <meta name="twitter:image" content={ogImage || "https://smilz.net/og-image.jpg"} />
       {article?.publishedTime && <meta property="article:published_time" content={article.publishedTime} />}
       {article?.modifiedTime && <meta property="article:modified_time" content={article.modifiedTime} />}
       {article?.author && <meta property="article:author" content={article.author} />}
