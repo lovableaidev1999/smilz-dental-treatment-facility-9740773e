@@ -35,9 +35,9 @@ const SEOHead = ({
   const coords = settings?.coordinates;
 
   const clinicName = general?.clinic_name ?? "Smilz Dental Treatment Facility";
-  const website = links?.website ?? "https://www.smilz.net";
+  const website = links?.website ?? "https://smilz.net";
   const fullTitle = `${title} | ${clinicName}`;
-  const url = canonicalUrl || website;
+  const url = canonicalUrl || `${website}${typeof window !== 'undefined' ? window.location.pathname : '/'}`;
 
   // Collect social sameAs links
   const sameAs = [
