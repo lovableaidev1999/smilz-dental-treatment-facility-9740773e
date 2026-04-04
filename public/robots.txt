@@ -22,4 +22,4 @@ Disallow: /admin/
 Disallow: /login-form/
 Disallow: /referral-register/
 
-Sitemap: https://www.smilz.net/sitemap.xml
+Sitemap: https://smilz.net/sitemap.xml

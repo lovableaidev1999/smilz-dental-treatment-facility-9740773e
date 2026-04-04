@@ -70,7 +70,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   general: { clinic_name: "Smilz Dental Treatment Facility", tagline: "Bridging Gaps... Spreading Smiles!", doctor_name: "Dr. Dibyendu Dutta", year_established: 1999, google_rating: 4.8, review_count: 44 },
   contact: { address: "21, Garia Park, Kolkata 700084", address_full: "21, Garia Park, Garia Park Buddha Temple, Garia, South Kolkata 700084", phone: "8961775554", phone_formatted: "8961 77 5554", emergency: "9831070248", email: "dr.d.dutta@gmail.com", whatsapp: "918961775554" },
   hours: { morning: "9:00 AM – 1:00 PM", evening: "5:00 PM – 9:00 PM", days: "Monday – Saturday", closed: "Sunday" },
-  links: { website: "https://www.smilz.net", google_maps_url: "https://maps.google.com/?cid=5056757662094737709", facebook: "", instagram: "", youtube: "" },
+  links: { website: "https://smilz.net", google_maps_url: "https://maps.google.com/?cid=5056757662094737709", facebook: "", instagram: "", youtube: "" },
   seo: { default_title: "Best Dental Clinic in Garia, South Kolkata", default_description: "Smilz Dental Treatment Facility - Trusted dental clinic in Garia Park, Kolkata since 1999.", default_keywords: "dental clinic Garia Kolkata, dentist South Kolkata" },
   appearance: { font_family: "Poppins", logo_url: "", default_banner_image: "", footer_text: "" },
   header: {

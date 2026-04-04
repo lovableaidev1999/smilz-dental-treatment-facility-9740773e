@@ -41,10 +41,10 @@ const Gallery = () => {
         title="Before & After Gallery"
         description={`See real before and after dental treatment results at ${settings?.general?.clinic_name ?? "Smilz Dental"} Kolkata.`}
         keywords="dental before after Kolkata, smile makeover results"
-        canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/gallery`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/gallery`}
         breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://www.smilz.net" },
-          { name: "Gallery", url: `${links?.website ?? "https://www.smilz.net"}/gallery` },
+          { name: "Home", url: links?.website ?? "https://smilz.net" },
+          { name: "Gallery", url: `${links?.website ?? "https://smilz.net"}/gallery` },
         ]}
       />
 

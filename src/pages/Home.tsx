@@ -192,7 +192,7 @@ const Home = () => {
         title={settings?.seo?.default_title ?? "Best Dental Clinic in Garia, South Kolkata"}
         description={settings?.seo?.default_description ?? "Smilz Dental Treatment Facility - Trusted dental clinic in Garia Park, Kolkata since 1999."}
         keywords={settings?.seo?.default_keywords ?? "dental clinic Garia Kolkata, dentist South Kolkata"}
-        breadcrumbs={[{ name: "Home", url: links?.website ?? "https://www.smilz.net" }]}
+        breadcrumbs={[{ name: "Home", url: links?.website ?? "https://smilz.net" }]}
       />
 
       {sections.map(renderSection)}

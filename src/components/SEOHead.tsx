@@ -35,9 +35,9 @@ const SEOHead = ({
   const coords = settings?.coordinates;
 
   const clinicName = general?.clinic_name ?? "Smilz Dental Treatment Facility";
-  const website = links?.website ?? "https://www.smilz.net";
+  const website = links?.website ?? "https://smilz.net";
   const fullTitle = `${title} | ${clinicName}`;
-  const url = canonicalUrl || website;
+  const url = canonicalUrl || `${website}${typeof window !== 'undefined' ? window.location.pathname : '/'}`;
 
   // Collect social sameAs links
   const sameAs = [
@@ -52,7 +52,7 @@ const SEOHead = ({
     "@type": "Dentist",
     "@id": `${website}/#dentist`,
     name: clinicName,
-    image: ogImage || `${website}/og-image.jpg`,
+    image: ogImage || "https://smilz.net/og-image.jpg",
     url: website,
     telephone: `+91${contact?.phone ?? "8961775554"}`,
     email: contact?.email ?? "dr.d.dutta@gmail.com",
@@ -167,14 +167,14 @@ const SEOHead = ({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:site_name" content={clinicName} />
-      {ogImage && <meta property="og:image" content={ogImage} />}
-      {ogImage && <meta property="og:image:width" content="1200" />}
-      {ogImage && <meta property="og:image:height" content="630" />}
+      <meta property="og:image" content={ogImage || "https://smilz.net/og-image.jpg"} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:locale" content="en_IN" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      <meta name="twitter:image" content={ogImage || "https://smilz.net/og-image.jpg"} />
       {article?.publishedTime && <meta property="article:published_time" content={article.publishedTime} />}
       {article?.modifiedTime && <meta property="article:modified_time" content={article.modifiedTime} />}
       {article?.author && <meta property="article:author" content={article.author} />}

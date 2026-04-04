@@ -9,7 +9,7 @@ export const CLINIC_INFO = {
   emergency: "9831070248",
   email: "dr.d.dutta@gmail.com",
   whatsapp: "918961775554",
-  website: "https://www.smilz.net",
+  website: "https://smilz.net",
   googleMapsUrl: "https://maps.google.com/?cid=5056757662094737709",
   googleRating: 4.8,
   reviewCount: 44,

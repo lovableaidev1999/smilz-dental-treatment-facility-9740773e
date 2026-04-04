@@ -32,10 +32,10 @@ const Referral = () => {
       <SEOHead
         title="Referral Registration"
         description={`Refer a patient to ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"}.`}
-        canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/referral`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/referral`}
         breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://www.smilz.net" },
-          { name: "Referral Registration", url: `${links?.website ?? "https://www.smilz.net"}/referral` },
+          { name: "Home", url: links?.website ?? "https://smilz.net" },
+          { name: "Referral Registration", url: `${links?.website ?? "https://smilz.net"}/referral` },
         ]}
       />
 

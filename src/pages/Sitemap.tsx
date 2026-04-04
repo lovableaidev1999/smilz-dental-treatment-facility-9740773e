@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const SITE = "https://www.smilz.net";
+const SITE = "https://smilz.net";
 
 const staticPages = [
   { loc: "/", priority: "1.0", changefreq: "weekly" },
