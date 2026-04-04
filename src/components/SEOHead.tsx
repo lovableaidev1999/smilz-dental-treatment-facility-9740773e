@@ -52,7 +52,7 @@ const SEOHead = ({
     "@type": "Dentist",
     "@id": `${website}/#dentist`,
     name: clinicName,
-    image: ogImage || `${website}/og-image.jpg`,
+    image: ogImage || "https://smilz.net/og-image.jpg",
     url: website,
     telephone: `+91${contact?.phone ?? "8961775554"}`,
     email: contact?.email ?? "dr.d.dutta@gmail.com",
