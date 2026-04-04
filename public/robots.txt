@@ -1,8 +1,14 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /login-form/
+Disallow: /referral-register/
+Disallow: /admin/
 
 User-agent: Bingbot
 Allow: /
+Disallow: /login-form/
+Disallow: /referral-register/
+Disallow: /admin/
 
 User-agent: Twitterbot
 Allow: /
@@ -13,5 +19,7 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /login-form/
+Disallow: /referral-register/
 
 Sitemap: https://www.smilz.net/sitemap.xml
