@@ -143,10 +143,10 @@ const About = () => {
         title={`About Us - ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}`}
         description={`Learn about ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}, led by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}. Trusted dental care in Garia, South Kolkata since ${general?.year_established ?? 1999}.`}
         keywords="best dentist Garia, Dr Dibyendu Dutta, dental clinic South Kolkata"
-        canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/about`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/about`}
         breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://www.smilz.net" },
-          { name: "About Us", url: `${links?.website ?? "https://www.smilz.net"}/about` },
+          { name: "Home", url: links?.website ?? "https://smilz.net" },
+          { name: "About Us", url: `${links?.website ?? "https://smilz.net"}/about` },
         ]}
       />
 

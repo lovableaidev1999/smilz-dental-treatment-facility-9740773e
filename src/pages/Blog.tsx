@@ -68,10 +68,10 @@ const Blog = () => {
         title="Dental Insights & Blog"
         description={`Expert dental insights, oral health tips, and treatment guides from ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} Kolkata.`}
         keywords="dental blog Kolkata, oral health tips, dental treatment guides"
-        canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/blog`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/blog`}
         breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://www.smilz.net" },
-          { name: "Insights", url: `${links?.website ?? "https://www.smilz.net"}/blog` },
+          { name: "Home", url: links?.website ?? "https://smilz.net" },
+          { name: "Insights", url: `${links?.website ?? "https://smilz.net"}/blog` },
         ]}
       />
 

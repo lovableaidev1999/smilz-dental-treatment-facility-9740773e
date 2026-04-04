@@ -40,7 +40,7 @@ const BlogPost = () => {
         title={post.meta_title || post.title}
         description={post.meta_description || post.excerpt}
         keywords={`${post.category}, dental blog Kolkata`}
-        canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/blog/${post.slug}`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/blog/${post.slug}`}
         type="article"
         article={{
           publishedTime: post.published_at,
@@ -50,9 +50,9 @@ const BlogPost = () => {
         }}
         ogImage={post.featured_image}
         breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://www.smilz.net" },
-          { name: "Insights", url: `${links?.website ?? "https://www.smilz.net"}/blog` },
-          { name: post.title, url: `${links?.website ?? "https://www.smilz.net"}/blog/${post.slug}` },
+          { name: "Home", url: links?.website ?? "https://smilz.net" },
+          { name: "Insights", url: `${links?.website ?? "https://smilz.net"}/blog` },
+          { name: post.title, url: `${links?.website ?? "https://smilz.net"}/blog/${post.slug}` },
         ]}
       />
 

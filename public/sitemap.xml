@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.smilz.net/</loc>
+    <loc>https://smilz.net/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.smilz.net/about</loc>
+    <loc>https://smilz.net/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.smilz.net/services</loc>
+    <loc>https://smilz.net/services</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.smilz.net/blog</loc>
+    <loc>https://smilz.net/blog</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.smilz.net/contact</loc>
+    <loc>https://smilz.net/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.smilz.net/gallery</loc>
+    <loc>https://smilz.net/gallery</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.smilz.net/referral</loc>
+    <loc>https://smilz.net/referral</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

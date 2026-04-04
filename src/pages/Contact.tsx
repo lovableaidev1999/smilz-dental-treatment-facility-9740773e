@@ -60,10 +60,10 @@ const Contact = () => {
         title="Contact Us"
         description={`Contact ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} at ${contact?.address ?? "21, Garia Park, Kolkata 700084"}. Call ${contact?.phone_formatted ?? "8961 77 5554"} or WhatsApp for appointments.`}
         keywords="dental clinic near Garia Park, dentist contact Kolkata"
-        canonicalUrl={`${links?.website ?? "https://www.smilz.net"}/contact`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/contact`}
         breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://www.smilz.net" },
-          { name: "Contact", url: `${links?.website ?? "https://www.smilz.net"}/contact` },
+          { name: "Home", url: links?.website ?? "https://smilz.net" },
+          { name: "Contact", url: `${links?.website ?? "https://smilz.net"}/contact` },
         ]}
       />
 
