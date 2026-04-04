@@ -222,9 +222,41 @@ const Home = () => {
         description={settings?.seo?.default_description ?? "Smilz Dental Treatment Facility - Trusted dental clinic in Garia Park, Kolkata since 1999."}
         keywords={settings?.seo?.default_keywords ?? "dental clinic Garia Kolkata, dentist South Kolkata"}
         breadcrumbs={[{ name: "Home", url: links?.website ?? "https://smilz.net" }]}
+        faqs={homepageFaqs}
       />
 
       {sections.map(renderSection)}
+
+      {/* FAQ Section */}
+      <section className="section-padding bg-dental-surface">
+        <div className="container-narrow mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">
+              Common Questions
+            </p>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+              Find answers to the most common questions about our dental treatments and services.
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <Accordion type="single" collapsible className="w-full">
+              {homepageFaqs.map((faq, i) => (
+                <AccordionItem key={i} value={`home-faq-${i}`}>
+                  <AccordionTrigger className="text-foreground font-medium text-left">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </div>
+      </section>
     </>
   );
 };
