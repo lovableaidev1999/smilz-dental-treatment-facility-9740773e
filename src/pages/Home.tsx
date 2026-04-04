@@ -12,6 +12,35 @@ import heroImg from "@/assets/hero-dental.jpg";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
 import type { PageSection } from "@/hooks/usePageContent";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+const homepageFaqs = [
+  {
+    q: "What dental treatments are available at Smilz Dental Clinic?",
+    a: "Smilz Dental Treatment Facility offers a wide range of services including dental implants, root canal treatment, smile designing, clear aligners, pediatric dentistry, and preventive dental care. The clinic focuses on advanced digital dentistry for precise and long-lasting results for patients in Kolkata and Howrah.",
+  },
+  {
+    q: "Is dental treatment at Smilz painless and safe?",
+    a: "Yes, Smilz Dental Clinic specializes in painless dentistry using modern techniques and advanced equipment. Strict sterilization protocols and safety standards are followed to ensure every treatment is comfortable, hygienic, and stress-free.",
+  },
+  {
+    q: "How do I book an appointment at Smilz Dental Clinic?",
+    a: "You can book an appointment at Smilz through the official website www.smilz.net, by calling the clinic directly, or via WhatsApp consultation. Flexible scheduling is available for patients from Kolkata, Howrah, and nearby areas.",
+  },
+  {
+    q: "Why should I choose Smilz Dental Clinic over other dental clinics in Kolkata?",
+    a: "Smilz stands out due to its use of advanced digital dentistry, experienced clinical expertise, and personalized patient care. The clinic specializes in precision treatments like guided dental implants and customized smile designing for superior results.",
+  },
+  {
+    q: "Are dental implants at Smilz a permanent solution for missing teeth?",
+    a: "Dental implants at Smilz are a long-term and reliable solution for replacing missing teeth. With guided implant technology, the clinic ensures accurate placement, faster healing, and natural-looking results.",
+  },
+];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
