@@ -243,7 +243,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           {rightPanelOpen ? (
             <>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="bg-card border-l border-border">
+              <ResizablePanel defaultSize={25} minSize={15} maxSize={30} className="bg-card border-l border-border">
                 <div className="h-full flex flex-col overflow-hidden">
                   <div className="h-9 border-b border-border flex items-center px-3 justify-between shrink-0">
                     <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
