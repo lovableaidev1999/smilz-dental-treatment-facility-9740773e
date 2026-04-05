@@ -178,7 +178,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           onSave={() => handleSave(false)}
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
-          onView={() => window.open(`/p/${pageSlug}`, '_blank')}
+          onView={() => {
+            const url = CORE_SLUGS.includes(pageSlug) ? `/${pageSlug === 'home' ? '' : pageSlug}` : `/p/${pageSlug}`;
+            window.open(url, '_blank');
+          }}
           onBack={() => navigate('/admin/page-layouts')}
           onUndo={handleUndo}
           onRedo={handleRedo}
