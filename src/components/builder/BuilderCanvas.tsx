@@ -76,7 +76,9 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
         <ContainerDropZone node={node}>
           {node.children && node.children.length > 0 ? (
             node.children.map(child => (
-              <SortableBlock key={child.id} node={child} parentId={node.id} />
+              <div key={child.id} className="w-full min-w-0">
+                <SortableBlock node={child} parentId={node.id} />
+              </div>
             ))
           ) : (
             <DropPlaceholder parentId={node.id} onAdd={type => addBlock(type, node.id)} />
@@ -92,43 +94,60 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
 };
 
 // ─── Container drop zone with grid/flex layout ──────────
+// Mirrors the shared-renderer's container markup exactly for WYSIWYG parity
 const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: React.ReactNode }) => {
   const { setNodeRef } = useDroppable({ id: `container-${node.id}`, data: { containerId: node.id } });
   const childIds = node.children?.map(c => c.id) || [];
 
-  let containerStyle: React.CSSProperties = {};
-  let containerClass = 'min-h-[60px] w-full';
-
   if (node.type === 'section') {
     const gridColumns = node.props.gridColumns || '1fr';
-    containerStyle = {
+    const colCount = gridColumns.split(' ').filter(Boolean).length;
+    const sectionStyle: React.CSSProperties = {
+      background: node.props.background || undefined,
+      backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+    const gridStyle: React.CSSProperties = {
       display: 'grid',
       gridTemplateColumns: gridColumns,
       columnGap: node.props.columnGap || '1.5rem',
       rowGap: node.props.rowGap || '1.5rem',
     };
-    containerClass += ' relative w-full py-12 px-4 md:px-6';
-    if (node.props.background) containerStyle.background = node.props.background;
-    if (node.props.backgroundImage) {
-      containerStyle.backgroundImage = `url(${node.props.backgroundImage})`;
-      containerStyle.backgroundSize = 'cover';
-      containerStyle.backgroundPosition = 'center';
-    }
-  } else if (node.type === 'grid') {
+    return (
+      <section className="relative w-full py-12 md:py-16 px-4 md:px-6 min-h-[60px]" style={sectionStyle}>
+        <div className="w-full mx-auto" style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}>
+          <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
+            <div ref={setNodeRef} className={`min-h-[60px] ${colCount > 1 ? 'vb-responsive-grid' : ''}`} style={gridStyle}>
+              {children}
+            </div>
+          </SortableContext>
+        </div>
+      </section>
+    );
+  }
+
+  if (node.type === 'grid') {
     const cols = node.props.gridCols || 2;
-    containerStyle = {
+    const gridStyle: React.CSSProperties = {
       display: 'grid',
       gridTemplateColumns: `repeat(${cols}, 1fr)`,
       columnGap: node.props.columnGap || '1rem',
       rowGap: node.props.rowGap || '1rem',
     };
-  } else {
-    containerStyle = { display: 'flex', flexDirection: 'column', gap: '0.5rem' };
+    return (
+      <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
+        <div ref={setNodeRef} className="vb-responsive-grid min-h-[60px] w-full" style={gridStyle}>
+          {children}
+        </div>
+      </SortableContext>
+    );
   }
 
+  // Column / generic container
   return (
     <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
-      <div ref={setNodeRef} className={containerClass} style={containerStyle}>
+      <div ref={setNodeRef} className="min-h-[60px] w-full" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', justifyContent: node.props?.verticalAlign || 'flex-start' }}>
         {children}
       </div>
     </SortableContext>
