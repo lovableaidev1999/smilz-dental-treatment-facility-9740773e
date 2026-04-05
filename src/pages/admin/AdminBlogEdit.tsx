@@ -294,7 +294,9 @@ const AdminBlogEdit = () => {
 
   const saveMutation = useMutation({
     mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
-      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const regularTags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const categoryTags = selectedCategories.map(c => `cat:${c}`);
+      const tags = [...categoryTags, ...regularTags];
       const isPublished = asDraft === true ? false : true;
       const layoutToSave = visualLayoutJson || visualLayout;
       // When publishing, always use current timestamp so post appears as latest
