@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,11 +9,37 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 interface Props {
   layout: LayoutNode[];
   className?: string;
 }
+
+// ─── Lazy load wrapper for below-the-fold blocks ────────
+const LazyBlock = ({ children, index }: { children: React.ReactNode; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(index < 3);
+
+  useEffect(() => {
+    if (index < 3 || !ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin: '200px' }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [index]);
+
+  if (index < 3) return <>{children}</>;
+
+  return (
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
+      {visible ? children : <div className="animate-pulse bg-muted rounded-lg h-24" />}
+    </div>
+  );
+};
 
 // ─── Animation wrapper ──────────────────────────────────
 const AnimatedBlock = ({ children, animation, delay, hoverEffect }: {
