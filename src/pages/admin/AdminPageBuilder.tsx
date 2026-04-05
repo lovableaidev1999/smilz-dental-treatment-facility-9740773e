@@ -137,35 +137,64 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
 
   const CORE_SLUGS = ['home', 'about', 'services', 'contact', 'blog', 'gallery'];
 
+  // Ref to track the current layout ID (may update after first save)
+  const currentLayoutId = useRef(layoutId);
+
   const handleSave = async (publish?: boolean) => {
     try {
-      // Block count warning
       const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
       const blockCount = countBlocks(state.layout);
       if (blockCount > 30) {
         toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
       }
 
-      // Determine publish state: explicit true/false, or preserve current
+      // Preserve current publish state unless explicitly changing it
       const publishState = publish !== undefined ? publish : (initialPublished || false);
 
       const result = await saveLayout.mutateAsync({
-        id: layoutId,
+        id: currentLayoutId.current,
         page_slug: pageSlug,
         page_title: pageTitle,
         layout_json: state.layout,
         is_published: publishState,
       });
       dispatch({ type: 'MARK_SAVED' });
-      toast({
-        title: publish === true ? 'Published!' : 'Saved!',
-        description: publish === true ? 'Your page is now live.' : 'Changes saved successfully.',
-      });
-      if (!layoutId && result.id) {
+
+      // Track the ID for subsequent saves
+      if (!currentLayoutId.current && result.id) {
+        currentLayoutId.current = result.id;
         navigate(`/admin/page-builder/${result.id}`, { replace: true });
       }
+
+      toast({
+        title: publish === true ? 'Published!' : 'Saved as draft!',
+        description: publish === true ? 'Your page is now live.' : 'Draft saved successfully.',
+      });
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({ title: 'Save failed', description: err.message || 'Unknown error', variant: 'destructive' });
+    }
+  };
+
+  const handlePreview = async () => {
+    try {
+      // Save as draft first, then open preview
+      const result = await saveLayout.mutateAsync({
+        id: currentLayoutId.current,
+        page_slug: pageSlug,
+        page_title: pageTitle,
+        layout_json: state.layout,
+        is_published: initialPublished || false,
+      });
+      dispatch({ type: 'MARK_SAVED' });
+
+      if (!currentLayoutId.current && result.id) {
+        currentLayoutId.current = result.id;
+        navigate(`/admin/page-builder/${result.id}`, { replace: true });
+      }
+
+      window.open(`/admin/preview/${result.id}`, '_blank');
+    } catch (err: any) {
+      toast({ title: 'Save failed', description: err.message || 'Could not save before preview', variant: 'destructive' });
     }
   };
 
