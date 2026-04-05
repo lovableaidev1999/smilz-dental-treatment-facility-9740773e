@@ -235,7 +235,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           )}
 
           {/* Canvas */}
-          <ResizablePanel defaultSize={leftPanelOpen && rightPanelOpen ? 60 : leftPanelOpen || rightPanelOpen ? 75 : 90} style={{ overflow: 'auto' }}>
+          <ResizablePanel defaultSize={leftPanelOpen && rightPanelOpen ? 55 : leftPanelOpen || rightPanelOpen ? 75 : 90} style={{ overflow: 'auto' }}>
             <BuilderCanvas />
           </ResizablePanel>
 
