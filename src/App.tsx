@@ -47,6 +47,7 @@ import AdminHeaderFooter from "@/pages/admin/AdminHeaderFooter";
 import AdminResetPassword from "@/pages/admin/AdminResetPassword";
 import AdminPageBuilder from "@/pages/admin/AdminPageBuilder";
 import AdminPageLayouts from "@/pages/admin/AdminPageLayouts";
+import PagePreview from "@/pages/admin/PagePreview";
 import BuiltPage from "@/pages/BuiltPage";
 
 const FONT_IMPORT_MAP: Record<string, string> = {

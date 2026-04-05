@@ -206,7 +206,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
           pageSlug={pageSlug}
           onSave={() => handleSave()}
           onPublish={() => handleSave(true)}
-          onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
+          onPreview={handlePreview}
           onView={() => {
             const url = CORE_SLUGS.includes(pageSlug) ? `/${pageSlug === 'home' ? '' : pageSlug}` : `/p/${pageSlug}`;
             window.open(url, '_blank');
