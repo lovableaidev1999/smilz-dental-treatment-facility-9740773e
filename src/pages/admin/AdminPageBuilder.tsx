@@ -227,8 +227,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
           {rightPanelOpen ? (
             <div className="w-64 border-l border-border bg-card shrink-0 overflow-hidden flex flex-col">
-              <div className="h-9 border-b border-border flex items-center px-3">
+              <div className="h-9 border-b border-border flex items-center px-3 justify-between">
                 <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
+                <button
+                  onClick={() => setShowSeoDialog(true)}
+                  className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                  title="SEO Settings"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <PropertiesPanel />
