@@ -379,41 +379,53 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
     case 'section': {
       const gridColumns = node.props.gridColumns || '1fr';
       const colCount = gridColumns.split(' ').filter(Boolean).length;
-      // Mobile-first: stack on mobile, use grid on larger screens
-      const responsiveGridClass = colCount > 1 ? 'grid grid-cols-1 md:grid-cols-2' + (colCount > 2 ? ` lg:grid-cols-${Math.min(colCount, 4)}` : '') : 'grid grid-cols-1';
       const sectionInner: React.CSSProperties = {
         columnGap: node.props.columnGap || '1.5rem',
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
       };
-      // For complex grid definitions (e.g. "70% 30%"), use inline style on desktop
-      const useInlineGrid = gridColumns.includes('%') || gridColumns.includes('fr') && colCount > 1;
       return (
         <section
           key={key}
-          className={`w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
+          className={`relative w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
           style={{
-            ...baseStyles,
             background: node.props.background || undefined,
             backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            padding: baseStyles.padding || undefined,
           }}
         >
           <div
             className="w-full mx-auto"
-            style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '1280px') }}
+            style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}
           >
-            <div className={responsiveGridClass} style={sectionInner}>
-              {node.children?.map((child, i) => renderNode(child, i))}
+            <div
+              className={`grid ${colCount > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}
+              style={{
+                ...sectionInner,
+                ...(colCount > 1 ? {} : {}),
+              }}
+            >
+              {node.children?.map((child, i) => (
+                <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+              ))}
             </div>
-            {/* Desktop-specific grid override via media query */}
-            {useInlineGrid && (
+            {/* Desktop grid override for custom column definitions */}
+            {colCount > 1 && (
               <style>{`
-                @media (min-width: 1024px) {
-                  [data-section-id="${node.id}"] > div:last-of-type { display: grid !important; grid-template-columns: ${gridColumns} !important; }
+                @media (min-width: 768px) {
+                  #section-${node.id} { grid-template-columns: ${gridColumns}; }
                 }
               `}</style>
+            )}
+            {colCount > 1 && (
+              <script dangerouslySetInnerHTML={{ __html: `
+                (function(){
+                  var el = document.querySelector('#section-${node.id}');
+                  if(el) el.id = 'section-${node.id}';
+                })();
+              `}} />
             )}
           </div>
         </section>
