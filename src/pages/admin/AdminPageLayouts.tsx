@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { SECTION_TEMPLATES, type SectionTemplate } from '@/lib/sectionTemplates';
+import { getExistingDesign } from '@/lib/existingDesignTemplates';
 
 const CORE_PAGES = [
   { slug: 'home', title: 'Home', path: '/' },
@@ -282,9 +283,32 @@ const AdminPageLayouts = () => {
       <Dialog open={showTemplatePicker} onOpenChange={setShowTemplatePicker}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Choose a Starting Template</DialogTitle>
+            <DialogTitle>Choose a Starting Point</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 py-2 max-h-[60vh] overflow-y-auto">
+            {/* "Edit Existing Design" option for core pages */}
+            {pendingCreate && CORE_PAGES.some(cp => cp.slug === pendingCreate.slug) && (() => {
+              const existingLayout = getExistingDesign(pendingCreate.slug);
+              if (!existingLayout) return null;
+              return (
+                <button
+                  onClick={() => {
+                    sessionStorage.setItem('builder_template', JSON.stringify(existingLayout));
+                    navigate(`/admin/page-builder/new?slug=${encodeURIComponent(pendingCreate.slug)}&title=${encodeURIComponent(pendingCreate.title)}&template=true`);
+                    setShowTemplatePicker(false);
+                    setPendingCreate(null);
+                  }}
+                  className="flex items-start gap-3 p-4 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all text-left group"
+                >
+                  <span className="text-2xl">✏️</span>
+                  <div>
+                    <h4 className="font-semibold text-primary">Edit Existing Design</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">Load the current {pendingCreate.title} page layout into the builder for editing and improvement</p>
+                  </div>
+                </button>
+              );
+            })()}
+
             {SECTION_TEMPLATES.map(template => (
               <button
                 key={template.id}
