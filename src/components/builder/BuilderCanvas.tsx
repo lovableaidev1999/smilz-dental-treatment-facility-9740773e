@@ -370,6 +370,7 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
           </span>
         )}
         <span className="ml-1">{def?.label || node.type}</span>
+        {isHiddenOnDevice && <span className="ml-1 text-amber-300 text-[9px]">👁️‍🗨️ hidden</span>}
         {isLocked && <span className="ml-1 text-amber-300 text-[9px]">🔒</span>}
         {!isLocked && (
           <button
