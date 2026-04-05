@@ -20,6 +20,7 @@ import BlockPalette from '@/components/builder/BlockPalette';
 import LayersPanel from '@/components/builder/LayersPanel';
 import BuilderCanvas from '@/components/builder/BuilderCanvas';
 import PropertiesPanel from '@/components/builder/PropertiesPanel';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
