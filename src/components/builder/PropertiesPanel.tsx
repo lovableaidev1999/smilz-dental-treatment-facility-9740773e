@@ -442,7 +442,31 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Count" value={String(props.count)} onChange={v => updateProp('count', parseInt(v) || 3)} />
-          <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Display Type</Label>
+            <Select value={props.displayType || 'grid'} onValueChange={v => updateProp('displayType', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {props.displayType !== 'carousel' && (
+            <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          )}
+          {props.displayType === 'carousel' && (
+            <>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Autoplay</Label>
+                <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Navigation</Label>
+                <Switch checked={props.showNavigation} onCheckedChange={v => updateProp('showNavigation', v)} />
+              </div>
+            </>
+          )}
           <PropField label="Category" value={props.category} onChange={v => updateProp('category', v)} placeholder="Filter by category" />
           <div className="flex items-center justify-between">
             <Label className="text-xs">Show Image</Label>
@@ -459,10 +483,38 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Count" value={String(props.count)} onChange={v => updateProp('count', parseInt(v) || 6)} />
-          <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Display Type</Label>
+            <Select value={props.displayType || 'carousel'} onValueChange={v => updateProp('displayType', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {props.displayType !== 'carousel' && (
+            <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          )}
+          {props.displayType === 'carousel' && (
+            <>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Autoplay</Label>
+                <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Navigation</Label>
+                <Switch checked={props.showNavigation} onCheckedChange={v => updateProp('showNavigation', v)} />
+              </div>
+            </>
+          )}
           <div className="flex items-center justify-between">
             <Label className="text-xs">Show Image</Label>
             <Switch checked={props.showImage} onCheckedChange={v => updateProp('showImage', v)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Description</Label>
+            <Switch checked={props.showDescription !== false} onCheckedChange={v => updateProp('showDescription', v)} />
           </div>
         </>
       );
