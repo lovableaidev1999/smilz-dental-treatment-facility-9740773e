@@ -104,7 +104,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     layout: "standard",
     show_social_icons: true,
   },
-  coordinates: { lat: 22.4625, lng: 88.3942 },
+  coordinates: { lat: 22.46966133744312, lng: 88.37928013838973 },
 };
 
 export const useSiteSettings = () => {
