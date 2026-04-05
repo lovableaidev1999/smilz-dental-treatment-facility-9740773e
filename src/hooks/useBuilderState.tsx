@@ -102,6 +102,8 @@ function builderReducer(state: BuilderState, action: BuilderAction): BuilderStat
       const { blockId, targetParentId, targetIndex } = action.payload;
       const node = findNodeById(state.layout, blockId);
       if (!node) return state;
+      // Prevent moving locked blocks
+      if (node.props?.locked) return state;
       const clone = deepClone(node);
       const without = removeNode(state.layout, blockId);
       return { ...state, layout: insertNode(without, clone, targetParentId, targetIndex), isDirty: true };
