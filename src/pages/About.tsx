@@ -268,7 +268,7 @@ const About = () => {
           </motion.h2>
           <motion.div className="rounded-2xl overflow-hidden shadow-elevated aspect-video" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <iframe
-              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates?.lat ?? 22.4625},${coordinates?.lng ?? 88.3942}&zoom=16`}
+              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates?.lat ?? 22.46966133744312},${coordinates?.lng ?? 88.37928013838973}&zoom=16`}
               width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
               referrerPolicy="no-referrer-when-downgrade" title={`${general?.clinic_name ?? "Smilz"} Location`}
             />
