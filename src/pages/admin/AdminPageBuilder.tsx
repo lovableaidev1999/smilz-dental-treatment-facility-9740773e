@@ -311,6 +311,7 @@ const AdminPageBuilder = () => {
   const [searchParams] = useSearchParams();
   const pageSlug = searchParams.get('slug') || 'new-page';
   const pageTitleParam = searchParams.get('title') || 'New Page';
+  const hasTemplate = searchParams.get('template') === 'true';
 
   const { data: existingLayout, isLoading } = usePageLayoutById(id || '');
 
@@ -322,7 +323,18 @@ const AdminPageBuilder = () => {
     );
   }
 
-  const initialLayout = existingLayout?.layout_json || [];
+  // Load template from sessionStorage if creating new page with template
+  let initialLayout = existingLayout?.layout_json || [];
+  if (!id && hasTemplate) {
+    try {
+      const tmpl = sessionStorage.getItem('builder_template');
+      if (tmpl) {
+        initialLayout = JSON.parse(tmpl);
+        sessionStorage.removeItem('builder_template');
+      }
+    } catch {}
+  }
+
   const pageTitle = existingLayout?.page_title || pageTitleParam;
   const slug = existingLayout?.page_slug || pageSlug;
 
