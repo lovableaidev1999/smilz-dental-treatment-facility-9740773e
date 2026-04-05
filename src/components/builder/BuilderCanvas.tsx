@@ -296,6 +296,7 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
   const isSelected = state.selectedBlockId === node.id;
   const isHovered = state.hoveredBlockId === node.id;
   const isLocked = node.props?.locked || false;
+  const isHiddenOnDevice = (node.props?.hideOn || []).includes(state.deviceMode);
   const def = getBlockDefinition(node.type);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -350,7 +351,7 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
     <div
       ref={setNodeRef}
       style={style}
-      className={`group/block relative ${isContainer ? 'min-h-[60px]' : ''} ${outlineClass} ${isDragging ? 'z-50' : ''}`}
+      className={`group/block relative ${isContainer ? 'min-h-[60px]' : ''} ${outlineClass} ${isDragging ? 'z-50' : ''} ${isHiddenOnDevice ? 'opacity-40 border-dashed' : ''}`}
       onClick={e => { e.stopPropagation(); dispatch({ type: 'SELECT_BLOCK', payload: node.id }); }}
       onMouseEnter={e => { e.stopPropagation(); dispatch({ type: 'HOVER_BLOCK', payload: node.id }); }}
       onMouseLeave={e => { e.stopPropagation(); dispatch({ type: 'HOVER_BLOCK', payload: null }); }}
@@ -367,6 +368,7 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
           </span>
         )}
         <span className="ml-1">{def?.label || node.type}</span>
+        {isHiddenOnDevice && <span className="ml-1 text-amber-300 text-[9px]">👁️‍🗨️ hidden</span>}
         {isLocked && <span className="ml-1 text-amber-300 text-[9px]">🔒</span>}
         {!isLocked && (
           <button

@@ -109,9 +109,13 @@ const getStyles = (node: LayoutNode): React.CSSProperties => {
 // ─── Responsive CSS classes for tablet/mobile ───────────
 const getResponsiveClasses = (node: LayoutNode): string => {
   const classes: string[] = [];
-  if (node.responsive?.tablet?.display === 'none') classes.push('md:hidden');
-  if (node.responsive?.mobile?.display === 'none') classes.push('max-md:hidden');
-  if (node.responsive?.desktop?.display === 'none') classes.push('lg:hidden');
+  const hideOn: string[] = node.props?.hideOn || [];
+  
+  // Per-device visibility via hideOn prop
+  if (hideOn.includes('mobile') || node.responsive?.mobile?.display === 'none') classes.push('max-md:hidden');
+  if (hideOn.includes('tablet') || node.responsive?.tablet?.display === 'none') classes.push('md:max-lg:hidden');
+  if (hideOn.includes('desktop') || node.responsive?.desktop?.display === 'none') classes.push('lg:hidden');
+  
   return classes.join(' ');
 };
 

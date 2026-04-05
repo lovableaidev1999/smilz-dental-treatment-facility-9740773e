@@ -93,6 +93,34 @@ const PropertiesPanel = () => {
 
       <Separator />
 
+      {/* Device Visibility */}
+      <div className="space-y-2">
+        <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Device Visibility</p>
+        <div className="space-y-1.5">
+          {(['desktop', 'tablet', 'mobile'] as const).map(device => {
+            const hideOn: string[] = node.props?.hideOn || [];
+            const isHidden = hideOn.includes(device);
+            return (
+              <div key={device} className="flex items-center justify-between">
+                <Label className="text-xs capitalize">{device}</Label>
+                <Switch
+                  checked={!isHidden}
+                  onCheckedChange={visible => {
+                    const current: string[] = node.props?.hideOn || [];
+                    const next = visible
+                      ? current.filter(d => d !== device)
+                      : [...current, device];
+                    updateProp('hideOn', next);
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Content Props */}
       <div className="space-y-3">
         <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Content</p>

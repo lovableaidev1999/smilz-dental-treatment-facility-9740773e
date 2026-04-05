@@ -31,10 +31,11 @@ import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight,
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
-const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
+const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished }: {
   layoutId?: string;
   pageSlug: string;
   pageTitle: string;
+  isPublished?: boolean;
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
   const { toast } = useToast();
@@ -136,7 +137,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
   const CORE_SLUGS = ['home', 'about', 'services', 'contact', 'blog', 'gallery'];
 
-  const handleSave = async (publish = false) => {
+  const handleSave = async (publish?: boolean) => {
     try {
       // Block count warning
       const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
@@ -145,21 +146,20 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
         toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
       }
 
-      // Embed SEO metadata into layout_json
-      const layoutToSave = [...state.layout] as any;
-      (layoutToSave as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
+      // Determine publish state: explicit true/false, or preserve current
+      const publishState = publish !== undefined ? publish : (initialPublished || false);
 
       const result = await saveLayout.mutateAsync({
         id: layoutId,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: layoutToSave,
-        is_published: publish,
+        layout_json: state.layout,
+        is_published: publishState,
       });
       dispatch({ type: 'MARK_SAVED' });
       toast({
-        title: publish ? 'Published!' : 'Saved as draft!',
-        description: publish ? 'Your page is now live.' : 'Draft saved successfully.',
+        title: publish === true ? 'Published!' : 'Saved!',
+        description: publish === true ? 'Your page is now live.' : 'Changes saved successfully.',
       });
       if (!layoutId && result.id) {
         navigate(`/admin/page-builder/${result.id}`, { replace: true });
@@ -175,7 +175,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
         <BuilderTopBar
           pageTitle={pageTitle}
           pageSlug={pageSlug}
-          onSave={() => handleSave(false)}
+          onSave={() => handleSave()}
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
           onView={() => {
@@ -360,7 +360,7 @@ const AdminPageBuilder = () => {
 
   return (
     <BuilderProvider initialLayout={initialLayout}>
-      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} />
+      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} isPublished={existingLayout?.is_published} />
     </BuilderProvider>
   );
 };
