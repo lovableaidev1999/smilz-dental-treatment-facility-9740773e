@@ -21,7 +21,7 @@ const About = () => {
   const links = settings?.links;
   const coordinates = settings?.coordinates;
 
-  const KNOWN_IDS = ["hero", "doctor", "cta"];
+  const KNOWN_IDS = ["hero", "doctor", "cta", "about_smilz"];
   let dynamicIndex = 0;
 
   const renderSection = (section: typeof sections[number]) => {
