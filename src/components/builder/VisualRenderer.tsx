@@ -374,17 +374,20 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
   switch (node.type) {
     case 'section': {
       const gridColumns = node.props.gridColumns || '1fr';
+      const colCount = gridColumns.split(' ').filter(Boolean).length;
+      // Mobile-first: stack on mobile, use grid on larger screens
+      const responsiveGridClass = colCount > 1 ? 'grid grid-cols-1 md:grid-cols-2' + (colCount > 2 ? ` lg:grid-cols-${Math.min(colCount, 4)}` : '') : 'grid grid-cols-1';
       const sectionInner: React.CSSProperties = {
-        display: 'grid',
-        gridTemplateColumns: gridColumns,
         columnGap: node.props.columnGap || '1.5rem',
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
       };
+      // For complex grid definitions (e.g. "70% 30%"), use inline style on desktop
+      const useInlineGrid = gridColumns.includes('%') || gridColumns.includes('fr') && colCount > 1;
       return (
         <section
           key={key}
-          className={`w-full ${rClasses}`}
+          className={`w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
           style={{
             ...baseStyles,
             background: node.props.background || undefined,
@@ -397,9 +400,17 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
             className="w-full mx-auto"
             style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '1280px') }}
           >
-            <div style={sectionInner}>
+            <div className={responsiveGridClass} style={sectionInner}>
               {node.children?.map((child, i) => renderNode(child, i))}
             </div>
+            {/* Desktop-specific grid override via media query */}
+            {useInlineGrid && (
+              <style>{`
+                @media (min-width: 1024px) {
+                  [data-section-id="${node.id}"] > div:last-of-type { display: grid !important; grid-template-columns: ${gridColumns} !important; }
+                }
+              `}</style>
+            )}
           </div>
         </section>
       );
