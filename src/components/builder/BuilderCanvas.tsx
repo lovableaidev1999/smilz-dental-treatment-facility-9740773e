@@ -76,7 +76,9 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
         <ContainerDropZone node={node}>
           {node.children && node.children.length > 0 ? (
             node.children.map(child => (
-              <SortableBlock key={child.id} node={child} parentId={node.id} />
+              <div key={child.id} className="w-full min-w-0">
+                <SortableBlock node={child} parentId={node.id} />
+              </div>
             ))
           ) : (
             <DropPlaceholder parentId={node.id} onAdd={type => addBlock(type, node.id)} />
