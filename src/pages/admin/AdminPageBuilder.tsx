@@ -134,12 +134,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
     }
   };
 
+  const CORE_SLUGS = ['home', 'about', 'services', 'contact', 'blog', 'gallery'];
+
   const handleSave = async (publish = false) => {
     try {
-      // Embed SEO metadata into layout_json
-      const layoutWithSeo = [...state.layout] as any;
-      (layoutWithSeo as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
-
       // Block count warning
       const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
       const blockCount = countBlocks(state.layout);
@@ -147,11 +145,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
         toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
       }
 
+      // Embed SEO metadata into layout_json
+      const layoutToSave = [...state.layout] as any;
+      (layoutToSave as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
+
       const result = await saveLayout.mutateAsync({
         id: layoutId,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: state.layout,
+        layout_json: layoutToSave,
         is_published: publish,
       });
       dispatch({ type: 'MARK_SAVED' });
@@ -176,7 +178,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           onSave={() => handleSave(false)}
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
-          onView={() => window.open(`/p/${pageSlug}`, '_blank')}
+          onView={() => {
+            const url = CORE_SLUGS.includes(pageSlug) ? `/${pageSlug === 'home' ? '' : pageSlug}` : `/p/${pageSlug}`;
+            window.open(url, '_blank');
+          }}
           onBack={() => navigate('/admin/page-layouts')}
           onUndo={handleUndo}
           onRedo={handleRedo}
@@ -189,10 +194,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           {/* Collapsible & Resizable left panel */}
           {leftPanelOpen ? (
             <>
-              <ResizablePanel defaultSize={15} minSize={10} maxSize={25} className="bg-card border-r border-border">
+              <ResizablePanel defaultSize={20} minSize={10} maxSize={25} className="bg-card border-r border-border">
                 <div className="h-full flex flex-col overflow-hidden">
-                  <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-                    <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0">
+                  <Tabs defaultValue="blocks" className="flex-1 flex flex-col min-h-0">
+                    <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0 shrink-0">
                       <TabsTrigger value="blocks" className="flex-1 rounded-none text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary">
                         <Blocks className="h-3.5 w-3.5 mr-1" /> Blocks
                       </TabsTrigger>
@@ -200,10 +205,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
                         <Layers className="h-3.5 w-3.5 mr-1" /> Layers
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="blocks" className="flex-1 overflow-auto mt-0">
+                    <TabsContent value="blocks" className="flex-1 overflow-y-auto mt-0 min-h-0">
                       <BlockPalette />
                     </TabsContent>
-                    <TabsContent value="layers" className="flex-1 overflow-auto mt-0">
+                    <TabsContent value="layers" className="flex-1 overflow-y-auto mt-0 min-h-0">
                       <LayersPanel />
                     </TabsContent>
                   </Tabs>
@@ -230,7 +235,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           )}
 
           {/* Canvas */}
-          <ResizablePanel defaultSize={leftPanelOpen && rightPanelOpen ? 60 : leftPanelOpen || rightPanelOpen ? 75 : 90} style={{ overflow: 'auto' }}>
+          <ResizablePanel defaultSize={leftPanelOpen && rightPanelOpen ? 55 : leftPanelOpen || rightPanelOpen ? 75 : 90} style={{ overflow: 'auto' }}>
             <BuilderCanvas />
           </ResizablePanel>
 
@@ -238,7 +243,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           {rightPanelOpen ? (
             <>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="bg-card border-l border-border">
+              <ResizablePanel defaultSize={25} minSize={15} maxSize={30} className="bg-card border-l border-border">
                 <div className="h-full flex flex-col overflow-hidden">
                   <div className="h-9 border-b border-border flex items-center px-3 justify-between shrink-0">
                     <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
