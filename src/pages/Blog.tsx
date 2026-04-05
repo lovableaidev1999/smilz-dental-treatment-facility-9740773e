@@ -42,15 +42,25 @@ const Blog = () => {
   const { data: settings } = useSiteSettings();
   const { sections } = usePageContent("blog");
   const links = settings?.links;
-  const KNOWN_IDS = ["hero"];
+  // Build dynamic category tabs from actual post data
+  const dynamicTabs = useMemo(() => {
+    const posts = allPosts ?? [];
+    const tabCounts = new Map<string, number>();
+    posts.forEach(p => {
+      const cats = getPostCategories(p);
+      const resolved = new Set(cats.map(resolveTab));
+      resolved.forEach(tab => tabCounts.set(tab, (tabCounts.get(tab) || 0) + 1));
+    });
+    const tabs = Array.from(tabCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([slug, count]) => ({ slug, label: formatLabel(slug), count }));
+    return [{ slug: "", label: "All", count: posts.length }, ...tabs];
+  }, [allPosts]);
 
   const filteredPosts = activeTab
     ? (allPosts ?? []).filter((p) => {
-        const primaryMatch = categoryToTab[p.category] === activeTab || p.category === activeTab;
-        // Also check cat: prefixed tags for multi-category support
-        const tagCats = Array.isArray(p.tags) ? p.tags.filter((t: string) => t.startsWith("cat:")).map((t: string) => t.slice(4)) : [];
-        const tagMatch = tagCats.some((c: string) => categoryToTab[c] === activeTab || c === activeTab);
-        return primaryMatch || tagMatch;
+        const cats = getPostCategories(p);
+        return cats.some(c => resolveTab(c) === activeTab || c === activeTab);
       })
     : (allPosts ?? []);
 
