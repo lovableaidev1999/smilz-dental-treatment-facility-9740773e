@@ -185,7 +185,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           saving={saveLayout.isPending}
         />
 
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
+        <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
           {/* Collapsible & Resizable left panel */}
           {leftPanelOpen ? (
             <>
