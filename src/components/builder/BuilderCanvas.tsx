@@ -172,13 +172,27 @@ const BlockPreview = ({ node }: { node: LayoutNode }) => {
         <div className="h-32 bg-muted rounded-lg flex items-center justify-center text-muted-foreground text-sm">🎬 No video URL set</div>
       );
     }
-    case 'google-map':
+    case 'google-map': {
+      const addr = props.address || '';
+      if (!addr.trim()) {
+        return (
+          <div className="border border-dashed border-primary/30 rounded-lg p-4 text-center">
+            <p className="text-sm text-primary font-medium">📍 Google Map</p>
+            <p className="text-xs text-muted-foreground">Please enter a location</p>
+          </div>
+        );
+      }
       return (
-        <div className="border border-dashed border-primary/30 rounded-lg p-4 text-center">
-          <p className="text-sm text-primary font-medium">📍 Google Map</p>
-          <p className="text-xs text-muted-foreground">{props.address || 'No address'}</p>
+        <div className="rounded-lg overflow-hidden">
+          <iframe
+            src={`https://www.google.com/maps?q=${encodeURIComponent(addr)}&z=${props.zoom || 15}&output=embed`}
+            className="w-full h-[200px] rounded-lg border-0 pointer-events-none"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
         </div>
       );
+    }
     case 'icon': {
       const IconMap: Record<string, string> = { Star: '⭐', Heart: '❤️', Check: '✓', Phone: '📞', Mail: '✉️', Home: '🏠', ArrowRight: '→', Tooth: '🦷', Smile: '😊', Shield: '🛡️', Clock: '🕐', Calendar: '📅', Sparkles: '✨', Syringe: '💉', Stethoscope: '🩺', Award: '🏆', Users: '👥', MapPin: '📍', ThumbsUp: '👍', Eye: '👁️', Baby: '👶', Pill: '💊', Xray: '🔬', Clipboard: '📋' };
       return (

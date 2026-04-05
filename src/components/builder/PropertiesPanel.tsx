@@ -670,9 +670,18 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
     case 'google-map':
       return (
         <>
-          <PropField label="Address" value={props.address} onChange={v => updateProp('address', v)} />
-          <PropField label="Zoom" value={String(props.zoom)} onChange={v => updateProp('zoom', parseInt(v) || 14)} />
-          <PropField label="Height" value={props.height} onChange={v => updateProp('height', v)} placeholder="300px" />
+          <PropField label="Location / Clinic Name" value={props.address} onChange={v => updateProp('address', v)} placeholder="e.g. Smilz Dental Treatment Facility, Howrah" />
+          <PropField label="Zoom Level" value={String(props.zoom || 15)} onChange={v => updateProp('zoom', parseInt(v) || 15)} />
+          {props.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(props.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+            >
+              📍 Open in Google Maps
+            </a>
+          )}
         </>
       );
 

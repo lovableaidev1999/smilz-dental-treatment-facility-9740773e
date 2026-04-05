@@ -631,14 +631,22 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
     }
 
     case 'google-map': {
-      const q = encodeURIComponent(node.props.address || 'Kolkata, India');
+      const address = node.props.address || '';
+      if (!address.trim()) {
+        return (
+          <div key={key} className={`${rClasses} flex items-center justify-center bg-muted rounded-lg`} style={{ ...baseStyles, height: node.props.height || '300px' }}>
+            <p className="text-muted-foreground text-sm">📍 Please enter a location</p>
+          </div>
+        );
+      }
+      const q = encodeURIComponent(address);
       return (
         <div key={key} className={rClasses} style={baseStyles}>
           <iframe
-            src={`https://maps.google.com/maps?q=${q}&z=${node.props.zoom || 14}&output=embed`}
-            className="w-full rounded-lg border-0"
-            style={{ height: node.props.height || '300px' }}
+            src={`https://www.google.com/maps?q=${q}&z=${node.props.zoom || 15}&output=embed`}
+            className="w-full h-[300px] md:h-[400px] rounded-lg border-0"
             loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
           />
         </div>
