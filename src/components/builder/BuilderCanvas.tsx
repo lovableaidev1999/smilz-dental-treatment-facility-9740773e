@@ -419,11 +419,11 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
   const { setNodeRef } = useDroppable({ id: `container-${node.id}`, data: { containerId: node.id } });
   const childIds = node.children?.map(c => c.id) || [];
 
-  // Determine grid or flex layout
   let containerStyle: React.CSSProperties = {};
-  let containerClass = 'min-h-[60px] w-full p-2';
+  let containerClass = 'min-h-[60px] w-full';
 
   if (node.type === 'section') {
+    // Match VisualRenderer: use exact gridTemplateColumns so editor matches live
     const gridColumns = node.props.gridColumns || '1fr';
     containerStyle = {
       display: 'grid',
@@ -431,7 +431,7 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
       columnGap: node.props.columnGap || '1.5rem',
       rowGap: node.props.rowGap || '1.5rem',
     };
-    containerClass += ' rounded-lg';
+    containerClass += ' py-12 px-4 md:px-6 rounded-lg';
   } else if (node.type === 'grid') {
     const cols = node.props.gridCols || 2;
     containerStyle = {
@@ -441,7 +441,6 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
       rowGap: node.props.rowGap || '1rem',
     };
   } else {
-    // Column: vertical flex
     containerStyle = { display: 'flex', flexDirection: 'column', gap: '0.5rem' };
   }
 
