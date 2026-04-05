@@ -100,6 +100,8 @@ const renderNode = (node: JSONContent, index: number): React.ReactNode => {
             alt={alt || "Dental care image"}
             className="w-full rounded-2xl shadow-card"
             loading="lazy"
+            width={800}
+            height={450}
           />
           {caption && (
             <figcaption className="text-sm text-muted-foreground text-center mt-2 italic">

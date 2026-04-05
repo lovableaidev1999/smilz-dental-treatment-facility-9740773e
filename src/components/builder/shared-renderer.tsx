@@ -105,7 +105,7 @@ const BlogLoopWidget = ({ props }: { props: any }) => {
   const renderCard = (post: any) => (
     <Link to={`/blog/${post.slug}`} className="group block h-full">
       <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
-        {props.showImage && post.featured_image && <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />}
+        {props.showImage && post.featured_image && <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" width={600} height={192} />}
         <div className="p-4">
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
           {props.showExcerpt && post.excerpt && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
@@ -135,7 +135,7 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
   const renderCard = (svc: any) => (
     <Link to={`/services/${svc.slug}`} className="group block h-full">
       <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
-        {props.showImage && svc.image_url && <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />}
+        {props.showImage && svc.image_url && <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" width={600} height={160} />}
         <div className="p-4">
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
           {props.showDescription && svc.short_description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>}
@@ -221,7 +221,7 @@ const ImageCarouselWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode;
   if (!imgs.length) return <div className="bg-muted rounded-lg h-48 flex items-center justify-center text-muted-foreground">Add images to carousel</div>;
   return (
     <div className={`relative overflow-hidden rounded-lg ${rClasses}`} style={baseStyles}>
-      <img src={imgs[current]?.src} alt={imgs[current]?.alt || ''} className="w-full h-64 object-cover transition-opacity" loading="lazy" />
+      <img src={imgs[current]?.src} alt={imgs[current]?.alt || ''} className="w-full h-64 object-cover transition-opacity" loading="lazy" width={800} height={256} />
       {imgs.length > 1 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {imgs.map((_: any, i: number) => (
@@ -393,6 +393,8 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
             className="w-full h-auto"
             style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit || 'contain' }}
             loading="lazy"
+            width={800}
+            height={600}
           />
           {node.props.caption && (
             <figcaption className="text-sm text-muted-foreground text-center mt-2 italic">{node.props.caption}</figcaption>
@@ -665,7 +667,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       return (
         <div key={key} className={`text-${node.props.align || 'center'} ${rClasses}`} style={baseStyles}>
           {node.props.src ? (
-            <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3" style={{ objectFit: 'contain' }} loading="lazy" />
+            <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3" style={{ objectFit: 'contain' }} loading="lazy" width={800} height={600} />
           ) : (
             <div className="h-24 bg-muted rounded-lg flex items-center justify-center text-muted-foreground text-xs mb-2">No image</div>
           )}
@@ -722,7 +724,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       return (
         <div key={key} className={`grid grid-cols-2 ${cols >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} ${cols >= 4 ? 'lg:grid-cols-4' : ''} ${rClasses}`} style={{ ...baseStyles, gap: node.props.gap || '0.5rem' }}>
           {imgs.map((img: any, i: number) => (
-            <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" />
+            <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" width={400} height={400} />
           ))}
           {!imgs.length && <div className="col-span-full text-center text-muted-foreground py-8">Add images to gallery</div>}
         </div>

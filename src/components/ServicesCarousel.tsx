@@ -187,6 +187,8 @@ function ServiceCard({ item }: { item: ServiceItem }) {
           alt={item.title}
           className="h-12 w-12 object-contain mb-4 rounded"
           loading="lazy"
+          width={48}
+          height={48}
         />
       ) : (
         <div className="text-4xl mb-4">{item.icon ?? "🦷"}</div>
