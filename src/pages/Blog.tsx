@@ -37,7 +37,13 @@ const Blog = () => {
   const KNOWN_IDS = ["hero"];
 
   const filteredPosts = activeTab
-    ? (allPosts ?? []).filter((p) => categoryToTab[p.category] === activeTab || p.category === activeTab)
+    ? (allPosts ?? []).filter((p) => {
+        const primaryMatch = categoryToTab[p.category] === activeTab || p.category === activeTab;
+        // Also check cat: prefixed tags for multi-category support
+        const tagCats = Array.isArray(p.tags) ? p.tags.filter((t: string) => t.startsWith("cat:")).map((t: string) => t.slice(4)) : [];
+        const tagMatch = tagCats.some((c: string) => categoryToTab[c] === activeTab || c === activeTab);
+        return primaryMatch || tagMatch;
+      })
     : (allPosts ?? []);
 
   let dynamicIndex = 0;
