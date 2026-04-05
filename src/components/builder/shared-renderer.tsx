@@ -22,6 +22,7 @@ import {
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import InlineEditable from './InlineEditable';
+import RichTextEditable from './RichTextEditable';
 
 // ─── Responsive styles (desktop baseline for live) ──────
 export const getStyles = (node: LayoutNode): React.CSSProperties => {
