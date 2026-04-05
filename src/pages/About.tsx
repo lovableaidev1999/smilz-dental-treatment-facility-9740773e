@@ -199,7 +199,7 @@ const About = () => {
           </section>
         );
       }
-
+      default: {
         const imageFirst = dynamicIndex % 2 === 0;
         dynamicIndex++;
         return <GenericSection key={section.id} section={section} imageFirst={imageFirst} />;
