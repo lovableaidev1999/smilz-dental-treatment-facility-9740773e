@@ -359,16 +359,23 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
       <div className={`absolute -top-5 left-0 flex items-center gap-0.5 bg-primary text-primary-foreground rounded-t text-[10px] px-1.5 py-0.5 z-10 transition-opacity ${
         isSelected || isHovered ? 'opacity-100' : 'opacity-0'
       }`}>
-        <span {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-          <GripVertical className="h-3 w-3" />
-        </span>
+        {isLocked ? (
+          <Lock className="h-3 w-3 text-amber-300" />
+        ) : (
+          <span {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+            <GripVertical className="h-3 w-3" />
+          </span>
+        )}
         <span className="ml-1">{def?.label || node.type}</span>
-        <button
-          onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BLOCK', payload: node.id }); }}
-          className="ml-1 hover:text-destructive-foreground"
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
+        {isLocked && <span className="ml-1 text-amber-300 text-[9px]">🔒</span>}
+        {!isLocked && (
+          <button
+            onClick={e => { e.stopPropagation(); dispatch({ type: 'DELETE_BLOCK', payload: node.id }); }}
+            className="ml-1 hover:text-destructive-foreground"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
       {/* Block content */}
