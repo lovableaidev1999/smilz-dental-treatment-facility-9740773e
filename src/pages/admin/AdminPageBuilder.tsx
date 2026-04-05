@@ -31,10 +31,11 @@ import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight,
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
-const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
+const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished }: {
   layoutId?: string;
   pageSlug: string;
   pageTitle: string;
+  isPublished?: boolean;
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
   const { toast } = useToast();
