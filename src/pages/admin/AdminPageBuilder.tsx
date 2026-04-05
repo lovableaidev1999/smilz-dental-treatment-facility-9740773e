@@ -175,7 +175,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
         <BuilderTopBar
           pageTitle={pageTitle}
           pageSlug={pageSlug}
-          onSave={() => handleSave(false)}
+          onSave={() => handleSave()}
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
           onView={() => {
