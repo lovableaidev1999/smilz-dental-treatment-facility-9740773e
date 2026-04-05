@@ -176,7 +176,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
           onView={() => window.open(`/p/${pageSlug}`, '_blank')}
-          onBack={() => navigate('/admin/pages')}
+          onBack={() => navigate('/admin/page-layouts')}
           onUndo={handleUndo}
           onRedo={handleRedo}
           canUndo={undoRedo.canUndo}
