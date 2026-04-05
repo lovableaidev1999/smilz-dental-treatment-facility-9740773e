@@ -3,12 +3,10 @@ import { Award, Heart, Shield, Users, Phone, Clock, MapPin, Calendar } from "luc
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
-import { useGallery } from "@/integrations/supabase/hooks";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
-import ClinicSlider from "@/components/ClinicSlider";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
