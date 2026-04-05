@@ -489,11 +489,11 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 
     case 'image':
       return node.props.src ? (
-        <figure key={key} className={rClasses} style={baseStyles}>
+        <figure key={key} className={`w-full ${rClasses}`} style={baseStyles}>
           <img
             src={node.props.src}
             alt={node.props.alt || ''}
-            className="w-full"
+            className="w-full h-auto"
             style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit || 'contain' }}
             loading="lazy"
           />
