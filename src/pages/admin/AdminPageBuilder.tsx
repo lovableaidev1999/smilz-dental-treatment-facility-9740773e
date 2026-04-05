@@ -135,6 +135,17 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
   const handleSave = async (publish = false) => {
     try {
+      // Embed SEO metadata into layout_json
+      const layoutWithSeo = [...state.layout] as any;
+      (layoutWithSeo as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
+
+      // Block count warning
+      const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
+      const blockCount = countBlocks(state.layout);
+      if (blockCount > 30) {
+        toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
+      }
+
       const result = await saveLayout.mutateAsync({
         id: layoutId,
         page_slug: pageSlug,
