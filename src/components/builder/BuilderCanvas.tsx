@@ -484,7 +484,7 @@ const BuilderCanvas = () => {
   const topLevelIds = layout.map(n => n.id);
 
   return (
-    <div className="flex-1 overflow-auto bg-muted/30 p-4">
+    <div className="h-full overflow-auto bg-muted/30 p-4">
       <div
         className="mx-auto bg-card shadow-card rounded-lg min-h-[70vh] transition-all duration-300"
         style={{ maxWidth: DEVICE_WIDTHS[deviceMode] }}
