@@ -132,7 +132,74 @@ const About = () => {
           </section>
         );
 
-      default: {
+      case "about_smilz": {
+        const sliderImages = (galleryItems || []).map((item: any) => ({
+          url: item.image_url,
+          alt: item.title || item.caption || "Smilz Dental Clinic",
+        }));
+        // Prepend the section's own image if it exists and isn't already in gallery
+        if (section.image_url) {
+          const alreadyInGallery = sliderImages.some((img: any) => img.url === section.image_url);
+          if (!alreadyInGallery) {
+            sliderImages.unshift({ url: section.image_url, alt: section.heading || "Smilz Dental Clinic" });
+          }
+        }
+
+        const paragraphs = section.body_text
+          ? section.body_text.split("\n").map((p: string) => p.trim()).filter(Boolean)
+          : [];
+
+        return (
+          <section key={section.id} className="section-padding">
+            <div className="container-narrow mx-auto">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <ClinicSlider images={sliderImages} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                >
+                  {section.section_title && (
+                    <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">
+                      {section.section_title}
+                    </p>
+                  )}
+                  {section.heading && (
+                    <h2 className="text-3xl font-heading font-bold text-foreground mb-4">
+                      {section.heading}
+                    </h2>
+                  )}
+                  {section.subheading && (
+                    <p className="text-lg text-foreground/80 mb-4">
+                      {section.subheading}
+                    </p>
+                  )}
+                  {paragraphs.length > 0 && (
+                    <div className="space-y-4 text-muted-foreground">
+                      {paragraphs.map((para: string, i: number) => <p key={i}>{para}</p>)}
+                    </div>
+                  )}
+                  {section.button_text && section.button_link && (
+                    <div className="mt-6">
+                      <Button asChild>
+                        <Link to={section.button_link}>{section.button_text}</Link>
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
         const imageFirst = dynamicIndex % 2 === 0;
         dynamicIndex++;
         return <GenericSection key={section.id} section={section} imageFirst={imageFirst} />;
