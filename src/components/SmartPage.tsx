@@ -1,4 +1,4 @@
-import { lazy, Suspense, ComponentType } from 'react';
+import { lazy, Suspense, ComponentType, Component, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import SEOHead from '@/components/SEOHead';
@@ -23,6 +23,27 @@ interface SmartPageProps {
     title?: string;
     description?: string;
   };
+}
+
+// ─── Error boundary for safe fallback ───────────────────
+class RendererErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('VisualRenderer error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
 }
 
 const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProps) => {
@@ -59,14 +80,12 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
 
     return (
       <>
-        <SEOHead
-          title={seoTitle}
-          description={seoDescription}
-          ogImage={ogImage}
-        />
-        <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="animate-pulse text-muted-foreground text-sm">Loading page...</div></div>}>
-          <VisualRenderer layout={layout.layout_json} />
-        </Suspense>
+        <SEOHead title={seoTitle} description={seoDescription} ogImage={ogImage} />
+        <RendererErrorBoundary fallback={<Fallback />}>
+          <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="animate-pulse text-muted-foreground text-sm">Loading page...</div></div>}>
+            <VisualRenderer layout={layout.layout_json} />
+          </Suspense>
+        </RendererErrorBoundary>
       </>
     );
   }
