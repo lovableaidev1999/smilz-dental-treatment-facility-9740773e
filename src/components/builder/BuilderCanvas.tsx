@@ -353,7 +353,7 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
     <div
       ref={setNodeRef}
       style={style}
-      className={`group/block relative ${isContainer ? 'min-h-[60px]' : ''} ${outlineClass} ${isDragging ? 'z-50' : ''}`}
+      className={`group/block relative ${isContainer ? 'min-h-[60px]' : ''} ${outlineClass} ${isDragging ? 'z-50' : ''} ${isHiddenOnDevice ? 'opacity-40 border-dashed' : ''}`}
       onClick={e => { e.stopPropagation(); dispatch({ type: 'SELECT_BLOCK', payload: node.id }); }}
       onMouseEnter={e => { e.stopPropagation(); dispatch({ type: 'HOVER_BLOCK', payload: node.id }); }}
       onMouseLeave={e => { e.stopPropagation(); dispatch({ type: 'HOVER_BLOCK', payload: null }); }}
