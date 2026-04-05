@@ -700,7 +700,7 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
       const imgs = (node.props.images || []).filter((img: any) => img.src);
       const cols = node.props.columns || 3;
       return (
-        <div key={key} className={rClasses} style={{ ...baseStyles, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: node.props.gap || '0.5rem' }}>
+        <div key={key} className={`grid grid-cols-2 ${cols >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} ${cols >= 4 ? 'lg:grid-cols-4' : ''} ${rClasses}`} style={{ ...baseStyles, gap: node.props.gap || '0.5rem' }}>
           {imgs.map((img: any, i: number) => (
             <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" />
           ))}
