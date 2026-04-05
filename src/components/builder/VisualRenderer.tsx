@@ -115,6 +115,53 @@ const getResponsiveClasses = (node: LayoutNode): string => {
   return classes.join(' ');
 };
 
+// ─── Embla Carousel helper ──────────────────────────────
+const EmblaCarousel = ({ items, renderItem, autoplay = true, showNavigation = true }: {
+  items: any[];
+  renderItem: (item: any, i: number) => React.ReactNode;
+  autoplay?: boolean;
+  showNavigation?: boolean;
+}) => {
+  const plugins = autoplay ? [Autoplay({ delay: 4000, stopOnInteraction: true })] : [];
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: 'start', slidesToScroll: 1, breakpoints: { '(min-width: 768px)': { slidesToScroll: 2 }, '(min-width: 1024px)': { slidesToScroll: 3 } } },
+    plugins
+  );
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on('select', onSelect);
+    return () => { emblaApi.off('select', onSelect); };
+  }, [emblaApi]);
+
+  return (
+    <div className="relative">
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex gap-4">
+          {items.map((item, i) => (
+            <div key={i} className="flex-[0_0_85%] min-w-0 md:flex-[0_0_45%] lg:flex-[0_0_30%]">
+              {renderItem(item, i)}
+            </div>
+          ))}
+        </div>
+      </div>
+      {showNavigation && items.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-4">
+          {items.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => emblaApi?.scrollTo(i)}
+              className={`w-2 h-2 rounded-full transition-colors ${i === selectedIndex ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Blog Loop Widget ──────────────────────────────────
 const BlogLoopWidget = ({ props }: { props: any }) => {
   const { data: posts } = useQuery({
@@ -132,28 +179,33 @@ const BlogLoopWidget = ({ props }: { props: any }) => {
     },
   });
 
-  const cols = props.columns || 3;
+  const renderCard = (post: any) => (
+    <Link to={`/blog/${post.slug}`} className="group block h-full">
+      <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
+        {props.showImage && post.featured_image && (
+          <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />
+        )}
+        <div className="p-4">
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
+          {props.showExcerpt && post.excerpt && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
+          )}
+          {props.showDate && post.published_at && (
+            <p className="text-xs text-muted-foreground mt-2">{new Date(post.published_at).toLocaleDateString()}</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
 
+  if (props.displayType === 'carousel') {
+    return <EmblaCarousel items={posts || []} renderItem={(post) => renderCard(post)} autoplay={props.autoplay} showNavigation={props.showNavigation} />;
+  }
+
+  const cols = props.columns || 3;
   return (
-    <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {(posts || []).map((post: any) => (
-        <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
-          <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow">
-            {props.showImage && post.featured_image && (
-              <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />
-            )}
-            <div className="p-4">
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
-              {props.showExcerpt && post.excerpt && (
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
-              )}
-              {props.showDate && post.published_at && (
-                <p className="text-xs text-muted-foreground mt-2">{new Date(post.published_at).toLocaleDateString()}</p>
-              )}
-            </div>
-          </div>
-        </Link>
-      ))}
+    <div className={`grid gap-6 grid-cols-1 ${cols >= 2 ? 'md:grid-cols-2' : ''} ${cols >= 3 ? 'lg:grid-cols-3' : ''} ${cols >= 4 ? 'xl:grid-cols-4' : ''}`}>
+      {(posts || []).map((post: any) => <div key={post.id}>{renderCard(post)}</div>)}
     </div>
   );
 };
@@ -173,25 +225,30 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
     },
   });
 
-  const cols = props.columns || 3;
+  const renderCard = (svc: any) => (
+    <Link to={`/services/${svc.slug}`} className="group block h-full">
+      <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
+        {props.showImage && svc.image_url && (
+          <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />
+        )}
+        <div className="p-4">
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
+          {props.showDescription && svc.short_description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
 
+  if (props.displayType === 'carousel') {
+    return <EmblaCarousel items={services || []} renderItem={(svc) => renderCard(svc)} autoplay={props.autoplay} showNavigation={props.showNavigation} />;
+  }
+
+  const cols = props.columns || 3;
   return (
-    <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {(services || []).map((svc: any) => (
-        <Link key={svc.id} to={`/services/${svc.slug}`} className="group block">
-          <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow">
-            {props.showImage && svc.image_url && (
-              <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />
-            )}
-            <div className="p-4">
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
-              {props.showDescription && svc.short_description && (
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>
-              )}
-            </div>
-          </div>
-        </Link>
-      ))}
+    <div className={`grid gap-6 grid-cols-1 ${cols >= 2 ? 'md:grid-cols-2' : ''} ${cols >= 3 ? 'lg:grid-cols-3' : ''} ${cols >= 4 ? 'xl:grid-cols-4' : ''}`}>
+      {(services || []).map((svc: any) => <div key={svc.id}>{renderCard(svc)}</div>)}
     </div>
   );
 };
