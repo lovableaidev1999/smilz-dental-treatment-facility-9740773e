@@ -221,7 +221,7 @@ const ImageCarouselWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode;
   if (!imgs.length) return <div className="bg-muted rounded-lg h-48 flex items-center justify-center text-muted-foreground">Add images to carousel</div>;
   return (
     <div className={`relative overflow-hidden rounded-lg ${rClasses}`} style={baseStyles}>
-      <img src={imgs[current]?.src} alt={imgs[current]?.alt || ''} className="w-full h-64 object-cover transition-opacity" loading="lazy" />
+      <img src={imgs[current]?.src} alt={imgs[current]?.alt || ''} className="w-full h-64 object-cover transition-opacity" loading="lazy" width={800} height={256} />
       {imgs.length > 1 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {imgs.map((_: any, i: number) => (
