@@ -105,7 +105,7 @@ const BlogLoopWidget = ({ props }: { props: any }) => {
   const renderCard = (post: any) => (
     <Link to={`/blog/${post.slug}`} className="group block h-full">
       <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
-        {props.showImage && post.featured_image && <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />}
+        {props.showImage && post.featured_image && <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" width={600} height={192} />}
         <div className="p-4">
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
           {props.showExcerpt && post.excerpt && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
