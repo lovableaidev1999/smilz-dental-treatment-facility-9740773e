@@ -241,7 +241,21 @@ const AdminBlogEdit = () => {
         meta_description: post.meta_description ?? "",
         published_at: post.published_at ? post.published_at.split("T")[0] : "",
       });
-      setTagsInput(Array.isArray(post.tags) ? post.tags.join(", ") : "");
+      // Extract categories from tags (prefixed with "cat:") and regular tags
+      const allTags = Array.isArray(post.tags) ? post.tags : [];
+      const cats = allTags.filter((t: string) => t.startsWith("cat:")).map((t: string) => t.slice(4));
+      const regularTags = allTags.filter((t: string) => !t.startsWith("cat:"));
+      setTagsInput(regularTags.join(", "));
+      // If no cat: prefixed categories found, use the primary category
+      if (cats.length > 0) {
+        setSelectedCategories(cats);
+      } else {
+        setSelectedCategories(post.category ? [post.category] : ["general"]);
+      }
+      // Discover any custom categories not in default list
+      const allCats = [...cats, post.category].filter(Boolean);
+      const custom = allCats.filter((c: string) => !DEFAULT_CATEGORIES.includes(c));
+      if (custom.length > 0) setCustomCategories(prev => [...new Set([...prev, ...custom])]);
 
       if (hasStoredVisualLayout) {
         setVisualLayout(storedVisualLayout);
