@@ -22,6 +22,7 @@ import {
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import InlineEditable from './InlineEditable';
+import RichTextEditable from './RichTextEditable';
 
 // ─── Responsive styles (desktop baseline for live) ──────
 export const getStyles = (node: LayoutNode): React.CSSProperties => {
@@ -346,18 +347,23 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       const className = `font-heading text-foreground ${sizes[node.props.level] || sizes[2]} ${rClasses}`;
       const style = { ...baseStyles, color: node.props.color || undefined, textAlign: node.props.align || baseStyles.textAlign };
 
+      const headingContent = node.props.html || node.props.text;
+
       if (editorMode) {
         return (
-          <InlineEditable
+          <RichTextEditable
             key={key}
             blockId={node.id}
-            propKey="text"
-            value={node.props.text}
+            propKey="html"
+            value={headingContent}
             tag={Tag as string}
             className={className}
             style={style}
           />
         );
+      }
+      if (node.props.html) {
+        return <Tag key={key} className={className} style={style} dangerouslySetInnerHTML={{ __html: node.props.html }} />;
       }
       return <Tag key={key} className={className} style={style}>{node.props.text}</Tag>;
     }
@@ -366,19 +372,23 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
     case 'text': {
       const className = `text-muted-foreground leading-relaxed ${rClasses}`;
       const style = { ...baseStyles, color: node.props.color || undefined, textAlign: node.props.align || baseStyles.textAlign };
+      const textContent = node.props.html || node.props.text;
 
       if (editorMode) {
         return (
-          <InlineEditable
+          <RichTextEditable
             key={key}
             blockId={node.id}
-            propKey="text"
-            value={node.props.text}
+            propKey="html"
+            value={textContent}
             tag="p"
             className={className}
             style={style}
           />
         );
+      }
+      if (node.props.html) {
+        return <p key={key} className={className} style={style} dangerouslySetInnerHTML={{ __html: node.props.html }} />;
       }
       return <p key={key} className={className} style={style}>{node.props.text}</p>;
     }
