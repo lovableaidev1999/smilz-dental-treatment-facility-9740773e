@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { SECTION_TEMPLATES, type SectionTemplate } from '@/lib/sectionTemplates';
+import { getExistingDesign } from '@/lib/existingDesignTemplates';
 
 const CORE_PAGES = [
   { slug: 'home', title: 'Home', path: '/' },
