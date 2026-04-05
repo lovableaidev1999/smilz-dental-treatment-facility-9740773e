@@ -42,14 +42,13 @@ const Blog = () => {
   const { data: settings } = useSiteSettings();
   const { sections } = usePageContent("blog");
   const links = settings?.links;
-  // Build dynamic category tabs from actual post data
+  // Build dynamic category tabs from actual post data — show every raw category
   const dynamicTabs = useMemo(() => {
     const posts = allPosts ?? [];
     const tabCounts = new Map<string, number>();
     posts.forEach(p => {
       const cats = getPostCategories(p);
-      const resolved = new Set(cats.map(resolveTab));
-      resolved.forEach(tab => tabCounts.set(tab, (tabCounts.get(tab) || 0) + 1));
+      cats.forEach(cat => tabCounts.set(cat, (tabCounts.get(cat) || 0) + 1));
     });
     const tabs = Array.from(tabCounts.entries())
       .sort((a, b) => b[1] - a[1])
