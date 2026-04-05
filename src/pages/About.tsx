@@ -3,17 +3,15 @@ import { Award, Heart, Shield, Users, Phone, Clock, MapPin, Calendar } from "luc
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
-import { useGallery } from "@/integrations/supabase/hooks";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
-import ClinicSlider from "@/components/ClinicSlider";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
   const { sections } = usePageContent("about");
-  const { data: galleryItems } = useGallery();
+  
 
   const general = settings?.general;
   const contact = settings?.contact;
@@ -133,18 +131,6 @@ const About = () => {
         );
 
       case "about_smilz": {
-        const sliderImages = (galleryItems || []).map((item: any) => ({
-          url: item.image_url,
-          alt: item.title || item.caption || "Smilz Dental Clinic",
-        }));
-        // Prepend the section's own image if it exists and isn't already in gallery
-        if (section.image_url) {
-          const alreadyInGallery = sliderImages.some((img: any) => img.url === section.image_url);
-          if (!alreadyInGallery) {
-            sliderImages.unshift({ url: section.image_url, alt: section.heading || "Smilz Dental Clinic" });
-          }
-        }
-
         const paragraphs = section.body_text
           ? section.body_text.split("\n").map((p: string) => p.trim()).filter(Boolean)
           : [];
@@ -158,7 +144,16 @@ const About = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                 >
-                  <ClinicSlider images={sliderImages} />
+                  {section.image_url && (
+                    <img
+                      src={section.image_url}
+                      alt={section.heading || "Smilz Dental Clinic"}
+                      className="rounded-2xl shadow-elevated w-full"
+                      loading="lazy"
+                      width={800}
+                      height={600}
+                    />
+                  )}
                 </motion.div>
 
                 <motion.div
