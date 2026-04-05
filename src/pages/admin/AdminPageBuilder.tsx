@@ -134,12 +134,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
     }
   };
 
+  const CORE_SLUGS = ['home', 'about', 'services', 'contact', 'blog', 'gallery'];
+
   const handleSave = async (publish = false) => {
     try {
-      // Embed SEO metadata into layout_json
-      const layoutWithSeo = [...state.layout] as any;
-      (layoutWithSeo as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
-
       // Block count warning
       const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
       const blockCount = countBlocks(state.layout);
@@ -147,11 +145,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
         toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
       }
 
+      // Embed SEO metadata into layout_json
+      const layoutToSave = [...state.layout] as any;
+      (layoutToSave as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
+
       const result = await saveLayout.mutateAsync({
         id: layoutId,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: state.layout,
+        layout_json: layoutToSave,
         is_published: publish,
       });
       dispatch({ type: 'MARK_SAVED' });
