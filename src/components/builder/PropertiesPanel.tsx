@@ -57,7 +57,8 @@ const PropertiesPanel = () => {
       {/* Actions */}
       <div className="flex gap-1">
         <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}>
+          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}
+          disabled={node.props?.locked}>
           <Copy className="h-3 w-3 mr-1" /> Duplicate
         </Button>
         <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
@@ -72,9 +73,22 @@ const PropertiesPanel = () => {
           <Clipboard className="h-3 w-3 mr-1" /> Paste
         </Button>
         <Button variant="destructive" size="sm" className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}>
+          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}
+          disabled={node.props?.locked}>
           <Trash2 className="h-3 w-3 mr-1" /> Delete
         </Button>
+      </div>
+
+      {/* Lock toggle */}
+      <div className="flex items-center justify-between">
+        <Label className="text-xs flex items-center gap-1">
+          {node.props?.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+          {node.props?.locked ? 'Locked' : 'Unlocked'}
+        </Label>
+        <Switch
+          checked={node.props?.locked || false}
+          onCheckedChange={v => updateProp('locked', v)}
+        />
       </div>
 
       <Separator />
