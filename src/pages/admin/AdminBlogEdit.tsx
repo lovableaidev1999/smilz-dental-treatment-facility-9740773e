@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid, Wand2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Save, Upload, Loader2, Eye, Code, FileText, Trash2, LayoutGrid, Wand2, ExternalLink, Plus, X } from "lucide-react";
 import ImageUrlInput from "@/components/admin/ImageUrlInput";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
@@ -162,11 +162,13 @@ const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving, featuredIma
   );
 };
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
   "dental-implant", "braces", "orthodontics", "rct", "caries",
   "veneers-and-crowns", "aligners", "emergency", "wisdom-tooth", "general",
 ];
+
+const formatLabel = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
 const AdminBlogEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -187,6 +189,9 @@ const AdminBlogEdit = () => {
   const [visualLayout, setVisualLayout] = useState<LayoutNode[] | null>(null);
   const [editorMode, setEditorMode] = useState<"blocks" | "html" | "visual" | "preview">("blocks");
   const [tagsInput, setTagsInput] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["general"]);
+  const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const imgRef = useRef<HTMLInputElement>(null);
   const { compress, isCompressing } = useImageUpload();
 
@@ -236,7 +241,21 @@ const AdminBlogEdit = () => {
         meta_description: post.meta_description ?? "",
         published_at: post.published_at ? post.published_at.split("T")[0] : "",
       });
-      setTagsInput(Array.isArray(post.tags) ? post.tags.join(", ") : "");
+      // Extract categories from tags (prefixed with "cat:") and regular tags
+      const allTags = Array.isArray(post.tags) ? post.tags : [];
+      const cats = allTags.filter((t: string) => t.startsWith("cat:")).map((t: string) => t.slice(4));
+      const regularTags = allTags.filter((t: string) => !t.startsWith("cat:"));
+      setTagsInput(regularTags.join(", "));
+      // If no cat: prefixed categories found, use the primary category
+      if (cats.length > 0) {
+        setSelectedCategories(cats);
+      } else {
+        setSelectedCategories(post.category ? [post.category] : ["general"]);
+      }
+      // Discover any custom categories not in default list
+      const allCats = [...cats, post.category].filter(Boolean);
+      const custom = allCats.filter((c: string) => !DEFAULT_CATEGORIES.includes(c));
+      if (custom.length > 0) setCustomCategories(prev => [...new Set([...prev, ...custom])]);
 
       if (hasStoredVisualLayout) {
         setVisualLayout(storedVisualLayout);
@@ -275,7 +294,9 @@ const AdminBlogEdit = () => {
 
   const saveMutation = useMutation({
     mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
-      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const regularTags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
+      const categoryTags = selectedCategories.map(c => `cat:${c}`);
+      const tags = [...categoryTags, ...regularTags];
       const isPublished = asDraft === true ? false : true;
       const layoutToSave = visualLayoutJson || visualLayout;
       // When publishing, always use current timestamp so post appears as latest
@@ -284,6 +305,7 @@ const AdminBlogEdit = () => {
         : (form.published_at ? new Date(form.published_at).toISOString() : null);
       const payload: any = {
         ...form,
+        category: selectedCategories[0] || "general",
         is_published: isPublished,
         tags,
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
@@ -537,14 +559,76 @@ const AdminBlogEdit = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle>Details</CardTitle></CardHeader>
+           <Card>
+            <CardHeader><CardTitle>Categories & Tags</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Category</label>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</option>)}
-                </select>
+                <label className="text-sm font-medium mb-2 block">Categories</label>
+                <div className="max-h-48 overflow-y-auto space-y-1 border border-border rounded-md p-2">
+                  {[...DEFAULT_CATEGORIES, ...customCategories].map((c) => (
+                    <label key={c} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-secondary rounded px-1 py-0.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(c)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCategories(prev => [...prev, c]);
+                          } else {
+                            setSelectedCategories(prev => prev.filter(cat => cat !== c));
+                          }
+                        }}
+                        className="rounded border-input"
+                      />
+                      <span>{formatLabel(c)}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {selectedCategories.map(c => (
+                      <span key={c} className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {formatLabel(c)}
+                        <button onClick={() => setSelectedCategories(prev => prev.filter(cat => cat !== c))} className="hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-1 mt-2">
+                  <Input
+                    value={newCategoryInput}
+                    onChange={(e) => setNewCategoryInput(e.target.value)}
+                    placeholder="New category..."
+                    className="text-xs h-8"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const slug = newCategoryInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                        if (slug && !DEFAULT_CATEGORIES.includes(slug) && !customCategories.includes(slug)) {
+                          setCustomCategories(prev => [...prev, slug]);
+                          setSelectedCategories(prev => [...prev, slug]);
+                          setNewCategoryInput("");
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => {
+                      const slug = newCategoryInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                      if (slug && !DEFAULT_CATEGORIES.includes(slug) && !customCategories.includes(slug)) {
+                        setCustomCategories(prev => [...prev, slug]);
+                        setSelectedCategories(prev => [...prev, slug]);
+                        setNewCategoryInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Tags (comma separated)</label>

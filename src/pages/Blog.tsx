@@ -37,7 +37,13 @@ const Blog = () => {
   const KNOWN_IDS = ["hero"];
 
   const filteredPosts = activeTab
-    ? (allPosts ?? []).filter((p) => categoryToTab[p.category] === activeTab || p.category === activeTab)
+    ? (allPosts ?? []).filter((p) => {
+        const primaryMatch = categoryToTab[p.category] === activeTab || p.category === activeTab;
+        // Also check cat: prefixed tags for multi-category support
+        const tagCats = Array.isArray(p.tags) ? p.tags.filter((t: string) => t.startsWith("cat:")).map((t: string) => t.slice(4)) : [];
+        const tagMatch = tagCats.some((c: string) => categoryToTab[c] === activeTab || c === activeTab);
+        return primaryMatch || tagMatch;
+      })
     : (allPosts ?? []);
 
   let dynamicIndex = 0;
@@ -83,7 +89,12 @@ const Blog = () => {
             {CATEGORY_TABS.map((tab) => (
               <button key={tab.slug} onClick={() => setActiveTab(tab.slug)} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab.slug ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground"}`}>
                 {tab.label}
-                {!isLoading && <span className="ml-1.5 text-xs opacity-75">({tab.slug === "" ? (allPosts ?? []).length : (allPosts ?? []).filter((p) => categoryToTab[p.category] === tab.slug || p.category === tab.slug).length})</span>}
+                {!isLoading && <span className="ml-1.5 text-xs opacity-75">({tab.slug === "" ? (allPosts ?? []).length : (allPosts ?? []).filter((p) => {
+                  const primaryMatch = categoryToTab[p.category] === tab.slug || p.category === tab.slug;
+                  const tagCats = Array.isArray(p.tags) ? p.tags.filter((t: string) => t.startsWith("cat:")).map((t: string) => t.slice(4)) : [];
+                  const tagMatch = tagCats.some((c: string) => categoryToTab[c] === tab.slug || c === tab.slug);
+                  return primaryMatch || tagMatch;
+                }).length})</span>}
               </button>
             ))}
           </div>
