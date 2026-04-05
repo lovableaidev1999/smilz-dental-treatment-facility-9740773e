@@ -127,7 +127,7 @@ const Blog = () => {
                   </Link>
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-xs font-medium text-accent bg-accent/10 px-2.5 py-1 rounded-full capitalize">{CATEGORY_TABS.find((t) => t.slug === (categoryToTab[post.category] || post.category))?.label || post.category}</span>
+                      <span className="text-xs font-medium text-accent bg-accent/10 px-2.5 py-1 rounded-full capitalize">{formatLabel(resolveTab(post.category) || post.category)}</span>
                       {post.published_at && <span className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(post.published_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>}
                     </div>
                     <Link to={`/blog/${post.slug}`}><h2 className="font-heading font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">{post.title}</h2></Link>
