@@ -326,7 +326,15 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
     case 'text':
       return (
         <>
-          <PropField label="Text" value={props.text} onChange={v => updateProp('text', v)} multiline />
+          {props.html ? (
+            <div className="space-y-1">
+              <Label className="text-xs">Text</Label>
+              <p className="text-[10px] text-muted-foreground italic">Double-click on canvas to edit with formatting</p>
+              <PropField label="Plain text fallback" value={props.text} onChange={v => updateProp('text', v)} multiline />
+            </div>
+          ) : (
+            <PropField label="Text" value={props.text} onChange={v => updateProp('text', v)} multiline />
+          )}
           <div className="flex items-center justify-between">
             <Label className="text-xs">Alignment</Label>
             <Select value={props.align || 'left'} onValueChange={v => updateProp('align', v)}>

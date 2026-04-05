@@ -64,7 +64,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: 'text', label: 'Text', icon: 'AlignLeft', category: 'basic',
     canHaveChildren: false,
-    defaultProps: { text: 'Enter your text here...', align: 'left', color: '' },
+    defaultProps: { text: 'Enter your text here...', html: '', align: 'left', color: '' },
   },
   {
     type: 'image', label: 'Image', icon: 'ImageIcon', category: 'basic',
