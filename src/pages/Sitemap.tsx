@@ -3,44 +3,74 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SITE = "https://smilz.net";
 
+/** Ensure every URL ends with a trailing slash */
+const withTrailingSlash = (path: string) =>
+  path.endsWith("/") ? path : `${path}/`;
+
 const staticPages = [
   { loc: "/", priority: "1.0", changefreq: "weekly" },
-  { loc: "/services", priority: "0.9", changefreq: "weekly" },
-  { loc: "/about", priority: "0.7", changefreq: "monthly" },
-  { loc: "/contact", priority: "0.7", changefreq: "monthly" },
-  { loc: "/gallery", priority: "0.6", changefreq: "monthly" },
-  { loc: "/blog", priority: "0.8", changefreq: "daily" },
-  { loc: "/referral", priority: "0.5", changefreq: "monthly" },
+  { loc: "/services/", priority: "0.9", changefreq: "weekly" },
+  { loc: "/about/", priority: "0.7", changefreq: "monthly" },
+  { loc: "/contact/", priority: "0.7", changefreq: "monthly" },
+  { loc: "/gallery/", priority: "0.6", changefreq: "monthly" },
+  { loc: "/blog/", priority: "0.8", changefreq: "daily" },
 ];
+
+/** Routes explicitly excluded from the sitemap */
+const EXCLUDED = new Set(["/login", "/admin", "/referral-register", "/referral", "/admin/login", "/admin/reset-password"]);
 
 const Sitemap = () => {
   useEffect(() => {
     const generate = async () => {
-      const [{ data: posts }, { data: services }] = await Promise.all([
+      const [{ data: posts }, { data: services }, { data: builtPages }] = await Promise.all([
         supabase.from("blog_posts").select("slug, updated_at, published_at").eq("is_published", true),
         supabase.from("services").select("slug, updated_at").eq("is_active", true),
+        supabase.from("page_layouts").select("slug, updated_at, is_published").eq("is_published", true),
       ]);
 
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      const seen = new Set<string>();
+      const entries: string[] = [];
 
+      const addUrl = (loc: string, lastmod?: string, changefreq = "monthly", priority = "0.5") => {
+        const normalized = withTrailingSlash(loc);
+        if (seen.has(normalized) || EXCLUDED.has(loc.replace(SITE, ""))) return;
+        seen.add(normalized);
+
+        let entry = `  <url>\n    <loc>${normalized}</loc>\n`;
+        if (lastmod) entry += `    <lastmod>${lastmod}</lastmod>\n`;
+        entry += `    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+        entries.push(entry);
+      };
+
+      // Static pages
       for (const p of staticPages) {
-        xml += `  <url>\n    <loc>${SITE}${p.loc}</loc>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>\n`;
+        addUrl(`${SITE}${p.loc}`, undefined, p.changefreq, p.priority);
       }
 
+      // Dynamic service pages
       for (const s of services ?? []) {
-        xml += `  <url>\n    <loc>${SITE}/services/${s.slug}</loc>\n    <lastmod>${(s.updated_at || new Date().toISOString()).split("T")[0]}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        const lastmod = (s.updated_at || new Date().toISOString()).split("T")[0];
+        addUrl(`${SITE}/services/${s.slug}`, lastmod, "monthly", "0.8");
       }
 
+      // Dynamic blog posts
       for (const p of posts ?? []) {
         const lastmod = (p.updated_at || p.published_at || new Date().toISOString()).split("T")[0];
-        xml += `  <url>\n    <loc>${SITE}/blog/${p.slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+        addUrl(`${SITE}/blog/${p.slug}`, lastmod, "monthly", "0.7");
       }
 
-      xml += `</urlset>`;
+      // CMS-built pages (/p/slug)
+      for (const pg of builtPages ?? []) {
+        const lastmod = (pg.updated_at || new Date().toISOString()).split("T")[0];
+        addUrl(`${SITE}/p/${pg.slug}`, lastmod, "monthly", "0.6");
+      }
 
-      const blob = new Blob([xml], { type: "application/xml" });
-      const url = URL.createObjectURL(blob);
-      window.location.replace(url);
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`;
+
+      // Serve as XML – replace the document with raw XML output
+      document.open("application/xml");
+      document.write(xml);
+      document.close();
     };
 
     generate();
