@@ -39,12 +39,14 @@ import {
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 // ─── Inner blog builder with DnD ────────────────────────
-const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
+const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving, featuredImage, onFeaturedImageChange }: {
   title: string;
   postId?: string;
   onBack: (layout: LayoutNode[]) => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
+  featuredImage: string;
+  onFeaturedImageChange: (url: string) => void;
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
   const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
