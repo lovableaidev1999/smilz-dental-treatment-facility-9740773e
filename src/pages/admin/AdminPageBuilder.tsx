@@ -21,7 +21,12 @@ import LayersPanel from '@/components/builder/LayersPanel';
 import BuilderCanvas from '@/components/builder/BuilderCanvas';
 import PropertiesPanel from '@/components/builder/PropertiesPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight, Settings } from 'lucide-react';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
@@ -38,6 +43,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
   const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [showSeoDialog, setShowSeoDialog] = useState(false);
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoOgImage, setSeoOgImage] = useState('');
   const undoRedo = useUndoRedo();
   const prevLayoutRef = useRef<string>('');
 
@@ -126,6 +135,17 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
   const handleSave = async (publish = false) => {
     try {
+      // Embed SEO metadata into layout_json
+      const layoutWithSeo = [...state.layout] as any;
+      (layoutWithSeo as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
+
+      // Block count warning
+      const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
+      const blockCount = countBlocks(state.layout);
+      if (blockCount > 30) {
+        toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
+      }
+
       const result = await saveLayout.mutateAsync({
         id: layoutId,
         page_slug: pageSlug,
@@ -156,7 +176,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           onPublish={() => handleSave(true)}
           onPreview={() => window.open(`/preview/${pageSlug}`, '_blank')}
           onView={() => window.open(`/p/${pageSlug}`, '_blank')}
-          onBack={() => navigate('/admin/pages')}
+          onBack={() => navigate('/admin/page-layouts')}
           onUndo={handleUndo}
           onRedo={handleRedo}
           canUndo={undoRedo.canUndo}
@@ -207,8 +227,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
 
           {rightPanelOpen ? (
             <div className="w-64 border-l border-border bg-card shrink-0 overflow-hidden flex flex-col">
-              <div className="h-9 border-b border-border flex items-center px-3">
+              <div className="h-9 border-b border-border flex items-center px-3 justify-between">
                 <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Properties</span>
+                <button
+                  onClick={() => setShowSeoDialog(true)}
+                  className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                  title="SEO Settings"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <PropertiesPanel />
@@ -247,6 +274,33 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           );
         })()}
       </DragOverlay>
+
+      {/* SEO Settings Dialog */}
+      <Dialog open={showSeoDialog} onOpenChange={setShowSeoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>SEO Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Page Title (SEO)</Label>
+              <Input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder="Override page title for search engines" />
+            </div>
+            <div>
+              <Label>Meta Description</Label>
+              <Textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} placeholder="Brief description for search results (max 160 chars)" className="min-h-[80px]" />
+              <p className="text-xs text-muted-foreground mt-1">{seoDescription.length}/160 characters</p>
+            </div>
+            <div>
+              <Label>OG Image URL</Label>
+              <Input value={seoOgImage} onChange={e => setSeoOgImage(e.target.value)} placeholder="https://... (1200x630 recommended)" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSeoDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DndContext>
   );
 };
@@ -257,6 +311,7 @@ const AdminPageBuilder = () => {
   const [searchParams] = useSearchParams();
   const pageSlug = searchParams.get('slug') || 'new-page';
   const pageTitleParam = searchParams.get('title') || 'New Page';
+  const hasTemplate = searchParams.get('template') === 'true';
 
   const { data: existingLayout, isLoading } = usePageLayoutById(id || '');
 
@@ -268,7 +323,18 @@ const AdminPageBuilder = () => {
     );
   }
 
-  const initialLayout = existingLayout?.layout_json || [];
+  // Load template from sessionStorage if creating new page with template
+  let initialLayout = existingLayout?.layout_json || [];
+  if (!id && hasTemplate) {
+    try {
+      const tmpl = sessionStorage.getItem('builder_template');
+      if (tmpl) {
+        initialLayout = JSON.parse(tmpl);
+        sessionStorage.removeItem('builder_template');
+      }
+    } catch {}
+  }
+
   const pageTitle = existingLayout?.page_title || pageTitleParam;
   const slug = existingLayout?.page_slug || pageSlug;
 

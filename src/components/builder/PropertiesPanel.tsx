@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Trash2, Copy, Clipboard, ImageIcon } from 'lucide-react';
+import { Trash2, Copy, Clipboard, ImageIcon, Lock, Unlock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import MediaPickerDialog from './MediaPickerDialog';
 import type { DeviceMode, ResponsiveProps } from '@/types/visual-builder';
@@ -57,7 +57,8 @@ const PropertiesPanel = () => {
       {/* Actions */}
       <div className="flex gap-1">
         <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}>
+          onClick={() => dispatch({ type: 'DUPLICATE_BLOCK', payload: selectedBlockId })}
+          disabled={node.props?.locked}>
           <Copy className="h-3 w-3 mr-1" /> Duplicate
         </Button>
         <Button variant="outline" size="sm" className="flex-1 text-xs h-7"
@@ -72,9 +73,22 @@ const PropertiesPanel = () => {
           <Clipboard className="h-3 w-3 mr-1" /> Paste
         </Button>
         <Button variant="destructive" size="sm" className="flex-1 text-xs h-7"
-          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}>
+          onClick={() => dispatch({ type: 'DELETE_BLOCK', payload: selectedBlockId })}
+          disabled={node.props?.locked}>
           <Trash2 className="h-3 w-3 mr-1" /> Delete
         </Button>
+      </div>
+
+      {/* Lock toggle */}
+      <div className="flex items-center justify-between">
+        <Label className="text-xs flex items-center gap-1">
+          {node.props?.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+          {node.props?.locked ? 'Locked' : 'Unlocked'}
+        </Label>
+        <Switch
+          checked={node.props?.locked || false}
+          onCheckedChange={v => updateProp('locked', v)}
+        />
       </div>
 
       <Separator />
@@ -428,7 +442,31 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Count" value={String(props.count)} onChange={v => updateProp('count', parseInt(v) || 3)} />
-          <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Display Type</Label>
+            <Select value={props.displayType || 'grid'} onValueChange={v => updateProp('displayType', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {props.displayType !== 'carousel' && (
+            <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          )}
+          {props.displayType === 'carousel' && (
+            <>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Autoplay</Label>
+                <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Navigation</Label>
+                <Switch checked={props.showNavigation} onCheckedChange={v => updateProp('showNavigation', v)} />
+              </div>
+            </>
+          )}
           <PropField label="Category" value={props.category} onChange={v => updateProp('category', v)} placeholder="Filter by category" />
           <div className="flex items-center justify-between">
             <Label className="text-xs">Show Image</Label>
@@ -445,10 +483,38 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
       return (
         <>
           <PropField label="Count" value={String(props.count)} onChange={v => updateProp('count', parseInt(v) || 6)} />
-          <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Display Type</Label>
+            <Select value={props.displayType || 'carousel'} onValueChange={v => updateProp('displayType', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {props.displayType !== 'carousel' && (
+            <PropField label="Columns" value={String(props.columns)} onChange={v => updateProp('columns', parseInt(v) || 3)} />
+          )}
+          {props.displayType === 'carousel' && (
+            <>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Autoplay</Label>
+                <Switch checked={props.autoplay} onCheckedChange={v => updateProp('autoplay', v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Navigation</Label>
+                <Switch checked={props.showNavigation} onCheckedChange={v => updateProp('showNavigation', v)} />
+              </div>
+            </>
+          )}
           <div className="flex items-center justify-between">
             <Label className="text-xs">Show Image</Label>
             <Switch checked={props.showImage} onCheckedChange={v => updateProp('showImage', v)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Description</Label>
+            <Switch checked={props.showDescription !== false} onCheckedChange={v => updateProp('showDescription', v)} />
           </div>
         </>
       );

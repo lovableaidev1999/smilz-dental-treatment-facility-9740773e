@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,11 +9,37 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 interface Props {
   layout: LayoutNode[];
   className?: string;
 }
+
+// ─── Lazy load wrapper for below-the-fold blocks ────────
+const LazyBlock = ({ children, index }: { children: React.ReactNode; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(index < 3);
+
+  useEffect(() => {
+    if (index < 3 || !ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin: '200px' }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [index]);
+
+  if (index < 3) return <>{children}</>;
+
+  return (
+    <div ref={ref} style={{ minHeight: visible ? undefined : '100px' }}>
+      {visible ? children : <div className="animate-pulse bg-muted rounded-lg h-24" />}
+    </div>
+  );
+};
 
 // ─── Animation wrapper ──────────────────────────────────
 const AnimatedBlock = ({ children, animation, delay, hoverEffect }: {
@@ -89,6 +115,53 @@ const getResponsiveClasses = (node: LayoutNode): string => {
   return classes.join(' ');
 };
 
+// ─── Embla Carousel helper ──────────────────────────────
+const EmblaCarousel = ({ items, renderItem, autoplay = true, showNavigation = true }: {
+  items: any[];
+  renderItem: (item: any, i: number) => React.ReactNode;
+  autoplay?: boolean;
+  showNavigation?: boolean;
+}) => {
+  const plugins = autoplay ? [Autoplay({ delay: 4000, stopOnInteraction: true })] : [];
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: 'start', slidesToScroll: 1, breakpoints: { '(min-width: 768px)': { slidesToScroll: 2 }, '(min-width: 1024px)': { slidesToScroll: 3 } } },
+    plugins
+  );
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on('select', onSelect);
+    return () => { emblaApi.off('select', onSelect); };
+  }, [emblaApi]);
+
+  return (
+    <div className="relative">
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex gap-4">
+          {items.map((item, i) => (
+            <div key={i} className="flex-[0_0_85%] min-w-0 md:flex-[0_0_45%] lg:flex-[0_0_30%]">
+              {renderItem(item, i)}
+            </div>
+          ))}
+        </div>
+      </div>
+      {showNavigation && items.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-4">
+          {items.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => emblaApi?.scrollTo(i)}
+              className={`w-2 h-2 rounded-full transition-colors ${i === selectedIndex ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Blog Loop Widget ──────────────────────────────────
 const BlogLoopWidget = ({ props }: { props: any }) => {
   const { data: posts } = useQuery({
@@ -106,28 +179,33 @@ const BlogLoopWidget = ({ props }: { props: any }) => {
     },
   });
 
-  const cols = props.columns || 3;
+  const renderCard = (post: any) => (
+    <Link to={`/blog/${post.slug}`} className="group block h-full">
+      <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
+        {props.showImage && post.featured_image && (
+          <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />
+        )}
+        <div className="p-4">
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
+          {props.showExcerpt && post.excerpt && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
+          )}
+          {props.showDate && post.published_at && (
+            <p className="text-xs text-muted-foreground mt-2">{new Date(post.published_at).toLocaleDateString()}</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
 
+  if (props.displayType === 'carousel') {
+    return <EmblaCarousel items={posts || []} renderItem={(post) => renderCard(post)} autoplay={props.autoplay} showNavigation={props.showNavigation} />;
+  }
+
+  const cols = props.columns || 3;
   return (
-    <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {(posts || []).map((post: any) => (
-        <Link key={post.id} to={`/blog/${post.slug}`} className="group block">
-          <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow">
-            {props.showImage && post.featured_image && (
-              <img src={post.featured_image} alt={post.title} className="w-full h-48 object-cover" loading="lazy" />
-            )}
-            <div className="p-4">
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{post.title}</h3>
-              {props.showExcerpt && post.excerpt && (
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
-              )}
-              {props.showDate && post.published_at && (
-                <p className="text-xs text-muted-foreground mt-2">{new Date(post.published_at).toLocaleDateString()}</p>
-              )}
-            </div>
-          </div>
-        </Link>
-      ))}
+    <div className={`grid gap-6 grid-cols-1 ${cols >= 2 ? 'md:grid-cols-2' : ''} ${cols >= 3 ? 'lg:grid-cols-3' : ''} ${cols >= 4 ? 'xl:grid-cols-4' : ''}`}>
+      {(posts || []).map((post: any) => <div key={post.id}>{renderCard(post)}</div>)}
     </div>
   );
 };
@@ -147,25 +225,30 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
     },
   });
 
-  const cols = props.columns || 3;
+  const renderCard = (svc: any) => (
+    <Link to={`/services/${svc.slug}`} className="group block h-full">
+      <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
+        {props.showImage && svc.image_url && (
+          <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />
+        )}
+        <div className="p-4">
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
+          {props.showDescription && svc.short_description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
 
+  if (props.displayType === 'carousel') {
+    return <EmblaCarousel items={services || []} renderItem={(svc) => renderCard(svc)} autoplay={props.autoplay} showNavigation={props.showNavigation} />;
+  }
+
+  const cols = props.columns || 3;
   return (
-    <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-      {(services || []).map((svc: any) => (
-        <Link key={svc.id} to={`/services/${svc.slug}`} className="group block">
-          <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow">
-            {props.showImage && svc.image_url && (
-              <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />
-            )}
-            <div className="p-4">
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
-              {props.showDescription && svc.short_description && (
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>
-              )}
-            </div>
-          </div>
-        </Link>
-      ))}
+    <div className={`grid gap-6 grid-cols-1 ${cols >= 2 ? 'md:grid-cols-2' : ''} ${cols >= 3 ? 'lg:grid-cols-3' : ''} ${cols >= 4 ? 'xl:grid-cols-4' : ''}`}>
+      {(services || []).map((svc: any) => <div key={svc.id}>{renderCard(svc)}</div>)}
     </div>
   );
 };
@@ -291,17 +374,20 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
   switch (node.type) {
     case 'section': {
       const gridColumns = node.props.gridColumns || '1fr';
+      const colCount = gridColumns.split(' ').filter(Boolean).length;
+      // Mobile-first: stack on mobile, use grid on larger screens
+      const responsiveGridClass = colCount > 1 ? 'grid grid-cols-1 md:grid-cols-2' + (colCount > 2 ? ` lg:grid-cols-${Math.min(colCount, 4)}` : '') : 'grid grid-cols-1';
       const sectionInner: React.CSSProperties = {
-        display: 'grid',
-        gridTemplateColumns: gridColumns,
         columnGap: node.props.columnGap || '1.5rem',
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
       };
+      // For complex grid definitions (e.g. "70% 30%"), use inline style on desktop
+      const useInlineGrid = gridColumns.includes('%') || gridColumns.includes('fr') && colCount > 1;
       return (
         <section
           key={key}
-          className={`w-full ${rClasses}`}
+          className={`w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
           style={{
             ...baseStyles,
             background: node.props.background || undefined,
@@ -314,9 +400,17 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
             className="w-full mx-auto"
             style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '1280px') }}
           >
-            <div style={sectionInner}>
+            <div className={responsiveGridClass} style={sectionInner}>
               {node.children?.map((child, i) => renderNode(child, i))}
             </div>
+            {/* Desktop-specific grid override via media query */}
+            {useInlineGrid && (
+              <style>{`
+                @media (min-width: 1024px) {
+                  [data-section-id="${node.id}"] > div:last-of-type { display: grid !important; grid-template-columns: ${gridColumns} !important; }
+                }
+              `}</style>
+            )}
           </div>
         </section>
       );
@@ -606,7 +700,7 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
       const imgs = (node.props.images || []).filter((img: any) => img.src);
       const cols = node.props.columns || 3;
       return (
-        <div key={key} className={rClasses} style={{ ...baseStyles, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: node.props.gap || '0.5rem' }}>
+        <div key={key} className={`grid grid-cols-2 ${cols >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} ${cols >= 4 ? 'lg:grid-cols-4' : ''} ${rClasses}`} style={{ ...baseStyles, gap: node.props.gap || '0.5rem' }}>
           {imgs.map((img: any, i: number) => (
             <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" />
           ))}
@@ -665,19 +759,23 @@ const VisualRenderer = ({ layout, className }: Props) => {
         const rendered = renderNode(node, i);
         if (!rendered) return null;
         const hasAnimation = node.props?.animation || node.props?.hoverEffect;
-        if (hasAnimation) {
-          return (
-            <AnimatedBlock
-              key={node.id}
-              animation={node.props.animation}
-              delay={node.props.animationDelay}
-              hoverEffect={node.props.hoverEffect}
-            >
-              {rendered}
-            </AnimatedBlock>
-          );
-        }
-        return rendered;
+        const content = hasAnimation ? (
+          <AnimatedBlock
+            key={node.id}
+            animation={node.props.animation}
+            delay={node.props.animationDelay}
+            hoverEffect={node.props.hoverEffect}
+          >
+            {rendered}
+          </AnimatedBlock>
+        ) : rendered;
+
+        // Lazy load blocks below the fold
+        return (
+          <LazyBlock key={node.id} index={i}>
+            {content}
+          </LazyBlock>
+        );
       })}
     </div>
   );
