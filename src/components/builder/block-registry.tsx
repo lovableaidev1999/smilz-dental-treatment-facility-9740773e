@@ -59,7 +59,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: 'heading', label: 'Heading', icon: 'Type', category: 'basic',
     canHaveChildren: false,
-    defaultProps: { text: 'Heading', level: 2, align: 'left', color: '' },
+    defaultProps: { text: 'Heading', html: '', level: 2, align: 'left', color: '' },
   },
   {
     type: 'text', label: 'Text', icon: 'AlignLeft', category: 'basic',
