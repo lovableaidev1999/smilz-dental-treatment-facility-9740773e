@@ -296,6 +296,9 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
   const isSelected = state.selectedBlockId === node.id;
   const isHovered = state.hoveredBlockId === node.id;
   const isLocked = node.props?.locked || false;
+  const isHiddenOnDevice = (node.props?.hideOn || []).includes(state.deviceMode);
+  const def = getBlockDefinition(node.type);
+  const isLocked = node.props?.locked || false;
   const def = getBlockDefinition(node.type);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
