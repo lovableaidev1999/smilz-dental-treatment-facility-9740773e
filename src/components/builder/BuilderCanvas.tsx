@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Lock } from 'lucide-react';
 import { useBuilder } from '@/hooks/useBuilderState';
 import { getBlockDefinition, getBlockIcon } from './block-registry';
 import { CONTAINER_TYPES } from '@/types/visual-builder';
