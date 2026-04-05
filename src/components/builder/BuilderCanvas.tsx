@@ -298,8 +298,6 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
   const isLocked = node.props?.locked || false;
   const isHiddenOnDevice = (node.props?.hideOn || []).includes(state.deviceMode);
   const def = getBlockDefinition(node.type);
-  const isLocked = node.props?.locked || false;
-  const def = getBlockDefinition(node.type);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
