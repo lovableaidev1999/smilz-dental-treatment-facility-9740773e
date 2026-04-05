@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Trash2, Copy, Clipboard, ImageIcon } from 'lucide-react';
+import { Trash2, Copy, Clipboard, ImageIcon, Lock, Unlock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import MediaPickerDialog from './MediaPickerDialog';
 import type { DeviceMode, ResponsiveProps } from '@/types/visual-builder';
