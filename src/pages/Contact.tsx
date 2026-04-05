@@ -107,11 +107,18 @@ const Contact = () => {
               </div>
               <div className="rounded-xl overflow-hidden shadow-card aspect-video">
                 <iframe
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates?.lat ?? 22.46966133744312},${coordinates?.lng ?? 88.37928013838973}&zoom=16`}
+                  src={`https://www.google.com/maps?q=Smilz+Dental+Treatment+Facility,+21+Garia+Park,+Kolkata+700084&z=16&output=embed`}
                   width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade" title="Smilz Dental location on Google Maps"
                 />
               </div>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Smilz+Dental+Treatment+Facility,+21+Garia+Park,+Kolkata+700084"
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-3 text-sm font-medium text-primary hover:underline"
+              >
+                <MapPin className="h-4 w-4" /> View in Google Maps
+              </a>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
