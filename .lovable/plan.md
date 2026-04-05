@@ -1,146 +1,89 @@
 
 
-# CMS-Driven Page Design System — Implementation Plan
+## Smart Page Builder Audit & Fix Plan
 
-## What This Delivers
+### Problem Summary
+The Visual Page Builder has architectural mismatches between the editor (`BuilderCanvas.tsx`) and the live renderer (`VisualRenderer.tsx`). They use **different rendering logic** for the same block types, causing what-you-see-is-NOT-what-you-get behavior. The About page was a symptom; the same issues will affect every page built with the builder.
 
-A unified system where any page (Home, About, Services, Contact, Gallery, Blog) can be redesigned through the Visual Page Builder. Includes section templates, block locking, per-page SEO controls, global reusable sections, and performance guardrails.
+### Root Cause Analysis
 
-## Architecture
+| Area | Editor (BuilderCanvas) | Live (VisualRenderer) | Mismatch |
+|------|----------------------|----------------------|----------|
+| **Section grid** | Inline `display: grid` + exact `gridTemplateColumns` always applied | Uses `vb-responsive-grid` CSS class to force `1fr` on mobile | Editor shows multi-col at all canvas widths; live stacks on mobile |
+| **Grid block** | Inline `gridTemplateColumns: repeat(N, 1fr)` always | Tailwind responsive classes (`md:grid-cols-2`, `lg:grid-cols-3`) | Completely different grid systems |
+| **Column block** | Inline flex with responsive merge logic | Inline flex with desktop-only styles | Tablet/mobile styles ignored on live |
+| **Block wrappers** | Blocks wrapped in `<div className="p-2">` (adds padding) | No wrapper padding | Spacing differs |
+| **Section wrapper** | `py-12 px-4 md:px-6 rounded-lg` on container | `py-12 md:py-16 px-4 md:px-6` on section element | Different padding targets |
+| **Image rendering** | `objectFit: 'contain'`, no `h-auto` | `w-full h-auto`, `objectFit: 'contain'` | Height handling differs |
+| **Heading sizes** | `text-3xl` (no responsive) | `text-3xl md:text-4xl` (responsive) | Text sizes differ per breakpoint |
+| **Button styles** | No hover, no Link wrapper | Uses `<Link>` with hover effects | Interactive differences |
+| **Container max-width** | Canvas applies `maxWidth` via `DEVICE_WIDTHS` on outer div | Section applies `maxWidth` on inner `mx-auto` div | Width constraint at different levels |
 
-```text
-User visits /about
-       │
-       ▼
-  SmartPage(slug="about", fallback=About)
-       │
-  Query page_layouts where slug="about" & is_published=true
-       │
-   ┌───┴───┐
-   │ Found │ → VisualRenderer (custom design + SEO from layout)
-   └───┬───┘
-       │ Not found
-       ▼
-  Original hardcoded About component
+### Plan
+
+#### 1. Create a shared `renderNode` function used by BOTH editor and live
+
+Extract the rendering logic from `VisualRenderer.tsx` into a shared module (`src/components/builder/shared-renderer.tsx`). Both `BuilderCanvas` and `VisualRenderer` will import and use the same function.
+
+- The shared renderer accepts an optional `editorMode` flag
+- When `editorMode` is true: wraps blocks in selection/hover overlays (the toolbar, drag handles, outlines) but does NOT change the actual block rendering
+- When `editorMode` is false: renders blocks identically but without editor chrome
+
+#### 2. Unify section rendering
+
+Both editor and live will use:
+```tsx
+// Section container
+<section className="relative w-full py-12 px-4 md:px-6">
+  <div className="w-full mx-auto" style={{ maxWidth }}>
+    <div className="vb-responsive-grid" style={{ display: 'grid', gridTemplateColumns, gap }}>
+      {children}
+    </div>
+  </div>
+</section>
+```
+The `vb-responsive-grid` CSS class handles mobile stacking via `!important` override.
+
+#### 3. Unify grid block rendering
+
+Replace the divergent approaches with a single pattern:
+```tsx
+<div className="vb-responsive-grid" style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap }}>
+  {children}
+</div>
 ```
 
-## Implementation Steps
+#### 4. Remove editor-only padding on block wrappers
 
-### Step 1: Create SmartPage wrapper
+Change `<div className="p-2">` around non-container blocks in `BuilderCanvas` to `<div className="w-full">` to match live rendering. Editor selection chrome (outlines, toolbars) will remain on the outer sortable wrapper.
 
-**New file**: `src/components/SmartPage.tsx`
+#### 5. Unify text/heading/image/button rendering
 
-- Accepts `slug`, `fallback` component, and optional `fallbackSeoProps`
-- Queries `page_layouts` for published layout matching slug (5-min staleTime cache)
-- If found: renders `<SEOHead>` with layout's SEO fields + `<VisualRenderer>`
-- If not found: renders fallback component unchanged
-- Shows brief loading spinner during fetch
+Make `BlockPreview` in `BuilderCanvas` use the same markup as `VisualRenderer`:
+- Headings: same responsive size classes
+- Images: same `w-full h-auto` classes
+- Buttons: same styling (though `Link` becomes a `span` in editor since navigation shouldn't work during editing)
 
-### Step 2: Wire core routes through SmartPage
+#### 6. Add error boundary for live rendering
 
-**Modified**: `src/App.tsx`
+Wrap `VisualRenderer` output in an error boundary that shows a safe fallback instead of crashing the page:
+```tsx
+<ErrorBoundary fallback={<div>Something went wrong loading this page.</div>}>
+  <VisualRenderer layout={layout} />
+</ErrorBoundary>
+```
 
-Replace direct components for 6 routes:
-- `/` → `SmartPage slug="home" fallback={Home}`
-- `/about` → `SmartPage slug="about" fallback={About}`
-- `/services` → `SmartPage slug="services" fallback={ServicesPage}`
-- `/contact` → `SmartPage slug="contact" fallback={Contact}`
-- `/gallery` → `SmartPage slug="gallery" fallback={Gallery}`
-- `/blog` → `SmartPage slug="blog" fallback={Blog}`
+### Files to modify
 
-### Step 3: Add SEO fields to page layouts
+1. **`src/components/builder/shared-renderer.tsx`** (NEW) — Shared `renderNode` function
+2. **`src/components/builder/VisualRenderer.tsx`** — Import shared renderer, remove duplicated logic
+3. **`src/components/builder/BuilderCanvas.tsx`** — Import shared renderer for block previews, remove `BlockPreview` component, keep only editor chrome (selection, drag, toolbars)
+4. **`src/index.css`** — Keep `vb-responsive-grid` as-is (already correct)
+5. **`src/components/SmartPage.tsx`** — Add error boundary wrapper
 
-**Modified**: `src/hooks/usePageLayouts.ts` — extend `PageLayoutRow` interface with optional `seo_title`, `seo_description`, `og_image` fields stored inside `layout_json` metadata (no schema change needed — store as top-level props in the JSON).
+### Technical Details
 
-**Modified**: `src/pages/admin/AdminPageBuilder.tsx` — add SEO settings tab/dialog with Title, Meta Description, OG Image fields. Save into the layout payload.
+The key architectural change is extracting `renderNode` so it becomes the **single source of truth**. The editor wraps each rendered node in a `SortableBlock` container that adds selection UI, but the inner content is identical to what the live site shows.
 
-**Modified**: `src/components/SmartPage.tsx` — pass SEO fields from layout to `<SEOHead>`.
-
-### Step 4: Add section locking
-
-**Modified**: `src/types/visual-builder.ts` — add optional `locked?: boolean` to `LayoutNode.props`.
-
-**Modified**: `src/components/builder/PropertiesPanel.tsx` — add Lock/Unlock toggle button. When locked, disable delete, drag, and prop editing for that block.
-
-**Modified**: `src/components/builder/BuilderCanvas.tsx` — skip drag handlers for locked blocks. Show lock icon overlay.
-
-**Modified**: `src/hooks/useBuilderState.tsx` — `DELETE_BLOCK` and `MOVE_BLOCK` actions skip locked blocks.
-
-### Step 5: Section templates
-
-**New file**: `src/lib/sectionTemplates.ts`
-
-Pre-built layout JSON arrays for common pages:
-- **Home**: Hero section (heading + CTA + background image) → Services loop (carousel) → Testimonials → CTA
-- **About**: Hero → Two-column (image + text) → Team/Doctor section → CTA
-- **Services**: Hero → Service loop (grid) → FAQ → CTA
-- **Contact**: Two-column (form + map/info) → CTA
-
-**Modified**: `src/pages/admin/AdminPageLayouts.tsx` — when creating a new page or designing a core page, show template picker dialog. User selects a template or starts blank. Template inserts pre-built `layout_json`.
-
-### Step 6: Core page management in Admin
-
-**Modified**: `src/pages/admin/AdminPageLayouts.tsx`
-
-- Add "Core Pages" section showing home, about, services, contact, gallery, blog with status
-- "Design" button opens builder with that slug
-- Publish/Unpublish toggle for instant switching
-- "Preview" button opens page in new tab
-- Warning dialog before publishing: "This will replace the current page design"
-
-### Step 7: Global reusable sections
-
-**New concept**: Store reusable sections as `page_layouts` rows with `is_template=true` and `template_type='global-header'|'global-footer'|'global-cta'`.
-
-**Modified**: `src/components/builder/block-registry.tsx` — add new block type `global-section` that references a template by ID.
-
-**Modified**: `src/components/builder/VisualRenderer.tsx` — `global-section` block fetches and renders the referenced template's layout_json inline.
-
-**Modified**: `src/pages/admin/AdminPageLayouts.tsx` — separate "Global Sections" management area for creating/editing reusable header, footer, CTA blocks.
-
-### Step 8: Upgrade dynamic blocks (mobile-first + layout control)
-
-**Modified**: `src/components/builder/VisualRenderer.tsx`
-
-- `ServiceLoopWidget`: add `displayType` prop support — "carousel" uses Embla with swipe/dots (reuse ServicesCarousel logic), "grid" uses responsive `grid-cols-1 md:grid-cols-2 lg:grid-cols-{n}`
-- `BlogLoopWidget`: same carousel/grid support with responsive columns
-- `ImageCarouselWidget`: upgrade to Embla with swipe
-- `GalleryWidget`: responsive `grid-cols-2 md:grid-cols-{n}`
-- All sections: responsive `grid-cols-1 md:grid-cols-2 lg:...` instead of fixed `gridTemplateColumns`
-
-**Modified**: `src/components/builder/block-registry.tsx` — add `displayType`, `autoplay`, `showNavigation` to service-loop and blog-loop defaults.
-
-**Modified**: `src/components/builder/PropertiesPanel.tsx` — add Display Type dropdown, Columns input, Autoplay/Navigation toggles for loop blocks.
-
-### Step 9: Performance guardrails
-
-**Modified**: `src/components/builder/VisualRenderer.tsx`
-- Wrap below-the-fold blocks (index > 2) in IntersectionObserver lazy wrapper
-- Add `loading="lazy"` to all images/iframes
-
-**Modified**: `src/components/builder/BuilderCanvas.tsx` or `BuilderTopBar.tsx`
-- Show warning badge when page has >30 blocks
-- Toast warning on save if block count exceeds limit
-
-**Modified**: `src/components/SmartPage.tsx`
-- React Query staleTime: 5 minutes for layout queries
-
-## Files Summary
-
-| File | Action |
-|------|--------|
-| `src/components/SmartPage.tsx` | New |
-| `src/lib/sectionTemplates.ts` | New |
-| `src/App.tsx` | Modified (6 routes) |
-| `src/types/visual-builder.ts` | Modified (locked prop) |
-| `src/hooks/usePageLayouts.ts` | Modified (SEO fields) |
-| `src/hooks/useBuilderState.tsx` | Modified (lock enforcement) |
-| `src/components/builder/VisualRenderer.tsx` | Modified (responsive blocks, global sections, lazy loading) |
-| `src/components/builder/block-registry.tsx` | Modified (layout control props, global-section type) |
-| `src/components/builder/PropertiesPanel.tsx` | Modified (SEO, lock toggle, layout controls) |
-| `src/components/builder/BuilderCanvas.tsx` | Modified (lock UI, block limit warning) |
-| `src/pages/admin/AdminPageBuilder.tsx` | Modified (SEO settings, template picker) |
-| `src/pages/admin/AdminPageLayouts.tsx` | Modified (core pages, global sections, templates) |
-
-No database schema changes required — all new data fits within existing `layout_json` JSONB and `page_layouts` table columns.
+The `vb-responsive-grid` CSS pattern (using `@media (max-width: 767px) { grid-template-columns: 1fr !important }`) is the correct approach for overriding inline grid styles on mobile — this stays as-is.
 
