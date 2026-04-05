@@ -268,11 +268,18 @@ const About = () => {
           </motion.h2>
           <motion.div className="rounded-2xl overflow-hidden shadow-elevated aspect-video" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <iframe
-              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates?.lat ?? 22.46966133744312},${coordinates?.lng ?? 88.37928013838973}&zoom=16`}
+              src="https://www.google.com/maps?q=Smilz+Dental+Treatment+Facility,+21+Garia+Park,+Kolkata+700084&z=16&output=embed"
               width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
               referrerPolicy="no-referrer-when-downgrade" title={`${general?.clinic_name ?? "Smilz"} Location`}
             />
           </motion.div>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Smilz+Dental+Treatment+Facility,+21+Garia+Park,+Kolkata+700084"
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mt-3 text-sm font-medium text-primary hover:underline"
+          >
+            <MapPin className="h-4 w-4" /> View in Google Maps
+          </a>
         </div>
       </section>
     </>
