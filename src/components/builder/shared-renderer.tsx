@@ -724,7 +724,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       return (
         <div key={key} className={`grid grid-cols-2 ${cols >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} ${cols >= 4 ? 'lg:grid-cols-4' : ''} ${rClasses}`} style={{ ...baseStyles, gap: node.props.gap || '0.5rem' }}>
           {imgs.map((img: any, i: number) => (
-            <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" />
+            <img key={i} src={img.src} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" loading="lazy" width={400} height={400} />
           ))}
           {!imgs.length && <div className="col-span-full text-center text-muted-foreground py-8">Add images to gallery</div>}
         </div>
