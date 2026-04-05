@@ -158,8 +158,8 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
       });
       dispatch({ type: 'MARK_SAVED' });
       toast({
-        title: publish ? 'Published!' : 'Saved as draft!',
-        description: publish ? 'Your page is now live.' : 'Draft saved successfully.',
+        title: publish === true ? 'Published!' : 'Saved!',
+        description: publish === true ? 'Your page is now live.' : 'Changes saved successfully.',
       });
       if (!layoutId && result.id) {
         navigate(`/admin/page-builder/${result.id}`, { replace: true });
