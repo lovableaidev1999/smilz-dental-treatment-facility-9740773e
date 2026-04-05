@@ -164,3 +164,11 @@
     transform: translateX(0);
   }
 }
+
+/* Visual Builder: force single-column grid on mobile, 
+   using !important to override inline gridTemplateColumns */
+@media (max-width: 767px) {
+  .vb-responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
