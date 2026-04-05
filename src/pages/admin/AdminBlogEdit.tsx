@@ -369,6 +369,8 @@ const AdminBlogEdit = () => {
             saveMutation.mutate({ asDraft, visualLayoutJson: layout });
           }}
           isSaving={saveMutation.isPending}
+          featuredImage={form.featured_image}
+          onFeaturedImageChange={(url) => setForm((p) => ({ ...p, featured_image: url }))}
         />
       </BuilderProvider>
     );
