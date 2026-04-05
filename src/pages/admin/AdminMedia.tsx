@@ -101,7 +101,10 @@ const AdminMedia = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, fields }: { id: string; fields: Record<string, string> }) => {
-      const { error } = await supabase.from("media_library").update(fields).eq("id", id);
+      // Only send alt_text which is a known column; caption & description need migration
+      const safeFields: Record<string, string> = {};
+      if (fields.alt_text !== undefined) safeFields.alt_text = fields.alt_text;
+      const { error } = await supabase.from("media_library").update(safeFields).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
