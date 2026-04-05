@@ -379,13 +379,9 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
     case 'section': {
       const gridColumns = node.props.gridColumns || '1fr';
       const colCount = gridColumns.split(' ').filter(Boolean).length;
-      const gapStyle: React.CSSProperties = {
-        columnGap: node.props.columnGap || '1.5rem',
-        rowGap: node.props.rowGap || '1.5rem',
-        alignItems: baseStyles.alignItems || undefined,
-      };
-      // Gap styles only (no display property - let Tailwind handle it)
-      const gapOnlyStyle: React.CSSProperties = {
+      const gridStyle: React.CSSProperties = {
+        display: 'grid',
+        gridTemplateColumns: gridColumns,
         columnGap: node.props.columnGap || '1.5rem',
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
@@ -407,32 +403,15 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
             className="w-full mx-auto"
             style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}
           >
-            {/* Mobile: single column stack. Desktop: use defined grid columns. */}
-            {colCount > 1 ? (
-              <>
-                {/* Mobile grid (stacked) - hidden on md+ */}
-                <div className="grid grid-cols-1 md:hidden" style={gapOnlyStyle}>
-                  {node.children?.map((child, i) => (
-                    <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
-                  ))}
-                </div>
-                {/* Desktop grid - hidden on mobile */}
-                <div
-                  className="hidden md:grid"
-                  style={{ ...gapOnlyStyle, gridTemplateColumns: gridColumns }}
-                >
-                  {node.children?.map((child, i) => (
-                    <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="grid grid-cols-1" style={gapOnlyStyle}>
-                {node.children?.map((child, i) => (
-                  <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
-                ))}
-              </div>
-            )}
+            {/* Single grid – vb-responsive-grid CSS class forces 1fr on mobile */}
+            <div
+              className={colCount > 1 ? 'vb-responsive-grid' : ''}
+              style={gridStyle}
+            >
+              {node.children?.map((child, i) => (
+                <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+              ))}
+            </div>
           </div>
         </section>
       );
