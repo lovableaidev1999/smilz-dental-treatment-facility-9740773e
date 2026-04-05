@@ -295,11 +295,13 @@ const SortableBlock = ({ node, parentId }: { node: LayoutNode; parentId: string 
   const isContainer = CONTAINER_TYPES.includes(node.type);
   const isSelected = state.selectedBlockId === node.id;
   const isHovered = state.hoveredBlockId === node.id;
+  const isLocked = node.props?.locked || false;
   const def = getBlockDefinition(node.type);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
     data: { fromPalette: false, blockId: node.id, parentId },
+    disabled: isLocked,
   });
 
   const rStyles = getResponsiveStyles(node, state.deviceMode);
