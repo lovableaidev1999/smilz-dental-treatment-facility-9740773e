@@ -393,6 +393,8 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
             className="w-full h-auto"
             style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit || 'contain' }}
             loading="lazy"
+            width={800}
+            height={600}
           />
           {node.props.caption && (
             <figcaption className="text-sm text-muted-foreground text-center mt-2 italic">{node.props.caption}</figcaption>
