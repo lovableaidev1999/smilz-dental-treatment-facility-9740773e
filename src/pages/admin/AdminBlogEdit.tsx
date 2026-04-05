@@ -247,14 +247,18 @@ const AdminBlogEdit = () => {
   const saveMutation = useMutation({
     mutationFn: async ({ asDraft, visualLayoutJson }: { asDraft?: boolean; visualLayoutJson?: LayoutNode[] }) => {
       const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
-      const isPublished = asDraft === true ? false : form.is_published;
+      const isPublished = asDraft === true ? false : true;
       const layoutToSave = visualLayoutJson || visualLayout;
+      // When publishing, always use current timestamp so post appears as latest
+      const publishedAt = isPublished
+        ? new Date().toISOString()
+        : (form.published_at ? new Date(form.published_at).toISOString() : null);
       const payload: any = {
         ...form,
         is_published: isPublished,
         tags,
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-        published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
+        published_at: publishedAt,
         updated_at: new Date().toISOString(),
         content_json: contentJson,
         content: legacyHtml || "",
