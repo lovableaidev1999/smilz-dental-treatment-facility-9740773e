@@ -119,13 +119,17 @@ function builderReducer(state: BuilderState, action: BuilderAction): BuilderStat
         isDirty: true,
       };
 
-    case 'DELETE_BLOCK':
+    case 'DELETE_BLOCK': {
+      // Prevent deleting locked blocks
+      const lockedNode = findNodeById(state.layout, action.payload);
+      if (lockedNode?.props?.locked) return state;
       return {
         ...state,
         layout: removeNode(state.layout, action.payload),
         isDirty: true,
         selectedBlockId: state.selectedBlockId === action.payload ? null : state.selectedBlockId,
       };
+    }
 
     case 'DUPLICATE_BLOCK': {
       const node = findNodeById(state.layout, action.payload);

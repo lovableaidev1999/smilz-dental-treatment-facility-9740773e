@@ -106,12 +106,12 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: 'blog-loop', label: 'Blog Posts', icon: 'Newspaper', category: 'dynamic',
     canHaveChildren: false,
-    defaultProps: { count: 3, layout: 'grid', columns: 3, showImage: true, showExcerpt: true, showDate: true, category: '' },
+    defaultProps: { count: 3, layout: 'grid', columns: 3, showImage: true, showExcerpt: true, showDate: true, category: '', displayType: 'grid', autoplay: true, showNavigation: true },
   },
   {
     type: 'service-loop', label: 'Services', icon: 'Briefcase', category: 'dynamic',
     canHaveChildren: false,
-    defaultProps: { count: 6, layout: 'grid', columns: 3, showImage: true, showDescription: true },
+    defaultProps: { count: 6, layout: 'grid', columns: 3, showImage: true, showDescription: true, displayType: 'carousel', autoplay: true, showNavigation: true },
   },
   {
     type: 'faq', label: 'FAQ', icon: 'HelpCircle', category: 'dynamic',

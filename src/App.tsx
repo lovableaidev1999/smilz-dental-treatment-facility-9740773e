@@ -122,13 +122,13 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route element={<Layout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/" element={<SmartPage slug="home" fallback={Home} />} />
+                <Route path="/services" element={<SmartPage slug="services" fallback={ServicesPage} />} />
                 <Route path="/services/:serviceId" element={<ServiceDetail />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/gallery" element={<Gallery />} />
-                <Route path="/blog" element={<Blog />} />
+                <Route path="/about" element={<SmartPage slug="about" fallback={About} />} />
+                <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
+                <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} />} />
+                <Route path="/blog" element={<SmartPage slug="blog" fallback={Blog} />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/preview/blog/:id" element={<BlogPreview />} />
                 <Route path="/referral" element={<Referral />} />
