@@ -506,13 +506,15 @@ const BuilderCanvas = () => {
         style={{ maxWidth: DEVICE_WIDTHS[deviceMode] }}
       >
         <SortableContext items={topLevelIds} strategy={verticalListSortingStrategy}>
-          <div ref={setCanvasRef} className="min-h-[70vh] p-4 space-y-2">
+          <div ref={setCanvasRef} className="min-h-[70vh] space-y-2">
             {layout.length > 0 ? (
               <>
                 {layout.map(node => (
                   <SortableBlock key={node.id} node={node} parentId={null} />
                 ))}
-                <AddSectionButton onOpen={() => setShowLayoutPicker(true)} />
+                <div className="p-4">
+                  <AddSectionButton onOpen={() => setShowLayoutPicker(true)} />
+                </div>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground">

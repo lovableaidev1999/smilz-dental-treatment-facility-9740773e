@@ -427,16 +427,19 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 
     case 'grid': {
       const cols = node.props.gridCols || 2;
-      const gridStyle: React.CSSProperties = {
-        ...baseStyles,
-        display: 'grid',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        columnGap: node.props.columnGap || '1rem',
-        rowGap: node.props.rowGap || '1rem',
-      };
       return (
-        <div key={key} className={rClasses} style={gridStyle}>
-          {node.children?.map((child, i) => renderNode(child, i))}
+        <div
+          key={key}
+          className={`grid grid-cols-1 ${cols >= 2 ? 'md:grid-cols-2' : ''} ${cols >= 3 ? 'lg:grid-cols-3' : ''} ${cols >= 4 ? 'xl:grid-cols-4' : ''} ${rClasses}`}
+          style={{
+            ...baseStyles,
+            columnGap: node.props.columnGap || '1rem',
+            rowGap: node.props.rowGap || '1rem',
+          }}
+        >
+          {node.children?.map((child, i) => (
+            <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+          ))}
         </div>
       );
     }
