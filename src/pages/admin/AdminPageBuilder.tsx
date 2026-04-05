@@ -360,7 +360,7 @@ const AdminPageBuilder = () => {
 
   return (
     <BuilderProvider initialLayout={initialLayout}>
-      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} />
+      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} isPublished={existingLayout?.is_published} />
     </BuilderProvider>
   );
 };
