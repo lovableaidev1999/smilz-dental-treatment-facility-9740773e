@@ -384,11 +384,12 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
       };
-      // Mobile: always single column. Tablet+: use the defined grid.
-      const gridStyle: React.CSSProperties = colCount > 1
-        ? { display: 'grid', gridTemplateColumns: gridColumns, ...gapStyle }
-        : { display: 'grid', gridTemplateColumns: '1fr', ...gapStyle };
-      const mobileGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr', ...gapStyle };
+      // Gap styles only (no display property - let Tailwind handle it)
+      const gapOnlyStyle: React.CSSProperties = {
+        columnGap: node.props.columnGap || '1.5rem',
+        rowGap: node.props.rowGap || '1.5rem',
+        alignItems: baseStyles.alignItems || undefined,
+      };
 
       return (
         <section
@@ -406,20 +407,32 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
             className="w-full mx-auto"
             style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}
           >
-            {/* Mobile grid (stacked) - hidden on md+ */}
-            {colCount > 1 && (
-              <div className="md:hidden" style={mobileGridStyle}>
+            {/* Mobile: single column stack. Desktop: use defined grid columns. */}
+            {colCount > 1 ? (
+              <>
+                {/* Mobile grid (stacked) - hidden on md+ */}
+                <div className="grid grid-cols-1 md:hidden" style={gapOnlyStyle}>
+                  {node.children?.map((child, i) => (
+                    <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+                  ))}
+                </div>
+                {/* Desktop grid - hidden on mobile */}
+                <div
+                  className="hidden md:grid"
+                  style={{ ...gapOnlyStyle, gridTemplateColumns: gridColumns }}
+                >
+                  {node.children?.map((child, i) => (
+                    <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-1" style={gapOnlyStyle}>
                 {node.children?.map((child, i) => (
                   <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
                 ))}
               </div>
             )}
-            {/* Desktop grid - hidden on mobile when multi-col */}
-            <div className={colCount > 1 ? 'hidden md:grid' : 'grid'} style={gridStyle}>
-              {node.children?.map((child, i) => (
-                <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
-              ))}
-            </div>
           </div>
         </section>
       );
