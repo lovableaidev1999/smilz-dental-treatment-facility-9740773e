@@ -379,42 +379,47 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
     case 'section': {
       const gridColumns = node.props.gridColumns || '1fr';
       const colCount = gridColumns.split(' ').filter(Boolean).length;
-      // Mobile-first: stack on mobile, use grid on larger screens
-      const responsiveGridClass = colCount > 1 ? 'grid grid-cols-1 md:grid-cols-2' + (colCount > 2 ? ` lg:grid-cols-${Math.min(colCount, 4)}` : '') : 'grid grid-cols-1';
-      const sectionInner: React.CSSProperties = {
+      const gapStyle: React.CSSProperties = {
         columnGap: node.props.columnGap || '1.5rem',
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
       };
-      // For complex grid definitions (e.g. "70% 30%"), use inline style on desktop
-      const useInlineGrid = gridColumns.includes('%') || gridColumns.includes('fr') && colCount > 1;
+      // Mobile: always single column. Tablet+: use the defined grid.
+      const gridStyle: React.CSSProperties = colCount > 1
+        ? { display: 'grid', gridTemplateColumns: gridColumns, ...gapStyle }
+        : { display: 'grid', gridTemplateColumns: '1fr', ...gapStyle };
+      const mobileGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr', ...gapStyle };
+
       return (
         <section
           key={key}
-          className={`w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
+          className={`relative w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
           style={{
-            ...baseStyles,
             background: node.props.background || undefined,
             backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            padding: baseStyles.padding || undefined,
           }}
         >
           <div
             className="w-full mx-auto"
-            style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '1280px') }}
+            style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}
           >
-            <div className={responsiveGridClass} style={sectionInner}>
-              {node.children?.map((child, i) => renderNode(child, i))}
-            </div>
-            {/* Desktop-specific grid override via media query */}
-            {useInlineGrid && (
-              <style>{`
-                @media (min-width: 1024px) {
-                  [data-section-id="${node.id}"] > div:last-of-type { display: grid !important; grid-template-columns: ${gridColumns} !important; }
-                }
-              `}</style>
+            {/* Mobile grid (stacked) - hidden on md+ */}
+            {colCount > 1 && (
+              <div className="md:hidden" style={mobileGridStyle}>
+                {node.children?.map((child, i) => (
+                  <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+                ))}
+              </div>
             )}
+            {/* Desktop grid - hidden on mobile when multi-col */}
+            <div className={colCount > 1 ? 'hidden md:grid' : 'grid'} style={gridStyle}>
+              {node.children?.map((child, i) => (
+                <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+              ))}
+            </div>
           </div>
         </section>
       );
@@ -422,16 +427,19 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 
     case 'grid': {
       const cols = node.props.gridCols || 2;
-      const gridStyle: React.CSSProperties = {
-        ...baseStyles,
-        display: 'grid',
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        columnGap: node.props.columnGap || '1rem',
-        rowGap: node.props.rowGap || '1rem',
-      };
       return (
-        <div key={key} className={rClasses} style={gridStyle}>
-          {node.children?.map((child, i) => renderNode(child, i))}
+        <div
+          key={key}
+          className={`grid grid-cols-1 ${cols >= 2 ? 'md:grid-cols-2' : ''} ${cols >= 3 ? 'lg:grid-cols-3' : ''} ${cols >= 4 ? 'xl:grid-cols-4' : ''} ${rClasses}`}
+          style={{
+            ...baseStyles,
+            columnGap: node.props.columnGap || '1rem',
+            rowGap: node.props.rowGap || '1rem',
+          }}
+        >
+          {node.children?.map((child, i) => (
+            <div key={child.id} className="w-full min-w-0">{renderNode(child, i)}</div>
+          ))}
         </div>
       );
     }
@@ -481,11 +489,11 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
 
     case 'image':
       return node.props.src ? (
-        <figure key={key} className={rClasses} style={baseStyles}>
+        <figure key={key} className={`w-full ${rClasses}`} style={baseStyles}>
           <img
             src={node.props.src}
             alt={node.props.alt || ''}
-            className="w-full"
+            className="w-full h-auto"
             style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit || 'contain' }}
             loading="lazy"
           />

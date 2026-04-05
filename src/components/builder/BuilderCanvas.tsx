@@ -419,11 +419,11 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
   const { setNodeRef } = useDroppable({ id: `container-${node.id}`, data: { containerId: node.id } });
   const childIds = node.children?.map(c => c.id) || [];
 
-  // Determine grid or flex layout
   let containerStyle: React.CSSProperties = {};
-  let containerClass = 'min-h-[60px] w-full p-2';
+  let containerClass = 'min-h-[60px] w-full';
 
   if (node.type === 'section') {
+    // Match VisualRenderer: use exact gridTemplateColumns so editor matches live
     const gridColumns = node.props.gridColumns || '1fr';
     containerStyle = {
       display: 'grid',
@@ -431,7 +431,7 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
       columnGap: node.props.columnGap || '1.5rem',
       rowGap: node.props.rowGap || '1.5rem',
     };
-    containerClass += ' rounded-lg';
+    containerClass += ' py-12 px-4 md:px-6 rounded-lg';
   } else if (node.type === 'grid') {
     const cols = node.props.gridCols || 2;
     containerStyle = {
@@ -441,7 +441,6 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
       rowGap: node.props.rowGap || '1rem',
     };
   } else {
-    // Column: vertical flex
     containerStyle = { display: 'flex', flexDirection: 'column', gap: '0.5rem' };
   }
 
@@ -506,13 +505,15 @@ const BuilderCanvas = () => {
         style={{ maxWidth: DEVICE_WIDTHS[deviceMode] }}
       >
         <SortableContext items={topLevelIds} strategy={verticalListSortingStrategy}>
-          <div ref={setCanvasRef} className="min-h-[70vh] p-4 space-y-2">
+          <div ref={setCanvasRef} className="min-h-[70vh] space-y-2">
             {layout.length > 0 ? (
               <>
                 {layout.map(node => (
                   <SortableBlock key={node.id} node={node} parentId={null} />
                 ))}
-                <AddSectionButton onOpen={() => setShowLayoutPicker(true)} />
+                <div className="p-4">
+                  <AddSectionButton onOpen={() => setShowLayoutPicker(true)} />
+                </div>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground">
