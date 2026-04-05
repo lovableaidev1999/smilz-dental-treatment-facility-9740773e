@@ -13,6 +13,7 @@ import ClinicSlider from "@/components/ClinicSlider";
 const About = () => {
   const { data: settings } = useSiteSettings();
   const { sections } = usePageContent("about");
+  const { data: galleryItems } = useGallery();
 
   const general = settings?.general;
   const contact = settings?.contact;
