@@ -759,19 +759,23 @@ const VisualRenderer = ({ layout, className }: Props) => {
         const rendered = renderNode(node, i);
         if (!rendered) return null;
         const hasAnimation = node.props?.animation || node.props?.hoverEffect;
-        if (hasAnimation) {
-          return (
-            <AnimatedBlock
-              key={node.id}
-              animation={node.props.animation}
-              delay={node.props.animationDelay}
-              hoverEffect={node.props.hoverEffect}
-            >
-              {rendered}
-            </AnimatedBlock>
-          );
-        }
-        return rendered;
+        const content = hasAnimation ? (
+          <AnimatedBlock
+            key={node.id}
+            animation={node.props.animation}
+            delay={node.props.animationDelay}
+            hoverEffect={node.props.hoverEffect}
+          >
+            {rendered}
+          </AnimatedBlock>
+        ) : rendered;
+
+        // Lazy load blocks below the fold
+        return (
+          <LazyBlock key={node.id} index={i}>
+            {content}
+          </LazyBlock>
+        );
       })}
     </div>
   );
