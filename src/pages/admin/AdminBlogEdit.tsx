@@ -559,14 +559,76 @@ const AdminBlogEdit = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader><CardTitle>Details</CardTitle></CardHeader>
+           <Card>
+            <CardHeader><CardTitle>Categories & Tags</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Category</label>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</option>)}
-                </select>
+                <label className="text-sm font-medium mb-2 block">Categories</label>
+                <div className="max-h-48 overflow-y-auto space-y-1 border border-border rounded-md p-2">
+                  {[...DEFAULT_CATEGORIES, ...customCategories].map((c) => (
+                    <label key={c} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-secondary rounded px-1 py-0.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(c)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCategories(prev => [...prev, c]);
+                          } else {
+                            setSelectedCategories(prev => prev.filter(cat => cat !== c));
+                          }
+                        }}
+                        className="rounded border-input"
+                      />
+                      <span>{formatLabel(c)}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {selectedCategories.map(c => (
+                      <span key={c} className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {formatLabel(c)}
+                        <button onClick={() => setSelectedCategories(prev => prev.filter(cat => cat !== c))} className="hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-1 mt-2">
+                  <Input
+                    value={newCategoryInput}
+                    onChange={(e) => setNewCategoryInput(e.target.value)}
+                    placeholder="New category..."
+                    className="text-xs h-8"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const slug = newCategoryInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                        if (slug && !DEFAULT_CATEGORIES.includes(slug) && !customCategories.includes(slug)) {
+                          setCustomCategories(prev => [...prev, slug]);
+                          setSelectedCategories(prev => [...prev, slug]);
+                          setNewCategoryInput("");
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => {
+                      const slug = newCategoryInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                      if (slug && !DEFAULT_CATEGORIES.includes(slug) && !customCategories.includes(slug)) {
+                        setCustomCategories(prev => [...prev, slug]);
+                        setSelectedCategories(prev => [...prev, slug]);
+                        setNewCategoryInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Tags (comma separated)</label>
