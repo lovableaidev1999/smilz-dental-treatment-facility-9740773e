@@ -305,6 +305,7 @@ const AdminBlogEdit = () => {
         : (form.published_at ? new Date(form.published_at).toISOString() : null);
       const payload: any = {
         ...form,
+        category: selectedCategories[0] || "general",
         is_published: isPublished,
         tags,
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
