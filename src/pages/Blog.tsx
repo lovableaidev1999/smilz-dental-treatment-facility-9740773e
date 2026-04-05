@@ -98,7 +98,7 @@ const Blog = () => {
                 <motion.article key={post.slug} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i * 0.05, 0.3) }} className="bg-card rounded-2xl overflow-hidden shadow-card border border-border group">
                   <Link to={`/blog/${post.slug}`}>
                     <div className="h-48 bg-secondary flex items-center justify-center overflow-hidden">
-                      {post.featured_image ? <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /> : <span className="text-6xl">📝</span>}
+                      {post.featured_image ? <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width={600} height={338} /> : <span className="text-6xl">📝</span>}
                     </div>
                   </Link>
                   <div className="p-6">

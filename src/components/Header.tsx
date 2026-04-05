@@ -71,6 +71,8 @@ const Header = () => {
               alt={`${settings?.general?.clinic_name ?? "Smilz"} Logo`}
               style={{ height: `${logoHeight}px` }}
               className="w-auto object-contain"
+              width={logoHeight * 2.5}
+              height={logoHeight}
             />
           </Link>
 
