@@ -9,15 +9,6 @@ import { useBlogPosts } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
 import type { PageSection } from "@/hooks/usePageContent";
 
-const CATEGORY_TABS = [
-  { slug: "", label: "All" },
-  { slug: "oral-hygiene", label: "Oral Hygiene" },
-  { slug: "procedures", label: "Procedures" },
-  { slug: "general-health", label: "General Health" },
-  { slug: "guides", label: "Guides" },
-  { slug: "awareness", label: "Awareness" },
-];
-
 const categoryToTab: Record<string, string> = {
   "oral-hygiene": "oral-hygiene", "awareness": "awareness", "guide": "guides",
   "dental-implant": "procedures", "dental-health": "general-health",
@@ -27,6 +18,23 @@ const categoryToTab: Record<string, string> = {
   "diabetis": "general-health", "wisdom-tooth": "procedures",
   "decision": "guides", "general": "general-health", "uncategorized": "awareness",
 };
+
+const formatLabel = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+
+const getPostCategories = (p: any): string[] => {
+  const cats: string[] = [];
+  if (p.category) cats.push(p.category);
+  if (Array.isArray(p.tags)) {
+    p.tags.filter((t: string) => t.startsWith("cat:")).forEach((t: string) => {
+      const c = t.slice(4);
+      if (!cats.includes(c)) cats.push(c);
+    });
+  }
+  return cats;
+};
+
+/** Resolve a raw category slug to its display tab slug */
+const resolveTab = (c: string) => categoryToTab[c] || c;
 
 const Blog = () => {
   const [activeTab, setActiveTab] = useState("");
