@@ -39,12 +39,14 @@ import {
 import { getBlockDefinition, getBlockIcon } from '@/components/builder/block-registry';
 
 // ─── Inner blog builder with DnD ────────────────────────
-const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
+const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving, featuredImage, onFeaturedImageChange }: {
   title: string;
   postId?: string;
   onBack: (layout: LayoutNode[]) => void;
   onSave: (layout: LayoutNode[], asDraft: boolean) => void;
   isSaving: boolean;
+  featuredImage: string;
+  onFeaturedImageChange: (url: string) => void;
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
   const [activeDragType, setActiveDragType] = useState<BlockType | null>(null);
@@ -117,6 +119,33 @@ const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving }: {
             <BuilderCanvas />
           </div>
           <div className="w-72 border-l border-border overflow-y-auto bg-card">
+            {/* Featured Image Picker */}
+            <div className="p-4 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Featured Image</h3>
+              {featuredImage ? (
+                <div className="relative group">
+                  <img src={featuredImage} alt="Featured" className="w-full h-32 object-cover rounded-md border border-border" />
+                  <button
+                    onClick={() => onFeaturedImageChange("")}
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove featured image"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-24 border-2 border-dashed border-border rounded-md flex items-center justify-center text-muted-foreground text-xs">
+                  No image selected
+                </div>
+              )}
+              <div className="mt-2">
+                <ImageUrlInput
+                  value={featuredImage}
+                  onChange={onFeaturedImageChange}
+                  placeholder="Pick from media library"
+                />
+              </div>
+            </div>
             <PropertiesPanel />
           </div>
         </div>
@@ -340,6 +369,8 @@ const AdminBlogEdit = () => {
             saveMutation.mutate({ asDraft, visualLayoutJson: layout });
           }}
           isSaving={saveMutation.isPending}
+          featuredImage={form.featured_image}
+          onFeaturedImageChange={(url) => setForm((p) => ({ ...p, featured_image: url }))}
         />
       </BuilderProvider>
     );
