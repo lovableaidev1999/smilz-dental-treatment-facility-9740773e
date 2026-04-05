@@ -162,11 +162,13 @@ const BlogBuilderInner = ({ title, postId, onBack, onSave, isSaving, featuredIma
   );
 };
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   "oral-hygiene", "procedures", "general-health", "guides", "awareness",
   "dental-implant", "braces", "orthodontics", "rct", "caries",
   "veneers-and-crowns", "aligners", "emergency", "wisdom-tooth", "general",
 ];
+
+const formatLabel = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
 const AdminBlogEdit = () => {
   const { id } = useParams<{ id: string }>();
