@@ -59,7 +59,7 @@ const Blog = () => {
   const filteredPosts = activeTab
     ? (allPosts ?? []).filter((p) => {
         const cats = getPostCategories(p);
-        return cats.some(c => resolveTab(c) === activeTab || c === activeTab);
+        return cats.includes(activeTab);
       })
     : (allPosts ?? []);
 
