@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -10,45 +10,47 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import Layout from "@/components/Layout";
 import ScrollToTop from "@/components/ScrollToTop";
 import SmartPage from "@/components/SmartPage";
-import Home from "@/pages/Home";
-import ServicesPage from "@/pages/Services";
-import ServiceDetail from "@/pages/ServiceDetail";
-import About from "@/pages/About";
-import Contact from "@/pages/Contact";
-import Gallery from "@/pages/Gallery";
-import Blog from "@/pages/Blog";
-import BlogPost from "@/pages/BlogPost";
-import BlogPreview from "@/pages/BlogPreview";
-import Referral from "@/pages/Referral";
-import NotFound from "@/pages/NotFound";
-import Sitemap from "@/pages/Sitemap";
+
+// Lazy-loaded public pages
+const Home = lazy(() => import("@/pages/Home"));
+const ServicesPage = lazy(() => import("@/pages/Services"));
+const ServiceDetail = lazy(() => import("@/pages/ServiceDetail"));
+const About = lazy(() => import("@/pages/About"));
+const Contact = lazy(() => import("@/pages/Contact"));
+const Gallery = lazy(() => import("@/pages/Gallery"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const BlogPost = lazy(() => import("@/pages/BlogPost"));
+const BlogPreview = lazy(() => import("@/pages/BlogPreview"));
+const Referral = lazy(() => import("@/pages/Referral"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const Sitemap = lazy(() => import("@/pages/Sitemap"));
+const BuiltPage = lazy(() => import("@/pages/BuiltPage"));
+
+// Lazy-loaded admin pages
+const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
+const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings"));
+const AdminPages = lazy(() => import("@/pages/admin/AdminPages"));
+const AdminServices = lazy(() => import("@/pages/admin/AdminServices"));
+const AdminServiceEdit = lazy(() => import("@/pages/admin/AdminServiceEdit"));
+const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
+const AdminBlogEdit = lazy(() => import("@/pages/admin/AdminBlogEdit"));
+const AdminMedia = lazy(() => import("@/pages/admin/AdminMedia"));
+const AdminGallery = lazy(() => import("@/pages/admin/AdminGallery"));
+const AdminReviews = lazy(() => import("@/pages/admin/AdminReviews"));
+const AdminMigrateImages = lazy(() => import("@/pages/admin/AdminMigrateImages"));
+const AdminHeaderFooter = lazy(() => import("@/pages/admin/AdminHeaderFooter"));
+const AdminResetPassword = lazy(() => import("@/pages/admin/AdminResetPassword"));
+const AdminPageBuilder = lazy(() => import("@/pages/admin/AdminPageBuilder"));
+const AdminPageLayouts = lazy(() => import("@/pages/admin/AdminPageLayouts"));
+const PagePreview = lazy(() => import("@/pages/admin/PagePreview"));
 
 // WordPress date-URL redirect helper
 const WpDateRedirect = () => {
   const { slug } = useParams<{ slug: string }>();
   return <Navigate to={`/blog/${slug}`} replace />;
 };
-
-// Admin pages
-import AdminLogin from "@/pages/admin/AdminLogin";
-import AdminLayout from "@/pages/admin/AdminLayout";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminSettings from "@/pages/admin/AdminSettings";
-import AdminPages from "@/pages/admin/AdminPages";
-import AdminServices from "@/pages/admin/AdminServices";
-import AdminServiceEdit from "@/pages/admin/AdminServiceEdit";
-import AdminBlog from "@/pages/admin/AdminBlog";
-import AdminBlogEdit from "@/pages/admin/AdminBlogEdit";
-import AdminMedia from "@/pages/admin/AdminMedia";
-import AdminGallery from "@/pages/admin/AdminGallery";
-import AdminReviews from "@/pages/admin/AdminReviews";
-import AdminMigrateImages from "@/pages/admin/AdminMigrateImages";
-import AdminHeaderFooter from "@/pages/admin/AdminHeaderFooter";
-import AdminResetPassword from "@/pages/admin/AdminResetPassword";
-import AdminPageBuilder from "@/pages/admin/AdminPageBuilder";
-import AdminPageLayouts from "@/pages/admin/AdminPageLayouts";
-import PagePreview from "@/pages/admin/PagePreview";
-import BuiltPage from "@/pages/BuiltPage";
 
 const FONT_IMPORT_MAP: Record<string, string> = {
   "Playfair Display": "Playfair+Display",
@@ -70,7 +72,7 @@ const FontApplier = () => {
       link.rel = "stylesheet";
       document.head.appendChild(link);
     }
-    link.href = `https://fonts.googleapis.com/css2?family=${fontParam}:wght@300;400;500;600;700;800&display=swap`;
+    link.href = `https://fonts.googleapis.com/css2?family=${fontParam}:wght@400;500;600;700&display=swap`;
     document.documentElement.style.setProperty("--app-font", `'${font}', sans-serif`);
   }, [font]);
 
@@ -107,6 +109,12 @@ const RecoveryRouteHandler = () => {
   return null;
 };
 
+const PageFallback = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="animate-pulse text-muted-foreground text-sm">Loading...</div>
+  </div>
+);
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -120,54 +128,56 @@ const App = () => (
             <BrowserRouter>
             <ScrollToTop />
             <RecoveryRouteHandler />
-            <Routes>
-              {/* Public routes */}
-              <Route element={<Layout />}>
-                <Route path="/" element={<SmartPage slug="home" fallback={Home} />} />
-                <Route path="/services" element={<SmartPage slug="services" fallback={ServicesPage} />} />
-                <Route path="/services/:serviceId" element={<ServiceDetail />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
-                <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} />} />
-                <Route path="/blog" element={<SmartPage slug="blog" fallback={Blog} />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/preview/blog/:id" element={<BlogPreview />} />
-                <Route path="/referral" element={<Referral />} />
-                <Route path="/p/:slug" element={<BuiltPage />} />
-              </Route>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                {/* Public routes */}
+                <Route element={<Layout />}>
+                  <Route path="/" element={<SmartPage slug="home" fallback={Home} />} />
+                  <Route path="/services" element={<SmartPage slug="services" fallback={ServicesPage} />} />
+                  <Route path="/services/:serviceId" element={<ServiceDetail />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
+                  <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} />} />
+                  <Route path="/blog" element={<SmartPage slug="blog" fallback={Blog} />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/preview/blog/:id" element={<BlogPreview />} />
+                  <Route path="/referral" element={<Referral />} />
+                  <Route path="/p/:slug" element={<BuiltPage />} />
+                </Route>
 
-              {/* WordPress date-based URL redirects */}
-              <Route path="/:year/:month/:slug" element={<WpDateRedirect />} />
-              <Route path="/:year/:month/:day/:slug" element={<WpDateRedirect />} />
+                {/* WordPress date-based URL redirects */}
+                <Route path="/:year/:month/:slug" element={<WpDateRedirect />} />
+                <Route path="/:year/:month/:day/:slug" element={<WpDateRedirect />} />
 
-              {/* Sitemap */}
-              <Route path="/sitemap.xml" element={<Sitemap />} />
+                {/* Sitemap */}
+                <Route path="/sitemap.xml" element={<Sitemap />} />
 
-              {/* Admin routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/reset-password" element={<AdminResetPassword />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="pages" element={<AdminPages />} />
-                <Route path="services" element={<AdminServices />} />
-                <Route path="services/:id" element={<AdminServiceEdit />} />
-                <Route path="blog" element={<AdminBlog />} />
-                <Route path="blog/:id" element={<AdminBlogEdit />} />
-                <Route path="media" element={<AdminMedia />} />
-                <Route path="gallery" element={<AdminGallery />} />
-                <Route path="reviews" element={<AdminReviews />} />
-                <Route path="migrate" element={<AdminMigrateImages />} />
-                <Route path="header-footer" element={<AdminHeaderFooter />} />
-                <Route path="page-layouts" element={<AdminPageLayouts />} />
-              </Route>
-              {/* Full-screen page builder & preview (outside admin sidebar layout) */}
-              <Route path="/admin/page-builder/new" element={<AdminPageBuilder />} />
-              <Route path="/admin/page-builder/:id" element={<AdminPageBuilder />} />
-              <Route path="/admin/preview/:id" element={<PagePreview />} />
+                {/* Admin routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="pages" element={<AdminPages />} />
+                  <Route path="services" element={<AdminServices />} />
+                  <Route path="services/:id" element={<AdminServiceEdit />} />
+                  <Route path="blog" element={<AdminBlog />} />
+                  <Route path="blog/:id" element={<AdminBlogEdit />} />
+                  <Route path="media" element={<AdminMedia />} />
+                  <Route path="gallery" element={<AdminGallery />} />
+                  <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="migrate" element={<AdminMigrateImages />} />
+                  <Route path="header-footer" element={<AdminHeaderFooter />} />
+                  <Route path="page-layouts" element={<AdminPageLayouts />} />
+                </Route>
+                {/* Full-screen page builder & preview (outside admin sidebar layout) */}
+                <Route path="/admin/page-builder/new" element={<AdminPageBuilder />} />
+                <Route path="/admin/page-builder/:id" element={<AdminPageBuilder />} />
+                <Route path="/admin/preview/:id" element={<PagePreview />} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
