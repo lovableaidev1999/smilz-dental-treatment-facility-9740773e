@@ -94,7 +94,7 @@ const SEOHead = ({
       geoMidpoint: { "@type": "GeoCoordinates", latitude: coords?.lat ?? 22.4625, longitude: coords?.lng ?? 88.3942 },
       geoRadius: "15000",
     },
-    hasMap: links?.google_maps_url || `https://maps.google.com/?q=${coords?.lat ?? 22.4625},${coords?.lng ?? 88.3942}`,
+    hasMap: `https://www.google.com/maps/search/?api=1&query=${coords?.lat ?? 22.4625},${coords?.lng ?? 88.3942}`,
     paymentAccepted: "Cash, UPI, Credit Card, Debit Card",
     currenciesAccepted: "INR",
   };

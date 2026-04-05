@@ -10,7 +10,7 @@ export const CLINIC_INFO = {
   email: "dr.d.dutta@gmail.com",
   whatsapp: "918961775554",
   website: "https://smilz.net",
-  googleMapsUrl: "https://maps.google.com/?cid=5056757662094737709",
+  googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Smilz+Dental+Treatment+Facility",
   googleRating: 4.8,
   reviewCount: 44,
   yearEstablished: 1999,
