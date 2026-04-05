@@ -642,13 +642,24 @@ const renderNode = (node: LayoutNode, index: number): React.ReactNode => {
       const q = encodeURIComponent(address);
       return (
         <div key={key} className={rClasses} style={baseStyles}>
-          <iframe
-            src={`https://www.google.com/maps?q=${q}&z=${node.props.zoom || 15}&output=embed`}
-            className="w-full h-[300px] md:h-[400px] rounded-lg border-0"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
+          <div className="w-full rounded-xl overflow-hidden border border-border">
+            <iframe
+              src={`https://www.google.com/maps?q=${q}&z=${node.props.zoom || 15}&output=embed`}
+              className="w-full h-[300px] md:h-[450px] border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              title="Google Maps"
+            />
+          </div>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline mt-2 inline-block"
+          >
+            Open in Google Maps ↗
+          </a>
         </div>
       );
     }
