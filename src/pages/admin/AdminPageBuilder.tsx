@@ -274,6 +274,33 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           );
         })()}
       </DragOverlay>
+
+      {/* SEO Settings Dialog */}
+      <Dialog open={showSeoDialog} onOpenChange={setShowSeoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>SEO Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Page Title (SEO)</Label>
+              <Input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder="Override page title for search engines" />
+            </div>
+            <div>
+              <Label>Meta Description</Label>
+              <Textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} placeholder="Brief description for search results (max 160 chars)" className="min-h-[80px]" />
+              <p className="text-xs text-muted-foreground mt-1">{seoDescription.length}/160 characters</p>
+            </div>
+            <div>
+              <Label>OG Image URL</Label>
+              <Input value={seoOgImage} onChange={e => setSeoOgImage(e.target.value)} placeholder="https://... (1200x630 recommended)" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSeoDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DndContext>
   );
 };
