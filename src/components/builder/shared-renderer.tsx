@@ -135,7 +135,7 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
   const renderCard = (svc: any) => (
     <Link to={`/services/${svc.slug}`} className="group block h-full">
       <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
-        {props.showImage && svc.image_url && <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" />}
+        {props.showImage && svc.image_url && <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" width={600} height={160} />}
         <div className="p-4">
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{svc.title}</h3>
           {props.showDescription && svc.short_description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{svc.short_description}</p>}
