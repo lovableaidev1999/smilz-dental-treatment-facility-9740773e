@@ -194,7 +194,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
           {/* Collapsible & Resizable left panel */}
           {leftPanelOpen ? (
             <>
-              <ResizablePanel defaultSize={15} minSize={10} maxSize={25} className="bg-card border-r border-border">
+              <ResizablePanel defaultSize={20} minSize={10} maxSize={25} className="bg-card border-r border-border">
                 <div className="h-full flex flex-col overflow-hidden">
                   <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
                     <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0">
