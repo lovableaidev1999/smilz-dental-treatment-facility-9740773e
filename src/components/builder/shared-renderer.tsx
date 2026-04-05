@@ -667,7 +667,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       return (
         <div key={key} className={`text-${node.props.align || 'center'} ${rClasses}`} style={baseStyles}>
           {node.props.src ? (
-            <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3" style={{ objectFit: 'contain' }} loading="lazy" />
+            <img src={node.props.src} alt={node.props.title || ''} className="w-full rounded-lg mb-3" style={{ objectFit: 'contain' }} loading="lazy" width={800} height={600} />
           ) : (
             <div className="h-24 bg-muted rounded-lg flex items-center justify-center text-muted-foreground text-xs mb-2">No image</div>
           )}
