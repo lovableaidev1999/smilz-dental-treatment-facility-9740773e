@@ -189,6 +189,9 @@ const AdminBlogEdit = () => {
   const [visualLayout, setVisualLayout] = useState<LayoutNode[] | null>(null);
   const [editorMode, setEditorMode] = useState<"blocks" | "html" | "visual" | "preview">("blocks");
   const [tagsInput, setTagsInput] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["general"]);
+  const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const imgRef = useRef<HTMLInputElement>(null);
   const { compress, isCompressing } = useImageUpload();
 
