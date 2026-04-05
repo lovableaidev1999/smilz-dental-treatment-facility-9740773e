@@ -137,7 +137,7 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
 
   const CORE_SLUGS = ['home', 'about', 'services', 'contact', 'blog', 'gallery'];
 
-  const handleSave = async (publish = false) => {
+  const handleSave = async (publish?: boolean) => {
     try {
       // Block count warning
       const countBlocks = (nodes: LayoutNode[]): number => nodes.reduce((sum, n) => sum + 1 + (n.children ? countBlocks(n.children) : 0), 0);
@@ -146,16 +146,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
         toast({ title: '⚠️ Performance Warning', description: `This page has ${blockCount} blocks. Consider reducing for better performance.`, variant: 'destructive' });
       }
 
-      // Embed SEO metadata into layout_json
-      const layoutToSave = [...state.layout] as any;
-      (layoutToSave as any)._seo = { title: seoTitle, description: seoDescription, ogImage: seoOgImage };
+      // Determine publish state: explicit true/false, or preserve current
+      const publishState = publish !== undefined ? publish : (initialPublished || false);
 
       const result = await saveLayout.mutateAsync({
         id: layoutId,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: layoutToSave,
-        is_published: publish,
+        layout_json: state.layout,
+        is_published: publishState,
       });
       dispatch({ type: 'MARK_SAVED' });
       toast({
