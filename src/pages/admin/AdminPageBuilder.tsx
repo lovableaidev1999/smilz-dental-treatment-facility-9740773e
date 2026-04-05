@@ -196,8 +196,8 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
             <>
               <ResizablePanel defaultSize={20} minSize={10} maxSize={25} className="bg-card border-r border-border">
                 <div className="h-full flex flex-col overflow-hidden">
-                  <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-                    <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0">
+                  <Tabs defaultValue="blocks" className="flex-1 flex flex-col min-h-0">
+                    <TabsList className="w-full rounded-none border-b h-9 bg-transparent p-0 shrink-0">
                       <TabsTrigger value="blocks" className="flex-1 rounded-none text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary">
                         <Blocks className="h-3.5 w-3.5 mr-1" /> Blocks
                       </TabsTrigger>
@@ -205,10 +205,10 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle }: {
                         <Layers className="h-3.5 w-3.5 mr-1" /> Layers
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="blocks" className="flex-1 overflow-auto mt-0">
+                    <TabsContent value="blocks" className="flex-1 overflow-y-auto mt-0 min-h-0">
                       <BlockPalette />
                     </TabsContent>
-                    <TabsContent value="layers" className="flex-1 overflow-auto mt-0">
+                    <TabsContent value="layers" className="flex-1 overflow-y-auto mt-0 min-h-0">
                       <LayersPanel />
                     </TabsContent>
                   </Tabs>
