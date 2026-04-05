@@ -486,11 +486,18 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       const items = node.props.items || [];
       if (editorMode) {
         return (
-          <div key={key} className="space-y-1">
+          <div key={key} className="space-y-2">
             <p className="text-sm font-medium text-foreground">FAQ ({items.length} items)</p>
-            {items.slice(0, 2).map((it: any, i: number) => (
-              <div key={i} className="text-xs text-muted-foreground border-l-2 border-primary/30 pl-2">{it.question}</div>
-            ))}
+            {items.length > 0 ? (
+              items.map((it: any, i: number) => (
+                <div key={i} className="border-l-2 border-primary/30 pl-2">
+                  <p className="text-sm font-medium text-foreground">{it.question}</p>
+                  {it.answer && <p className="text-sm text-muted-foreground mt-1">{it.answer}</p>}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No FAQ items added yet.</p>
+            )}
           </div>
         );
       }
