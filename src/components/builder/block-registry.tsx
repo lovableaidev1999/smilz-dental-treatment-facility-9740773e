@@ -4,7 +4,7 @@ import {
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
   Video, MapPin, Star, PanelTop, ChevronsUpDown, Image as ImageLucide,
-  Box, GalleryHorizontal, Images, Share2,
+  Box, GalleryHorizontal, Images, Share2, Phone,
 } from 'lucide-react';
 
 const genId = () => `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -207,6 +207,24 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     },
   },
 
+  {
+    type: 'cta-bar',
+    label: 'CTA Bar',
+    icon: 'Phone',
+    category: 'dynamic',
+    canHaveChildren: false,
+    defaultProps: {
+      phone: '+918961775554',
+      whatsappText: 'Hi, I would like to book an appointment.',
+      bookLabel: 'Book Appointment',
+      callLabel: 'Call Now',
+      bgColor: '',
+      bookBgColor: '',
+      callBgColor: '',
+      sticky: true,
+    },
+  },
+
   // Advanced
   {
     type: 'icon-list', label: 'Icon List', icon: 'ListOrdered', category: 'advanced',
@@ -237,7 +255,7 @@ export const BLOCK_ICON_MAP: Record<string, React.FC<any>> = {
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
   Video, MapPin, Star, PanelTop, ChevronsUpDown, ImageLucide,
-  Box, GalleryHorizontal, Images, Share2,
+  Box, GalleryHorizontal, Images, Share2, Phone,
 };
 
 export const getBlockIcon = (def: BlockDefinition) =>

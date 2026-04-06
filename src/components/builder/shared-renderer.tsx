@@ -767,6 +767,48 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         </div>
       );
 
+    // ─── CTA BAR ──────────────────────────────────────────
+    case 'cta-bar': {
+      const phone = node.props.phone || '+918961775554';
+      const rawPhone = phone.replace(/[^0-9]/g, '');
+      const waText = encodeURIComponent(node.props.whatsappText || 'Hi, I would like to book an appointment.');
+      const barBg = node.props.bgColor || 'hsl(var(--primary) / 0.95)';
+      const bookBg = node.props.bookBgColor || 'hsl(var(--destructive))';
+      const callBg = node.props.callBgColor || '';
+      const stickyClass = node.props.sticky ? 'sticky top-0 z-50' : '';
+
+      const inner = (
+        <div
+          className={`w-full shadow-md backdrop-blur-sm ${stickyClass} ${rClasses}`}
+          style={{ ...baseStyles, background: barBg }}
+        >
+          <div className="mx-auto flex items-center justify-center gap-3 py-2.5 px-4" style={{ maxWidth: '80rem' }}>
+            <a
+              href={editorMode ? undefined : `https://wa.me/${rawPhone}?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90"
+              style={{ background: bookBg }}
+              onClick={editorMode ? (e) => e.preventDefault() : undefined}
+            >
+              <span className="shrink-0">💬</span>
+              {node.props.bookLabel || 'Book Appointment'}
+            </a>
+            <a
+              href={editorMode ? undefined : `tel:${phone}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/30 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+              style={callBg ? { background: callBg, borderColor: 'transparent' } : {}}
+              onClick={editorMode ? (e) => e.preventDefault() : undefined}
+            >
+              <span className="shrink-0">📞</span>
+              {node.props.callLabel || 'Call Now'}
+            </a>
+          </div>
+        </div>
+      );
+      return <div key={key}>{inner}</div>;
+    }
+
     // ─── HTML EMBED ─────────────────────────────────────
     case 'html-embed':
       if (editorMode) {

@@ -26,7 +26,8 @@ export type BlockType =
   | 'icon-box'
   | 'image-carousel'
   | 'gallery'
-  | 'social-icons';
+  | 'social-icons'
+  | 'cta-bar';
 
 // Container types that can hold children
 export const CONTAINER_TYPES: BlockType[] = ['section', 'column', 'grid'];
