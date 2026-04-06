@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -108,7 +107,6 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export const useSiteSettings = () => {
-  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["site_settings"],
     queryFn: async (): Promise<SiteSettings> => {
@@ -127,33 +125,9 @@ export const useSiteSettings = () => {
       }
       return settings;
     },
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 1000 * 60 * 10,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
   });
-
-  useEffect(() => {
-    const id = Math.random().toString(36).slice(2, 8);
-    const channel = supabase
-      .channel(`site-settings-live-${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_settings",
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["site_settings"] });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
 
   return query;
 };

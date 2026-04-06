@@ -22,11 +22,14 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          ui: ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-tooltip", "@radix-ui/react-popover"],
-          query: ["@tanstack/react-query"],
-          motion: ["framer-motion"],
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-dom") || id.includes("react-router-dom")) return "vendor";
+            if (id.includes("@radix-ui")) return "ui";
+            if (id.includes("@tanstack/react-query") || id.includes("@tanstack/query-core")) return "query";
+            if (id.includes("framer-motion")) return "motion";
+            if (id.includes("@tiptap") || id.includes("@dnd-kit") || id.includes("recharts") || id.includes("react-markdown") || id.includes("remark-gfm")) return "admin";
+          }
         },
       },
     },
