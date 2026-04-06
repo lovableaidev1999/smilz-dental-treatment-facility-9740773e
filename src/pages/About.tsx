@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
+import StickyCtaBar from "@/components/StickyCtaBar";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
