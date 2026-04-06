@@ -1,62 +1,61 @@
 
 
-## Performance Optimization — Implementation Plan
+## Rich Text Formatting for Visual Builder Text Blocks
 
-### Overview
-Optimize the site's PageSpeed score by reducing JS bundle size on the critical path, fixing data-fetching inefficiencies, and moving images out of the JS bundle. The key constraint is that **no images must break** — all existing image references will be preserved with correct paths.
+Currently, the visual builder's text blocks store plain strings and use a basic `contentEditable` div (`InlineEditable.tsx`) that strips all formatting. This plan adds bold, italic, underline, font size, and line break support.
 
-### Steps
+### Approach
 
-#### 1. Move hero images to `/public/images/` (keep originals as fallback)
-- Copy `src/assets/hero-dental.jpg` and `src/assets/doctor.jpg` to `public/images/`
-- Keep `src/assets/logo.webp` as-is (small file, used in Header)
-- Update `Home.tsx` and `About.tsx` to use string paths (`"/images/hero-dental.jpg"`, `"/images/doctor.jpg"`) instead of ES imports
-- Update `index.html` preload to `href="/images/hero-dental.jpg"`
-- **Safety**: The `src/assets/` originals stay in place so no other references break; only the imports in Home/About change
+Store text content as **HTML strings** instead of plain text. Replace the plain `InlineEditable` with a new `RichTextEditable` component that shows a mini formatting toolbar when editing.
 
-#### 2. Replace framer-motion with CSS animations on public pages
-- **Home.tsx**: Replace `motion.div` in hero (line 85) with a plain `<div className="animate-fade-up">`, and in about section (lines 147-164) with `<div className="animate-fade-up">`
-- **About.tsx**: Replace `motion.div` wrappers with CSS animation classes
-- Remove `import { motion } from "framer-motion"` from both files
-- Remove unused `fadeUp` constant from Home.tsx
-- framer-motion remains in the `motion` chunk for admin/builder use but won't load on public pages
+### Changes
 
-#### 3. Fix usePageContent caching & remove realtime on public pages
-- In `usePageContent.tsx`: Change `staleTime: 0` → `5 * 60 * 1000`, remove `refetchOnMount: "always"` and `refetchOnWindowFocus: true`
-- Remove the entire `useEffect` block that creates a Supabase realtime channel (lines 46-67) — this is only useful for admin live editing, not public visitors
-- The admin pages that need live updates already have their own mechanisms
+**1. Create `src/components/builder/RichTextEditable.tsx`**
 
-#### 4. Fix useSiteSettings caching & remove realtime on public pages
-- Same treatment: `staleTime: 0` → `5 * 60 * 1000`, remove `refetchOnMount: "always"` and `refetchOnWindowFocus: true`
-- Remove the realtime subscription `useEffect` (lines 136-156)
-- Keep `useUpdateSetting` mutation's `onSuccess` invalidation for admin usage
+A new component that replaces `InlineEditable` for text/heading blocks:
+- Uses `contentEditable` with `innerHTML` instead of `innerText`
+- Shows a floating mini-toolbar on double-click (edit mode) with buttons for: **Bold**, *Italic*, Underline, Font Size (small/normal/large/xlarge), and line break hint
+- Uses `document.execCommand` for formatting (bold, italic, underline, fontSize) -- simple and sufficient for this use case
+- On blur, saves the `innerHTML` back to the block's `html` prop
+- Shift+Enter inserts a `<br>` for new lines
 
-#### 5. Prefetch site_settings in Layout
-- In `Layout.tsx`, call `useSiteSettings()` so the query starts fetching as soon as the layout mounts, before child pages need it
-- This eliminates the waterfall where Header, Home, Footer all independently trigger the same query
+**2. Update `src/components/builder/block-registry.tsx`**
 
-#### 6. Optimize Vite chunking — isolate admin-only deps
-- In `vite.config.ts`, add an `admin` manual chunk containing heavy admin-only libraries: `@tiptap/*`, `@dnd-kit/*`, `recharts`, `react-markdown`
-- This ensures these libraries are never accidentally pulled into public page bundles
+- Add `html` to defaultProps for `heading` and `text` blocks (empty string, meaning fallback to `text` prop for backward compatibility)
 
-#### 7. Verify after changes
-- Use browser tools to check the homepage loads correctly with all images visible
-- Run a performance profile to measure improvement
+**3. Update `src/components/builder/PropertiesPanel.tsx`**
 
-### Files to modify
-| File | Change |
-|------|--------|
-| `public/images/` | Copy hero-dental.jpg and doctor.jpg here |
-| `src/pages/Home.tsx` | Replace framer-motion with CSS classes, use static image paths |
-| `src/pages/About.tsx` | Replace framer-motion with CSS classes, use static image path |
-| `src/hooks/usePageContent.tsx` | Fix caching, remove realtime subscription |
-| `src/hooks/useSiteSettings.tsx` | Fix caching, remove realtime subscription |
-| `src/components/Layout.tsx` | Add useSiteSettings() prefetch call |
-| `vite.config.ts` | Add admin chunk for TipTap/dnd-kit/recharts |
-| `index.html` | Update preload path to `/images/hero-dental.jpg` |
+- For text/heading blocks, change the "Text" field to a note saying "Double-click on canvas to edit with formatting" when `html` content exists
+- Keep the plain text field as a fallback/source editor
 
-### Risk mitigation
-- Original `src/assets/` files are NOT deleted — only the imports in Home.tsx and About.tsx change to use `/public/images/` paths
-- `logo.webp` stays imported as-is in Header (it's small)
-- All other image references throughout the app remain unchanged
+**4. Update `src/components/builder/shared-renderer.tsx`**
+
+- In the `heading` and `text` cases:
+  - **Editor mode**: Use `RichTextEditable` instead of `InlineEditable`, reading from `node.props.html` (falling back to `node.props.text`)
+  - **Live mode**: Render using `dangerouslySetInnerHTML` when `html` prop exists, otherwise render plain `text` as before (backward compatible)
+
+**5. Update `src/components/builder/InlineEditable.tsx`**
+
+- No changes needed; kept for any other uses but text/heading blocks will use the new component
+
+### Data Model
+
+```text
+Before:  { type: "text", props: { text: "Hello world", ... } }
+After:   { type: "text", props: { text: "Hello world", html: "<b>Hello</b> world", ... } }
+```
+
+The `html` prop takes priority when present. The `text` prop remains as plain-text fallback for backward compatibility with existing saved layouts.
+
+### Mini Toolbar UI
+
+A small absolute-positioned bar appearing above the editable element with icon buttons:
+- **B** (Bold) | *I* (Italic) | U (Underline) | Font Size dropdown (S/M/L/XL)
+- Styled consistently with the existing builder UI (ghost buttons, border, bg-card)
+
+### Technical Notes
+
+- `document.execCommand` is deprecated but remains the simplest approach for inline contentEditable formatting and is universally supported. A full TipTap integration would be overkill for these inline canvas edits.
+- HTML is sanitized on render using `dangerouslySetInnerHTML` -- since this is admin-only content created by authenticated users, the risk is acceptable (same pattern used by `html-embed` and `legacy-content` blocks).
+- Existing saved layouts with only `text` prop continue to work unchanged.
 

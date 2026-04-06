@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Star, Shield, Clock, Award, ChevronRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import GoogleReviewSlider from "@/components/GoogleReviewSlider";
@@ -7,6 +8,8 @@ import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import heroImg from "@/assets/hero-dental.jpg";
+import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
 import ServicesCarousel from "@/components/ServicesCarousel";
 import type { PageSection } from "@/hooks/usePageContent";
@@ -40,6 +43,14 @@ const homepageFaqs = [
   },
 ];
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" as const },
+  }),
+};
+
 const Home = () => {
   const { data: settings } = useSiteSettings();
   const { sections } = usePageContent("home");
@@ -67,11 +78,11 @@ const Home = () => {
         return (
           <section key={section.id} className="relative min-h-[85vh] flex items-center overflow-hidden">
             <div className="absolute inset-0">
-              <img src={section.image_url || "/images/hero-dental.jpg"} alt={`Modern dental clinic interior at ${general?.clinic_name ?? "Smilz"}`} className="w-full h-full object-cover" width={1920} height={1080} fetchPriority="high" decoding="async" />
+              <img src={section.image_url || heroImg} alt={`Modern dental clinic interior at ${general?.clinic_name ?? "Smilz"}`} className="w-full h-full object-cover" width={1920} height={1080} fetchPriority="high" decoding="async" />
               <div className="absolute inset-0 bg-gradient-hero" />
             </div>
             <div className="relative container-narrow mx-auto px-4 py-20">
-              <div className="max-w-2xl animate-fade-in">
+              <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-2xl">
                 <p className="text-dental-gold font-semibold text-sm uppercase tracking-wider mb-4">
                   {general?.tagline ?? "Bridging Gaps... Spreading Smiles!"}
                 </p>
@@ -101,7 +112,7 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </div>
           </section>
         );
@@ -133,10 +144,10 @@ const Home = () => {
           <section key={section.id} className="section-padding">
             <div className="container-narrow mx-auto">
               <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="animate-fade-in">
-                  <img src={section.image_url || "/images/doctor.jpg"} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1024} />
-                </div>
-                <div className="animate-fade-in">
+                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                  <img src={section.image_url || doctorImg} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1024} />
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
                   <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">About Us</p>
                   <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-6">{section.heading ?? `Your Trusted Dental Partner Since ${general?.year_established ?? 1999}`}</h2>
                   <p className="text-muted-foreground mb-4">
@@ -150,7 +161,7 @@ const Home = () => {
                   <Link to={section.button_link ?? "/about"} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity">
                     {section.button_text ?? "Learn More About Us"} <ChevronRight className="h-4 w-4" />
                   </Link>
-                </div>
+                </motion.div>
               </div>
             </div>
           </section>

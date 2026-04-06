@@ -1,15 +1,18 @@
+import { motion } from "framer-motion";
 import { Award, Heart, Shield, Users, Phone, Clock, MapPin, Calendar } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
 import StickyCtaBar from "@/components/StickyCtaBar";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
   const { sections } = usePageContent("about");
+  
 
   const general = settings?.general;
   const contact = settings?.contact;
@@ -41,15 +44,18 @@ const About = () => {
           <section key={section.id} className="section-padding">
             <div className="container-narrow mx-auto">
               <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-                <img
-                  src={section.image_url || "/images/doctor.jpg"}
+                <motion.img
+                  src={section.image_url || doctorImg}
                   alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} - Dentist at ${general?.clinic_name ?? "Smilz"}`}
-                  className="rounded-2xl shadow-elevated w-full animate-fade-in"
+                  className="rounded-2xl shadow-elevated w-full"
                   loading="lazy"
                   width={800}
                   height={1024}
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
                 />
-                <div className="animate-fade-in">
+                <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
                   <h2 className="text-3xl font-heading font-bold text-foreground mb-4">
                     {section.heading ?? `Meet ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}`}
                   </h2>
@@ -70,7 +76,7 @@ const About = () => {
                       </>
                     )}
                   </div>
-                </div>
+                </motion.div>
               </div>
 
               {/* Values Grid */}
@@ -81,17 +87,20 @@ const About = () => {
                   { icon: Award, title: "25+ Years", desc: `Trusted expertise serving Garia and South Kolkata since ${general?.year_established ?? 1999}.` },
                   { icon: Users, title: "Family Friendly", desc: "Comprehensive dental solutions for patients of all ages." },
                 ].map(({ icon: Icon, title, desc }, i) => (
-                  <div
+                  <motion.div
                     key={title}
-                    className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-in"
-                    style={{ animationDelay: `${i * 100}ms`, animationFillMode: "both" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-card rounded-xl p-6 shadow-card text-center"
                   >
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary mb-4">
                       <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="font-heading font-semibold text-foreground mb-2">{title}</h3>
                     <p className="text-sm text-muted-foreground">{desc}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -102,7 +111,7 @@ const About = () => {
         return (
           <section key={section.id} className="section-padding bg-gradient-primary text-primary-foreground">
             <div className="container-narrow mx-auto text-center">
-              <div className="animate-fade-in">
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
                 <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">{section.heading ?? "Ready for a Healthier Smile?"}</h2>
                 <p className="text-primary-foreground/85 max-w-lg mx-auto mb-8">{section.subheading ?? "Book your appointment today and experience the Smilz difference."}</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -117,7 +126,7 @@ const About = () => {
                     </Button>
                   )}
                 </div>
-              </div>
+              </motion.div>
             </div>
           </section>
         );
@@ -131,7 +140,11 @@ const About = () => {
           <section key={section.id} className="section-padding">
             <div className="container-narrow mx-auto">
               <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="animate-fade-in">
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                >
                   {section.image_url && (
                     <img
                       src={section.image_url}
@@ -142,9 +155,13 @@ const About = () => {
                       height={600}
                     />
                   )}
-                </div>
+                </motion.div>
 
-                <div className="animate-fade-in">
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                >
                   {section.section_title && (
                     <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">
                       {section.section_title}
@@ -172,7 +189,7 @@ const About = () => {
                       </Button>
                     </div>
                   )}
-                </div>
+                </motion.div>
               </div>
             </div>
           </section>
@@ -205,19 +222,19 @@ const About = () => {
       {/* Clinic Info - always shown after all CMS sections */}
       <section className="section-padding bg-secondary/30">
         <div className="container-narrow mx-auto">
-          <h2 className="text-3xl font-heading font-bold text-foreground text-center mb-12 animate-fade-in">
+          <motion.h2 className="text-3xl font-heading font-bold text-foreground text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Visit Our Clinic
-          </h2>
+          </motion.h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-in">
+            <motion.div className="bg-card rounded-xl p-6 shadow-card text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4"><MapPin className="h-7 w-7 text-primary" /></div>
               <h3 className="font-heading font-semibold text-foreground mb-2">Our Address</h3>
               <p className="text-muted-foreground text-sm">{contact?.address_full ?? contact?.address ?? "21, Garia Park, Kolkata 700084"}</p>
               {links?.google_maps_url && (
                 <a href={links.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm font-medium mt-3 inline-block hover:underline">Get Directions →</a>
               )}
-            </div>
-            <div className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-in" style={{ animationDelay: "100ms", animationFillMode: "both" }}>
+            </motion.div>
+            <motion.div className="bg-card rounded-xl p-6 shadow-card text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4"><Clock className="h-7 w-7 text-primary" /></div>
               <h3 className="font-heading font-semibold text-foreground mb-2">Clinic Timings</h3>
               <div className="text-muted-foreground text-sm space-y-1">
@@ -226,8 +243,8 @@ const About = () => {
                 <p className="mt-2">{hours?.days ?? "Monday – Saturday"}</p>
                 <p className="text-destructive text-xs font-medium">{hours?.closed ?? "Sunday"} – Closed</p>
               </div>
-            </div>
-            <div className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "both" }}>
+            </motion.div>
+            <motion.div className="bg-card rounded-xl p-6 shadow-card text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4"><Phone className="h-7 w-7 text-primary" /></div>
               <h3 className="font-heading font-semibold text-foreground mb-2">Contact Numbers</h3>
               <div className="text-muted-foreground text-sm space-y-2">
@@ -235,7 +252,7 @@ const About = () => {
                 <p><span className="font-medium text-foreground">Emergency:</span> <a href={`tel:${contact?.emergency ?? "9831070248"}`} className="text-primary hover:underline">{contact?.emergency ?? "9831070248"}</a></p>
                 <p><span className="font-medium text-foreground">Email:</span> <a href={`mailto:${contact?.email ?? ""}`} className="text-primary hover:underline text-xs">{contact?.email ?? "dr.d.dutta@gmail.com"}</a></p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -243,16 +260,16 @@ const About = () => {
       {/* Map Section */}
       <section className="section-padding">
         <div className="container-narrow mx-auto">
-          <h2 className="text-3xl font-heading font-bold text-foreground text-center mb-8 animate-fade-in">
+          <motion.h2 className="text-3xl font-heading font-bold text-foreground text-center mb-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             Find Us on the Map
-          </h2>
-          <div className="rounded-2xl overflow-hidden shadow-elevated aspect-video animate-fade-in">
+          </motion.h2>
+          <motion.div className="rounded-2xl overflow-hidden shadow-elevated aspect-video" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <iframe
               src="https://www.google.com/maps?q=Smilz+Dental+Treatment+Facility,+21+Garia+Park,+Kolkata+700084&z=16&output=embed"
               width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
               referrerPolicy="no-referrer-when-downgrade" title={`${general?.clinic_name ?? "Smilz"} Location`}
             />
-          </div>
+          </motion.div>
           <a
             href="https://www.google.com/maps/search/?api=1&query=Smilz+Dental+Treatment+Facility,+21+Garia+Park,+Kolkata+700084"
             target="_blank" rel="noopener noreferrer"
