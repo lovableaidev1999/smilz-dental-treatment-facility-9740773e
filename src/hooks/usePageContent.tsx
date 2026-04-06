@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PageSection {
@@ -21,7 +20,6 @@ export interface PageSection {
 }
 
 export const usePageContent = (pageName: string) => {
-  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["page_content", pageName],
     queryFn: async () => {
@@ -37,34 +35,9 @@ export const usePageContent = (pageName: string) => {
       }
       return data as PageSection[];
     },
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 1000 * 60 * 5,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
   });
-
-  useEffect(() => {
-    const id = Math.random().toString(36).slice(2, 8);
-    const channel = supabase
-      .channel(`page-content-${pageName}-${id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "page_content",
-          filter: `page_name=eq.${pageName}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["page_content", pageName] });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [pageName, queryClient]);
 
   const getSection = (sectionId: string): PageSection | undefined =>
     query.data?.find((s) => s.section_id === sectionId);
