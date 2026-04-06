@@ -88,6 +88,7 @@ const Blog = () => {
 
   return (
     <>
+      <StickyCtaBar />
       <SEOHead
         title="Dental Insights & Blog"
         description={`Expert dental insights, oral health tips, and treatment guides from ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} Kolkata.`}
