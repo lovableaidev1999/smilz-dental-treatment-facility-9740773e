@@ -777,8 +777,9 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       const callBg = node.props.callBgColor || '';
       const stickyClass = node.props.sticky ? 'sticky top-0 z-50' : '';
 
-      const inner = (
+      return (
         <div
+          key={key}
           className={`w-full shadow-md backdrop-blur-sm ${stickyClass} ${rClasses}`}
           style={{ ...baseStyles, background: barBg }}
         >
@@ -806,7 +807,6 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
           </div>
         </div>
       );
-      return <div key={key}>{inner}</div>;
     }
 
     // ─── HTML EMBED ─────────────────────────────────────
