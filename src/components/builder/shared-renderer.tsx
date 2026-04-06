@@ -775,7 +775,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       const barBg = node.props.bgColor || 'hsl(var(--primary) / 0.95)';
       const bookBg = node.props.bookBgColor || 'hsl(var(--destructive))';
       const callBg = node.props.callBgColor || '';
-      const stickyClass = node.props.sticky ? 'sticky top-0 z-50' : '';
+      const stickyClass = node.props.sticky ? 'fixed top-0 left-0 z-[9999]' : '';
 
       return (
         <div
