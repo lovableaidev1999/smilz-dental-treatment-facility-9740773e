@@ -237,7 +237,7 @@ export const BLOCK_ICON_MAP: Record<string, React.FC<any>> = {
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
   Video, MapPin, Star, PanelTop, ChevronsUpDown, ImageLucide,
-  Box, GalleryHorizontal, Images, Share2,
+  Box, GalleryHorizontal, Images, Share2, Phone,
 };
 
 export const getBlockIcon = (def: BlockDefinition) =>

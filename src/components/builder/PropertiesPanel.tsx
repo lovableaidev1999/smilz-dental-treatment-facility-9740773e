@@ -913,6 +913,26 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
         </div>
       );
 
+    case 'cta-bar':
+      return (
+        <>
+          <PropField label="Phone Number" value={props.phone} onChange={v => updateProp('phone', v)} placeholder="+918961775554" />
+          <PropField label="WhatsApp Message" value={props.whatsappText} onChange={v => updateProp('whatsappText', v)} placeholder="Hi, I would like to book an appointment." />
+          <PropField label="Book Button Label" value={props.bookLabel} onChange={v => updateProp('bookLabel', v)} />
+          <PropField label="Call Button Label" value={props.callLabel} onChange={v => updateProp('callLabel', v)} />
+          <Separator className="my-2" />
+          <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Colors</p>
+          <PropField label="Bar Background" value={props.bgColor} onChange={v => updateProp('bgColor', v)} placeholder="CSS color" />
+          <PropField label="Book Button Color" value={props.bookBgColor} onChange={v => updateProp('bookBgColor', v)} placeholder="CSS color" />
+          <PropField label="Call Button Color" value={props.callBgColor} onChange={v => updateProp('callBgColor', v)} placeholder="CSS color" />
+          <Separator className="my-2" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Sticky (Fixed on Scroll)</Label>
+            <Switch checked={props.sticky ?? true} onCheckedChange={v => updateProp('sticky', v)} />
+          </div>
+        </>
+      );
+
     case 'contact-form':
       return (
         <div className="space-y-2">
