@@ -78,7 +78,7 @@ const Home = () => {
         return (
           <section key={section.id} className="relative min-h-[85vh] flex items-center overflow-hidden">
             <div className="absolute inset-0">
-              <img src={section.image_url || heroImg} alt={`Modern dental clinic interior at ${general?.clinic_name ?? "Smilz"}`} className="w-full h-full object-cover" width={1920} height={1080} />
+              <img src={section.image_url || heroImg} alt={`Modern dental clinic interior at ${general?.clinic_name ?? "Smilz"}`} className="w-full h-full object-cover" width={1920} height={1080} fetchPriority="high" decoding="async" />
               <div className="absolute inset-0 bg-gradient-hero" />
             </div>
             <div className="relative container-narrow mx-auto px-4 py-20">
