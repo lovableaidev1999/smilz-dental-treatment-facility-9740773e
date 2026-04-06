@@ -207,6 +207,24 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     },
   },
 
+  {
+    type: 'cta-bar',
+    label: 'CTA Bar',
+    icon: 'Phone',
+    category: 'dynamic',
+    canHaveChildren: false,
+    defaultProps: {
+      phone: '+918961775554',
+      whatsappText: 'Hi, I would like to book an appointment.',
+      bookLabel: 'Book Appointment',
+      callLabel: 'Call Now',
+      bgColor: '',
+      bookBgColor: '',
+      callBgColor: '',
+      sticky: true,
+    },
+  },
+
   // Advanced
   {
     type: 'icon-list', label: 'Icon List', icon: 'ListOrdered', category: 'advanced',
