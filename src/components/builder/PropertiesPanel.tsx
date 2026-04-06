@@ -922,9 +922,27 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
           <PropField label="Call Button Label" value={props.callLabel} onChange={v => updateProp('callLabel', v)} />
           <Separator className="my-2" />
           <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Colors</p>
-          <PropField label="Bar Background" value={props.bgColor} onChange={v => updateProp('bgColor', v)} placeholder="CSS color" />
-          <PropField label="Book Button Color" value={props.bookBgColor} onChange={v => updateProp('bookBgColor', v)} placeholder="CSS color" />
-          <PropField label="Call Button Color" value={props.callBgColor} onChange={v => updateProp('callBgColor', v)} placeholder="CSS color" />
+          <div className="space-y-2">
+            <Label className="text-xs">Bar Background</Label>
+            <div className="flex gap-2">
+              <Input value={props.bgColor || ''} onChange={e => updateProp('bgColor', e.target.value)} placeholder="CSS color" className="h-7 text-xs flex-1" />
+              <input type="color" value={props.bgColor || '#1a365d'} onChange={e => updateProp('bgColor', e.target.value)} className="h-7 w-7 rounded border border-border cursor-pointer p-0" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Book Button Color</Label>
+            <div className="flex gap-2">
+              <Input value={props.bookBgColor || ''} onChange={e => updateProp('bookBgColor', e.target.value)} placeholder="CSS color" className="h-7 text-xs flex-1" />
+              <input type="color" value={props.bookBgColor || '#dc2626'} onChange={e => updateProp('bookBgColor', e.target.value)} className="h-7 w-7 rounded border border-border cursor-pointer p-0" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Call Button Color</Label>
+            <div className="flex gap-2">
+              <Input value={props.callBgColor || ''} onChange={e => updateProp('callBgColor', e.target.value)} placeholder="CSS color" className="h-7 text-xs flex-1" />
+              <input type="color" value={props.callBgColor || '#1a365d'} onChange={e => updateProp('callBgColor', e.target.value)} className="h-7 w-7 rounded border border-border cursor-pointer p-0" />
+            </div>
+          </div>
           <Separator className="my-2" />
           <div className="flex items-center justify-between">
             <Label className="text-xs">Sticky (Fixed on Scroll)</Label>
