@@ -127,10 +127,7 @@ export const useSiteSettings = () => {
       }
       return settings;
     },
-    staleTime: 0,
     gcTime: 1000 * 60 * 10,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
