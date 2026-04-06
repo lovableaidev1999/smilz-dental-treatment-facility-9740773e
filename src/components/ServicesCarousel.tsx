@@ -177,13 +177,29 @@ const ServicesCarousel = ({
   );
 };
 
+/** Append Supabase image transform params for optimised delivery */
+function optimiseImageUrl(url: string, size: number): string {
+  if (!url) return url;
+  try {
+    const u = new URL(url);
+    if (u.hostname.endsWith('.supabase.co') && u.pathname.includes('/storage/')) {
+      u.searchParams.set('width', String(size));
+      u.searchParams.set('height', String(size));
+      u.searchParams.set('resize', 'contain');
+      u.searchParams.set('format', 'webp');
+      return u.toString();
+    }
+  } catch { /* non-URL, return as-is */ }
+  return url;
+}
+
 /** Individual service card */
 function ServiceCard({ item }: { item: ServiceItem }) {
   const content = (
     <div className="group bg-card rounded-xl p-6 shadow-card hover:shadow-hover border border-border hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
       {item.image ? (
         <img
-          src={item.image}
+          src={optimiseImageUrl(item.image, 96)}
           alt={item.title}
           className="h-12 w-12 object-contain mb-4 rounded"
           loading="lazy"

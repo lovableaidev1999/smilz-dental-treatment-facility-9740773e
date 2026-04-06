@@ -37,10 +37,7 @@ export const usePageContent = (pageName: string) => {
       }
       return data as PageSection[];
     },
-    staleTime: 0,
     gcTime: 1000 * 60 * 5,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
