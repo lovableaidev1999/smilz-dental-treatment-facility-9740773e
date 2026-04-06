@@ -4,7 +4,7 @@ import {
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
   Video, MapPin, Star, PanelTop, ChevronsUpDown, Image as ImageLucide,
-  Box, GalleryHorizontal, Images, Share2,
+  Box, GalleryHorizontal, Images, Share2, Phone,
 } from 'lucide-react';
 
 const genId = () => `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
