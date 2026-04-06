@@ -7,6 +7,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useBlogPosts } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
+import StickyCtaBar from "@/components/StickyCtaBar";
 import type { PageSection } from "@/hooks/usePageContent";
 
 const categoryToTab: Record<string, string> = {
@@ -87,6 +88,7 @@ const Blog = () => {
 
   return (
     <>
+      <StickyCtaBar />
       <SEOHead
         title="Dental Insights & Blog"
         description={`Expert dental insights, oral health tips, and treatment guides from ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} Kolkata.`}

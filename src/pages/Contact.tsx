@@ -5,6 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { GenericSection } from "@/components/DynamicSections";
+import StickyCtaBar from "@/components/StickyCtaBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +57,7 @@ const Contact = () => {
 
   return (
     <>
+      <StickyCtaBar />
       <SEOHead
         title="Contact Us"
         description={`Contact ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} at ${contact?.address ?? "21, Garia Park, Kolkata 700084"}. Call ${contact?.phone_formatted ?? "8961 77 5554"} or WhatsApp for appointments.`}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
+import StickyCtaBar from "@/components/StickyCtaBar";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
@@ -204,6 +205,7 @@ const About = () => {
 
   return (
     <>
+      <StickyCtaBar />
       <SEOHead
         title={`About Us - ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}`}
         description={`Learn about ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}, led by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}. Trusted dental care in Garia, South Kolkata since ${general?.year_established ?? 1999}.`}
