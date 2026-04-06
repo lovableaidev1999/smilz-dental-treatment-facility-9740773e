@@ -38,6 +38,7 @@ const Gallery = () => {
 
   return (
     <>
+      <StickyCtaBar />
       <SEOHead
         title="Before & After Gallery"
         description={`See real before and after dental treatment results at ${settings?.general?.clinic_name ?? "Smilz Dental"} Kolkata.`}

@@ -57,6 +57,7 @@ const Contact = () => {
 
   return (
     <>
+      <StickyCtaBar />
       <SEOHead
         title="Contact Us"
         description={`Contact ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} at ${contact?.address ?? "21, Garia Park, Kolkata 700084"}. Call ${contact?.phone_formatted ?? "8961 77 5554"} or WhatsApp for appointments.`}
