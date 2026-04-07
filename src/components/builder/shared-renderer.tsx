@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeWpImages } from '@/lib/wpImageSanitizer';
 import type { LayoutNode } from '@/types/visual-builder';
 import {
   Accordion,
