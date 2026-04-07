@@ -1,61 +1,63 @@
 
 
-## Rich Text Formatting for Visual Builder Text Blocks
+## Why PageSpeed Is Low (68 on Mobile)
 
-Currently, the visual builder's text blocks store plain strings and use a basic `contentEditable` div (`InlineEditable.tsx`) that strips all formatting. This plan adds bold, italic, underline, font size, and line break support.
+The PageSpeed report reveals these bottlenecks:
 
-### Approach
+| Issue | Impact | Root Cause |
+|-------|--------|------------|
+| **LCP 8.5s** (red) | Biggest problem | Hero image (`hero-dental.jpg`) is imported via JS module, so it can't start loading until React boots. On slow 4G, this chain is: HTML → JS bundle → React render → image request. |
+| **FCP 2.6s** (orange) | Slow first paint | CSS is inlined (good), but the app still needs the full JS bundle to render anything — there's no static HTML content. Google Fonts loaded via JS (`FontApplier`) adds another network hop. |
+| **Image delivery** (1,568 KiB savings) | Large unoptimized images | `doctor.jpg` and `hero-dental.jpg` are bundled as full-resolution JPEGs with no WebP/AVIF conversion or responsive `srcset`. |
+| **Framer Motion** on homepage | Blocks LCP | The hero section wraps content in `motion.div` with `initial={{ opacity: 0 }}`, meaning the LCP element starts invisible and fades in — Lighthouse counts the animation delay. |
+| **Cache lifetimes** (1,163 KiB) | Repeat visit penalty | Hostinger likely serves assets without long-lived `Cache-Control` headers. |
+| **Unused JS** (68 KiB) | Minor | Some tree-shaking opportunities in vendor chunks. |
+| **Forced reflow** | Minor | Likely from `useIsMobile` or dynamic font application on mount. |
 
-Store text content as **HTML strings** instead of plain text. Replace the plain `InlineEditable` with a new `RichTextEditable` component that shows a mini formatting toolbar when editing.
+## Plan to Fix (Target: 85+ Mobile Performance)
 
-### Changes
+### 1. Move hero + doctor images to `/public` with WebP versions
+- Convert `hero-dental.jpg` and `doctor.jpg` to optimized WebP (quality 80, max 1200px wide for hero, 800px for doctor)
+- Place in `public/images/` so they're directly addressable URLs
+- Add `<link rel="preload">` in `index.html` for the hero image (using the final public path, not a Vite-hashed path)
+- Update `Home.tsx` to reference `/images/hero-dental.webp` directly instead of importing
 
-**1. Create `src/components/builder/RichTextEditable.tsx`**
+### 2. Add responsive `srcset` to hero image
+- Provide 2 sizes: 600w (mobile) and 1200w (desktop)
+- Use `sizes="100vw"` so the browser picks the right one
+- This alone should cut ~1MB on mobile
 
-A new component that replaces `InlineEditable` for text/heading blocks:
-- Uses `contentEditable` with `innerHTML` instead of `innerText`
-- Shows a floating mini-toolbar on double-click (edit mode) with buttons for: **Bold**, *Italic*, Underline, Font Size (small/normal/large/xlarge), and line break hint
-- Uses `document.execCommand` for formatting (bold, italic, underline, fontSize) -- simple and sufficient for this use case
-- On blur, saves the `innerHTML` back to the block's `html` prop
-- Shift+Enter inserts a `<br>` for new lines
+### 3. Remove Framer Motion from hero section
+- Replace `motion.div` with a plain `div` using CSS `animate-fade-up` class (already exists in the project)
+- Keep Framer Motion for below-the-fold sections (about, reviews) — those don't affect LCP
+- This eliminates the opacity:0 → 1 delay that Lighthouse penalizes
 
-**2. Update `src/components/builder/block-registry.tsx`**
+### 4. Preload Google Fonts properly
+- The `FontApplier` component loads fonts via JS after React mounts — too late
+- Move the font `<link>` to `index.html` `<head>` with `rel="preload"` (already partially there, but the JS-based `FontApplier` overrides it)
+- Make `FontApplier` only apply the CSS variable, not re-create the link tag if the font is already Poppins
 
-- Add `html` to defaultProps for `heading` and `text` blocks (empty string, meaning fallback to `text` prop for backward compatibility)
+### 5. Add lazy loading for below-fold images
+- `doctor.jpg` in the About section already has `loading="lazy"` (good)
+- Service card images have `loading="lazy"` (good)
+- Ensure review slider and other sections don't trigger unnecessary network requests on initial load
 
-**3. Update `src/components/builder/PropertiesPanel.tsx`**
+### 6. Improve cache headers via `.htaccess`
+- Add `Cache-Control` headers for static assets (JS, CSS, images, fonts): `max-age=31536000, immutable` for hashed assets
+- Add `Cache-Control: max-age=3600` for `index.html`
 
-- For text/heading blocks, change the "Text" field to a note saying "Double-click on canvas to edit with formatting" when `html` content exists
-- Keep the plain text field as a fallback/source editor
+### Technical Details
 
-**4. Update `src/components/builder/shared-renderer.tsx`**
+**Files to modify:**
+- `index.html` — add hero image `<link rel="preload">`, ensure font preload stays
+- `src/pages/Home.tsx` — replace `motion.div` in hero with CSS animation, use public image paths with `srcset`
+- `public/.htaccess` — add cache headers
+- `vite.config.ts` — no changes needed (CSS inlining stays)
 
-- In the `heading` and `text` cases:
-  - **Editor mode**: Use `RichTextEditable` instead of `InlineEditable`, reading from `node.props.html` (falling back to `node.props.text`)
-  - **Live mode**: Render using `dangerouslySetInnerHTML` when `html` prop exists, otherwise render plain `text` as before (backward compatible)
+**New files:**
+- `public/images/hero-dental.webp` (optimized, 1200px)
+- `public/images/hero-dental-600.webp` (optimized, 600px mobile)
+- `public/images/doctor.webp` (optimized, 800px)
 
-**5. Update `src/components/builder/InlineEditable.tsx`**
-
-- No changes needed; kept for any other uses but text/heading blocks will use the new component
-
-### Data Model
-
-```text
-Before:  { type: "text", props: { text: "Hello world", ... } }
-After:   { type: "text", props: { text: "Hello world", html: "<b>Hello</b> world", ... } }
-```
-
-The `html` prop takes priority when present. The `text` prop remains as plain-text fallback for backward compatibility with existing saved layouts.
-
-### Mini Toolbar UI
-
-A small absolute-positioned bar appearing above the editable element with icon buttons:
-- **B** (Bold) | *I* (Italic) | U (Underline) | Font Size dropdown (S/M/L/XL)
-- Styled consistently with the existing builder UI (ghost buttons, border, bg-card)
-
-### Technical Notes
-
-- `document.execCommand` is deprecated but remains the simplest approach for inline contentEditable formatting and is universally supported. A full TipTap integration would be overkill for these inline canvas edits.
-- HTML is sanitized on render using `dangerouslySetInnerHTML` -- since this is admin-only content created by authenticated users, the risk is acceptable (same pattern used by `html-embed` and `legacy-content` blocks).
-- Existing saved layouts with only `text` prop continue to work unchanged.
+**No breaking changes** — all visual layout, responsive behavior, and functionality remain identical. Only the delivery mechanism for above-the-fold assets changes.
 
