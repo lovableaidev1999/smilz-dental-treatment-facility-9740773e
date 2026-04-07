@@ -1,13 +1,21 @@
 RewriteEngine On
 RewriteBase /
 
+# ── Correct MIME types ──
+AddType text/css .css
+AddType application/javascript .js .mjs
+AddType image/svg+xml .svg
+AddType image/webp .webp
+AddType font/woff2 .woff2
+AddType application/json .json
+
 # ── WordPress date-based URL redirects → /blog/[slug] ──
 RewriteRule ^(\d{4})/(\d{2})/([^/]+)/?$ /blog/$3 [R=301,L]
 RewriteRule ^(\d{4})/(\d{2})/(\d{2})/([^/]+)/?$ /blog/$4 [R=301,L]
 
-# ── Add your custom 301 redirects below ──
-# RewriteRule ^old-page/?$ /new-page [R=301,L]
-# RewriteRule ^category/old-slug/?$ /services/new-slug [R=301,L]
+# ── Skip static assets from SPA fallback ──
+RewriteCond %{REQUEST_URI} \.(css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|json|map)$ [NC]
+RewriteRule ^ - [L]
 
 # ── SPA fallback ──
 RewriteCond %{REQUEST_FILENAME} !-f
