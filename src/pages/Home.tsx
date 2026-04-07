@@ -8,8 +8,6 @@ import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import heroImg from "@/assets/hero-dental.jpg";
-import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
 import ServicesCarousel from "@/components/ServicesCarousel";
 import type { PageSection } from "@/hooks/usePageContent";
@@ -78,11 +76,26 @@ const Home = () => {
         return (
           <section key={section.id} className="relative min-h-[85vh] flex items-center overflow-hidden">
             <div className="absolute inset-0">
-              <img src={section.image_url || heroImg} alt={`Modern dental clinic interior at ${general?.clinic_name ?? "Smilz"}`} className="w-full h-full object-cover" width={1920} height={1080} fetchPriority="high" decoding="async" />
+              <picture>
+                <source
+                  srcSet="/images/hero-dental-600.webp 600w, /images/hero-dental.webp 1200w"
+                  sizes="100vw"
+                  type="image/webp"
+                />
+                <img
+                  src={section.image_url || "/images/hero-dental.webp"}
+                  alt={`Modern dental clinic interior at ${general?.clinic_name ?? "Smilz"}`}
+                  className="w-full h-full object-cover"
+                  width={1200}
+                  height={675}
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              </picture>
               <div className="absolute inset-0 bg-gradient-hero" />
             </div>
             <div className="relative container-narrow mx-auto px-4 py-20">
-              <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-2xl">
+              <div className="max-w-2xl animate-fade-up">
                 <p className="text-dental-gold font-semibold text-sm uppercase tracking-wider mb-4">
                   {general?.tagline ?? "Bridging Gaps... Spreading Smiles!"}
                 </p>
@@ -112,7 +125,7 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             </div>
           </section>
         );
@@ -145,7 +158,10 @@ const Home = () => {
             <div className="container-narrow mx-auto">
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-                  <img src={section.image_url || doctorImg} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1024} />
+                  <picture>
+                    <source srcSet="/images/doctor.webp" type="image/webp" />
+                    <img src={section.image_url || "/images/doctor.webp"} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1000} />
+                  </picture>
                 </motion.div>
                 <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
                   <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">About Us</p>
