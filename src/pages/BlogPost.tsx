@@ -7,6 +7,7 @@ import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
 import BlockRenderer from "@/components/BlockRenderer";
 import VisualRenderer from "@/components/builder/VisualRenderer";
 import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
+import { sanitizeWpImages } from "@/lib/wpImageSanitizer";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
