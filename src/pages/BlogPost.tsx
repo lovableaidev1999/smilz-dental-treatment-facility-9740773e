@@ -84,7 +84,7 @@ const BlogPost = () => {
             ) : hasBlockContent ? (
               <BlockRenderer content={post.content_json} className="mb-8" />
             ) : (
-              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: post.content }} />
+              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-strong:text-foreground prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: sanitizeWpImages(post.content) }} />
             )}
             {post.tags && post.tags.length > 0 && (
               <div className="mt-10 pt-6 border-t border-border">
