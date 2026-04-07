@@ -521,7 +521,7 @@ const AdminBlogEdit = () => {
               {editorMode === "preview" && !contentJson && !visualLayout?.length && legacyHtml && (
                 <div
                   className="prose prose-sm max-w-none p-6 border border-border rounded-lg min-h-[400px]"
-                  dangerouslySetInnerHTML={{ __html: legacyHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeWpImages(legacyHtml) }}
                 />
               )}
               {editorMode === "preview" && !contentJson && !visualLayout?.length && !legacyHtml && (
