@@ -824,7 +824,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
     // ─── LEGACY CONTENT ─────────────────────────────────
     case 'legacy-content':
       return (
-        <div key={key} className={`prose prose-lg max-w-none ${rClasses}`} style={baseStyles} dangerouslySetInnerHTML={{ __html: node.props.html || '' }} />
+        <div key={key} className={`prose prose-lg max-w-none ${rClasses}`} style={baseStyles} dangerouslySetInnerHTML={{ __html: sanitizeWpImages(node.props.html || '') }} />
       );
 
     default:
