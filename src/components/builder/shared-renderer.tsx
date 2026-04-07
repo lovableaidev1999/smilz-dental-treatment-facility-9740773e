@@ -819,7 +819,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
           </div>
         );
       }
-      return <div key={key} className={rClasses} style={baseStyles} dangerouslySetInnerHTML={{ __html: node.props.html || '' }} />;
+      return <div key={key} className={rClasses} style={baseStyles} dangerouslySetInnerHTML={{ __html: sanitizeWpImages(node.props.html || '') }} />;
 
     // ─── LEGACY CONTENT ─────────────────────────────────
     case 'legacy-content':
