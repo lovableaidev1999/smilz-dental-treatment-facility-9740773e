@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeWpImages } from '@/lib/wpImageSanitizer';
 import type { LayoutNode } from '@/types/visual-builder';
 import {
   Accordion,
@@ -818,12 +819,12 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
           </div>
         );
       }
-      return <div key={key} className={rClasses} style={baseStyles} dangerouslySetInnerHTML={{ __html: node.props.html || '' }} />;
+      return <div key={key} className={rClasses} style={baseStyles} dangerouslySetInnerHTML={{ __html: sanitizeWpImages(node.props.html || '') }} />;
 
     // ─── LEGACY CONTENT ─────────────────────────────────
     case 'legacy-content':
       return (
-        <div key={key} className={`prose prose-lg max-w-none ${rClasses}`} style={baseStyles} dangerouslySetInnerHTML={{ __html: node.props.html || '' }} />
+        <div key={key} className={`prose prose-lg max-w-none ${rClasses}`} style={baseStyles} dangerouslySetInnerHTML={{ __html: sanitizeWpImages(node.props.html || '') }} />
       );
 
     default:

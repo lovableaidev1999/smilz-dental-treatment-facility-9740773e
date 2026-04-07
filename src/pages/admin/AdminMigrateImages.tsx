@@ -36,19 +36,31 @@ const AdminMigrateImages = () => {
 
     try {
       // Scan services
-      const { data: services } = await supabase.from("services").select("id, featured_image");
+      const { data: services } = await supabase.from("services").select("id, featured_image, content");
       (services ?? []).forEach((s) => {
         if (s.featured_image && WP_URL_PATTERN.test(s.featured_image)) {
           found.push({ table: "services", id: s.id, field: "featured_image", oldUrl: s.featured_image, status: "pending" });
         }
+        // Scan inline images in content HTML
+        const contentMatches = [...(s.content || '').matchAll(/https?:\/\/smilz\.net\/wp-content\/uploads\/[^\s"'<>)]+/gi)];
+        const uniqueUrls = [...new Set(contentMatches.map(m => m[0]))];
+        uniqueUrls.forEach((url) => {
+          found.push({ table: "services", id: s.id, field: "content (inline)", oldUrl: url, status: "pending" });
+        });
       });
 
       // Scan blog_posts
-      const { data: posts } = await supabase.from("blog_posts").select("id, featured_image");
+      const { data: posts } = await supabase.from("blog_posts").select("id, featured_image, content");
       (posts ?? []).forEach((p) => {
         if (p.featured_image && WP_URL_PATTERN.test(p.featured_image)) {
           found.push({ table: "blog_posts", id: p.id, field: "featured_image", oldUrl: p.featured_image, status: "pending" });
         }
+        // Scan inline images in content HTML
+        const contentMatches = [...(p.content || '').matchAll(/https?:\/\/smilz\.net\/wp-content\/uploads\/[^\s"'<>)]+/gi)];
+        const uniqueUrls = [...new Set(contentMatches.map(m => m[0]))];
+        uniqueUrls.forEach((url) => {
+          found.push({ table: "blog_posts", id: p.id, field: "content (inline)", oldUrl: url, status: "pending" });
+        });
       });
 
       // Scan gallery
@@ -60,11 +72,16 @@ const AdminMigrateImages = () => {
       });
 
       // Scan page_content
-      const { data: pages } = await supabase.from("page_content").select("id, image_url");
+      const { data: pages } = await supabase.from("page_content").select("id, image_url, content");
       (pages ?? []).forEach((p) => {
         if (p.image_url && WP_URL_PATTERN.test(p.image_url)) {
           found.push({ table: "page_content", id: p.id, field: "image_url", oldUrl: p.image_url, status: "pending" });
         }
+        const contentMatches = [...(p.content || '').matchAll(/https?:\/\/smilz\.net\/wp-content\/uploads\/[^\s"'<>)]+/gi)];
+        const uniqueUrls = [...new Set(contentMatches.map(m => m[0]))];
+        uniqueUrls.forEach((url) => {
+          found.push({ table: "page_content", id: p.id, field: "content (inline)", oldUrl: url, status: "pending" });
+        });
       });
 
       // Scan site_settings for any image URLs in JSON values

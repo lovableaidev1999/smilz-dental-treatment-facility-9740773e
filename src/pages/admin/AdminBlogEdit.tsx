@@ -12,6 +12,7 @@ import ImageUrlInput from "@/components/admin/ImageUrlInput";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import TipTapEditor from "@/components/editor/TipTapEditor";
 import BlockRenderer from "@/components/BlockRenderer";
+import { sanitizeWpImages } from "@/lib/wpImageSanitizer";
 import type { JSONContent } from "@tiptap/core";
 import type { LayoutNode, BlockType } from "@/types/visual-builder";
 import { wrapLegacyContent, convertHtmlToVisualLayout } from "@/lib/legacyMigration";
@@ -521,7 +522,7 @@ const AdminBlogEdit = () => {
               {editorMode === "preview" && !contentJson && !visualLayout?.length && legacyHtml && (
                 <div
                   className="prose prose-sm max-w-none p-6 border border-border rounded-lg min-h-[400px]"
-                  dangerouslySetInnerHTML={{ __html: legacyHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeWpImages(legacyHtml) }}
                 />
               )}
               {editorMode === "preview" && !contentJson && !visualLayout?.length && !legacyHtml && (
