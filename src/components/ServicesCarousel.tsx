@@ -42,7 +42,6 @@ const ServicesCarousel = ({
   displayType = "carousel",
 }: ServicesCarouselProps) => {
   const isMobile = useIsMobile();
-  const isMobile = useIsMobile();
 
   // Build items: prefer structured services, then parsed body text
   const items: ServiceItem[] = services?.length
