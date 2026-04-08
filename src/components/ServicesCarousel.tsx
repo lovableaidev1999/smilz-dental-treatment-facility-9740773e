@@ -94,9 +94,9 @@ const ServicesCarousel = ({
     emblaApi.reInit();
   }, [emblaApi, items.length]);
 
-  // Autoplay (desktop only)
+  // Autoplay
   useEffect(() => {
-    if (!emblaApi || isMobile || items.length <= 3) return;
+    if (!emblaApi || items.length <= 1) return;
     const timer = setInterval(() => {
       if (emblaApi.canScrollNext()) {
         emblaApi.scrollNext();
