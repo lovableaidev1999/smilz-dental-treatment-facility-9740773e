@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ChevronRight as ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -36,11 +36,11 @@ function parseBodyTextToItems(bodyText: string): ServiceItem[] {
     .map((line) => ({ title: line }));
 }
 
-const ServicesCarousel = ({
+const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
   services,
   bodyText,
   displayType = "carousel",
-}: ServicesCarouselProps) => {
+}, ref) => {
   const isMobile = useIsMobile();
 
   // Build items: prefer structured services, then parsed body text
@@ -62,6 +62,7 @@ const ServicesCarousel = ({
     slidesToScroll: 1,
     containScroll: "trimSnaps",
     dragFree: false,
+    watchDrag: true,
   });
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -86,6 +87,12 @@ const ServicesCarousel = ({
       emblaApi.off("select", onSelect);
     };
   }, [emblaApi, onSelect]);
+
+  // Reinitialize when items change (async data load)
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.reInit();
+  }, [emblaApi, items.length]);
 
   // Autoplay (desktop only)
   useEffect(() => {
@@ -175,7 +182,8 @@ const ServicesCarousel = ({
       )}
     </div>
   );
-};
+});
+ServicesCarousel.displayName = "ServicesCarousel";
 
 /** Individual service card */
 function ServiceCard({ item }: { item: ServiceItem }) {
