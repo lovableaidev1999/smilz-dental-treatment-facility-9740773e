@@ -175,7 +175,8 @@ const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
       )}
     </div>
   );
-};
+});
+ServicesCarousel.displayName = "ServicesCarousel";
 
 /** Individual service card */
 function ServiceCard({ item }: { item: ServiceItem }) {
