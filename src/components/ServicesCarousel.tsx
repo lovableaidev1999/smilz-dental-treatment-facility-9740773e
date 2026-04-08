@@ -87,6 +87,12 @@ const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
     };
   }, [emblaApi, onSelect]);
 
+  // Reinitialize when items change (async data load)
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.reInit();
+  }, [emblaApi, items.length]);
+
   // Autoplay (desktop only)
   useEffect(() => {
     if (!emblaApi || isMobile || items.length <= 3) return;
