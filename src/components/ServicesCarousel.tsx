@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, forwardRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ChevronRight as ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -36,11 +36,11 @@ function parseBodyTextToItems(bodyText: string): ServiceItem[] {
     .map((line) => ({ title: line }));
 }
 
-const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
+const ServicesCarousel = ({
   services,
   bodyText,
   displayType = "carousel",
-}, ref) => {
+}: ServicesCarouselProps) => {
   const isMobile = useIsMobile();
 
   // Build items: prefer structured services, then parsed body text
@@ -182,8 +182,7 @@ const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
       )}
     </div>
   );
-});
-ServicesCarousel.displayName = "ServicesCarousel";
+};
 
 /** Individual service card */
 function ServiceCard({ item }: { item: ServiceItem }) {
