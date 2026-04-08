@@ -62,6 +62,7 @@ const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
     slidesToScroll: 1,
     containScroll: "trimSnaps",
     dragFree: false,
+    watchDrag: true,
   });
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
