@@ -36,11 +36,11 @@ function parseBodyTextToItems(bodyText: string): ServiceItem[] {
     .map((line) => ({ title: line }));
 }
 
-const ServicesCarousel = ({
+const ServicesCarousel = forwardRef<HTMLDivElement, ServicesCarouselProps>(({
   services,
   bodyText,
   displayType = "carousel",
-}: ServicesCarouselProps) => {
+}, ref) => {
   const isMobile = useIsMobile();
 
   // Build items: prefer structured services, then parsed body text
