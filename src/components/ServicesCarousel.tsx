@@ -183,8 +183,7 @@ const ServicesCarousel = ({
       )}
     </div>
   );
-});
-ServicesCarousel.displayName = "ServicesCarousel";
+};
 
 /** Individual service card */
 function ServiceCard({ item }: { item: ServiceItem }) {
