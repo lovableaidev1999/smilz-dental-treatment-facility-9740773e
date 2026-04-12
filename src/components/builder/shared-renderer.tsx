@@ -275,10 +275,17 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         rowGap: node.props.rowGap || '1.5rem',
         alignItems: baseStyles.alignItems || undefined,
       };
+      const spacingMap: Record<string, string> = {
+        none: '',
+        small: 'py-3 md:py-4',
+        medium: 'py-6 md:py-8',
+        large: 'py-12 md:py-16',
+      };
+      const spacingClass = spacingMap[node.props.sectionSpacing] ?? spacingMap.medium;
       return (
         <section
           key={key}
-          className={`relative w-full py-12 md:py-16 px-4 md:px-6 ${rClasses}`}
+          className={`relative w-full ${spacingClass} px-4 md:px-6 ${rClasses}`}
           style={{
             background: node.props.background || undefined,
             backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,

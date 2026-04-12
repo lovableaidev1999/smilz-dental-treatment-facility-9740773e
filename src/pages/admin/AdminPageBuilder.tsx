@@ -28,14 +28,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight, Settings } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
-const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished }: {
+const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished, initialSeo }: {
   layoutId?: string;
   pageSlug: string;
   pageTitle: string;
   isPublished?: boolean;
+  initialSeo?: { seoTitle?: string; seoDescription?: string; seoOgImage?: string; seoKeywords?: string; seoCanonicalUrl?: string; seoRobots?: string };
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
   const { toast } = useToast();
@@ -46,9 +49,12 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [showSeoDialog, setShowSeoDialog] = useState(false);
-  const [seoTitle, setSeoTitle] = useState('');
-  const [seoDescription, setSeoDescription] = useState('');
-  const [seoOgImage, setSeoOgImage] = useState('');
+  const [seoTitle, setSeoTitle] = useState(initialSeo?.seoTitle || '');
+  const [seoDescription, setSeoDescription] = useState(initialSeo?.seoDescription || '');
+  const [seoOgImage, setSeoOgImage] = useState(initialSeo?.seoOgImage || '');
+  const [seoKeywords, setSeoKeywords] = useState(initialSeo?.seoKeywords || '');
+  const [seoCanonicalUrl, setSeoCanonicalUrl] = useState(initialSeo?.seoCanonicalUrl || '');
+  const [seoRobots, setSeoRobots] = useState(initialSeo?.seoRobots || 'index, follow');
   const undoRedo = useUndoRedo();
   const prevLayoutRef = useRef<string>('');
 
@@ -151,11 +157,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
       // Preserve current publish state unless explicitly changing it
       const publishState = publish !== undefined ? publish : (initialPublished || false);
 
+      // Inject _seo metadata into layout_json
+      const seoMeta = { _seo: { seoTitle, seoDescription, seoOgImage, seoKeywords, seoCanonicalUrl, seoRobots } };
+      const layoutWithSeo = [...state.layout.filter((n: any) => !n._seo), seoMeta as any];
+
       const result = await saveLayout.mutateAsync({
         id: currentLayoutId.current,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: state.layout,
+        layout_json: layoutWithSeo,
         is_published: publishState,
       });
       dispatch({ type: 'MARK_SAVED' });
@@ -178,11 +188,13 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
   const handlePreview = async () => {
     try {
       // Save as draft first, then open preview
+      const seoMeta = { _seo: { seoTitle, seoDescription, seoOgImage, seoKeywords, seoCanonicalUrl, seoRobots } };
+      const layoutWithSeo = [...state.layout.filter((n: any) => !n._seo), seoMeta as any];
       const result = await saveLayout.mutateAsync({
         id: currentLayoutId.current,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: state.layout,
+        layout_json: layoutWithSeo,
         is_published: initialPublished || false,
       });
       dispatch({ type: 'MARK_SAVED' });
@@ -326,23 +338,73 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
 
       {/* SEO Settings Dialog */}
       <Dialog open={showSeoDialog} onOpenChange={setShowSeoDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>SEO Settings</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Page Title (SEO)</Label>
-              <Input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder="Override page title for search engines" />
+              <Label>SEO Title</Label>
+              <Input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder={pageTitle || 'Override page title for search engines'} maxLength={60} />
+              <p className={`text-xs mt-1 ${seoTitle.length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>{seoTitle.length}/60 characters</p>
             </div>
             <div>
               <Label>Meta Description</Label>
-              <Textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} placeholder="Brief description for search results (max 160 chars)" className="min-h-[80px]" />
-              <p className="text-xs text-muted-foreground mt-1">{seoDescription.length}/160 characters</p>
+              <Textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} placeholder="Brief description for search results (max 160 chars)" className="min-h-[80px]" maxLength={160} />
+              <p className={`text-xs mt-1 ${seoDescription.length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>{seoDescription.length}/160 characters</p>
+            </div>
+            <div>
+              <Label>URL Slug</Label>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground shrink-0">/p/</span>
+                <Input value={pageSlug} disabled className="h-7 text-xs bg-muted" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Slug is set when creating the page</p>
+            </div>
+            <div>
+              <Label>Keywords</Label>
+              <Input value={seoKeywords} onChange={e => setSeoKeywords(e.target.value)} placeholder="dental care, garia, kolkata (comma-separated)" />
+            </div>
+            <div>
+              <Label>Canonical URL</Label>
+              <Input value={seoCanonicalUrl} onChange={e => setSeoCanonicalUrl(e.target.value)} placeholder="https://smilz.net/... (optional override)" />
             </div>
             <div>
               <Label>OG Image URL</Label>
               <Input value={seoOgImage} onChange={e => setSeoOgImage(e.target.value)} placeholder="https://... (1200x630 recommended)" />
+            </div>
+            <div>
+              <Label>Robots</Label>
+              <Select value={seoRobots} onValueChange={setSeoRobots}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="index, follow">Index / Follow</SelectItem>
+                  <SelectItem value="noindex, follow">NoIndex / Follow</SelectItem>
+                  <SelectItem value="noindex, nofollow">NoIndex / NoFollow</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Separator />
+            <div>
+              <Label className="text-xs font-semibold">Heading Structure Preview</Label>
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground max-h-32 overflow-y-auto bg-muted/30 rounded p-2">
+                {(() => {
+                  const headings: { level: number; text: string }[] = [];
+                  const walk = (nodes: LayoutNode[]) => {
+                    nodes.forEach(n => {
+                      if (n.type === 'heading') headings.push({ level: n.props.level || 2, text: n.props.text || '(empty)' });
+                      if (n.children) walk(n.children);
+                    });
+                  };
+                  walk(state.layout);
+                  if (!headings.length) return <p className="italic">No headings found</p>;
+                  return headings.map((h, i) => (
+                    <p key={i} style={{ paddingLeft: `${(h.level - 1) * 12}px` }}>
+                      <span className="font-mono text-primary">H{h.level}</span> {h.text}
+                    </p>
+                  ));
+                })()}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -372,8 +434,17 @@ const AdminPageBuilder = () => {
     );
   }
 
-  // Load template from sessionStorage if creating new page with template
+  // Extract _seo from layout_json and separate blocks
   let initialLayout = existingLayout?.layout_json || [];
+  let extractedSeo: any = {};
+  if (Array.isArray(initialLayout)) {
+    const seoEntry = initialLayout.find((n: any) => n._seo);
+    if (seoEntry) {
+      extractedSeo = (seoEntry as any)._seo || {};
+      initialLayout = initialLayout.filter((n: any) => !n._seo);
+    }
+  }
+
   if (!id && hasTemplate) {
     try {
       const tmpl = sessionStorage.getItem('builder_template');
@@ -389,7 +460,7 @@ const AdminPageBuilder = () => {
 
   return (
     <BuilderProvider initialLayout={initialLayout}>
-      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} isPublished={existingLayout?.is_published} />
+      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} isPublished={existingLayout?.is_published} initialSeo={extractedSeo} />
     </BuilderProvider>
   );
 };

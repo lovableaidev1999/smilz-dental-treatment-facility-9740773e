@@ -414,6 +414,18 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
     case 'section':
       return (
         <>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Section Spacing</Label>
+            <Select value={props.sectionSpacing || 'medium'} onValueChange={v => updateProp('sectionSpacing', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="small">Small</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="large">Large</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <PropField label="Background" value={props.background} onChange={v => updateProp('background', v)} placeholder="CSS color or gradient" />
           <PropField label="Background Image" value={props.backgroundImage} onChange={v => updateProp('backgroundImage', v)} placeholder="URL" />
           <PropField label="Max Width" value={props.maxWidth} onChange={v => updateProp('maxWidth', v)} />
