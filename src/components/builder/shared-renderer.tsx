@@ -361,6 +361,23 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       );
     }
 
+    // ─── CONTAINER ──────────────────────────────────────
+    case 'container': {
+      const containerStyle: React.CSSProperties = {
+        ...baseStyles,
+        background: node.props.background || undefined,
+        padding: node.props.padding || '1.5rem',
+        borderRadius: node.props.borderRadius || '1rem',
+        border: node.props.borderColor ? `1px solid ${node.props.borderColor}` : undefined,
+        boxShadow: node.props.shadow ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' : undefined,
+      };
+      return (
+        <div key={key} className={rClasses} style={containerStyle}>
+          {node.children?.map((child, i) => renderNodeContent(child, i, opts))}
+        </div>
+      );
+    }
+
     // ─── HEADING ────────────────────────────────────────
     case 'heading': {
       const Tag = `h${node.props.level || 2}` as keyof JSX.IntrinsicElements;
