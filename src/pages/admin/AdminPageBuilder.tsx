@@ -185,11 +185,13 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
   const handlePreview = async () => {
     try {
       // Save as draft first, then open preview
+      const seoMeta = { _seo: { seoTitle, seoDescription, seoOgImage, seoKeywords, seoCanonicalUrl, seoRobots } };
+      const layoutWithSeo = [...state.layout.filter((n: any) => !n._seo), seoMeta as any];
       const result = await saveLayout.mutateAsync({
         id: currentLayoutId.current,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: state.layout,
+        layout_json: layoutWithSeo,
         is_published: initialPublished || false,
       });
       dispatch({ type: 'MARK_SAVED' });
