@@ -3,7 +3,7 @@ import {
   Layout, Columns, Type, AlignLeft, ImageIcon, MousePointerClick,
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
-  Video, MapPin, Star, PanelTop, ChevronsUpDown, Image as ImageLucide,
+  Video, MapPin, Star, PanelTop, ChevronsUpDown, Image as ImageLucide, Square,
   Box, GalleryHorizontal, Images, Share2, Phone,
 } from 'lucide-react';
 
