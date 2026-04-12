@@ -363,6 +363,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
 
     // ─── CONTAINER ──────────────────────────────────────
     case 'container': {
+      const isSticky = node.props.sticky && !editorMode;
       const containerStyle: React.CSSProperties = {
         ...baseStyles,
         background: node.props.background || undefined,
@@ -370,6 +371,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         borderRadius: node.props.borderRadius || '1rem',
         border: node.props.borderColor ? `1px solid ${node.props.borderColor}` : undefined,
         boxShadow: node.props.shadow ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' : undefined,
+        ...(isSticky ? { position: 'sticky' as const, top: node.props.stickyTop || '96px', zIndex: 10 } : {}),
       };
       return (
         <div key={key} className={rClasses} style={containerStyle}>
