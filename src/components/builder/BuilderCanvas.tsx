@@ -116,8 +116,11 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
       columnGap: node.props.columnGap || '1.5rem',
       rowGap: node.props.rowGap || '1.5rem',
     };
+    const sectionClasses = responsiveStyles.padding
+      ? 'relative w-full min-h-[60px]'
+      : 'relative w-full py-12 md:py-16 px-4 md:px-6 min-h-[60px]';
     return (
-      <section className="relative w-full py-12 md:py-16 px-4 md:px-6 min-h-[60px]" style={sectionStyle}>
+      <section className={sectionClasses} style={sectionStyle}>
         <div className="w-full mx-auto" style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}>
           <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
             <div ref={setNodeRef} className={`min-h-[60px] ${colCount > 1 ? 'vb-responsive-grid' : ''}`} style={gridStyle}>
