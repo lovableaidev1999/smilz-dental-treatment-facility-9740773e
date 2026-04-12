@@ -146,7 +146,7 @@ const ServiceDetail = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Appointment CTA */}
-              <div className="bg-primary text-primary-foreground rounded-2xl p-6 sticky top-24">
+              <div className="bg-primary text-primary-foreground rounded-2xl p-6">
                 <h3 className="font-heading font-bold text-lg mb-3">Book Your Appointment</h3>
                 <p className="text-sm text-primary-foreground/80 mb-5">
                   Get expert {service.title.toLowerCase()} treatment at {general?.clinic_name ?? "Smilz"}.
