@@ -3,9 +3,16 @@ import { usePageLayout } from '@/hooks/usePageLayouts';
 import VisualRenderer from '@/components/builder/VisualRenderer';
 import SEOHead from '@/components/SEOHead';
 
+const extractSeo = (layoutJson: any[]) => {
+  const seoEntry = layoutJson?.find((n: any) => n._seo);
+  const seo = seoEntry?._seo || {};
+  const blocks = (layoutJson || []).filter((n: any) => !n._seo);
+  return { seo, blocks };
+};
+
 const BuiltPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { data: layout, isLoading, error } = usePageLayout(slug || '');
+  const { data: layout, isLoading } = usePageLayout(slug || '');
 
   if (isLoading) {
     return (
@@ -15,12 +22,21 @@ const BuiltPage = () => {
     );
   }
 
-  if (!layout) return null; // Will fall through to NotFound via router
+  if (!layout) return null;
+
+  const { seo, blocks } = extractSeo(layout.layout_json);
 
   return (
     <>
-      <SEOHead title={layout.page_title} description={`${layout.page_title} - Smilz Dental`} />
-      <VisualRenderer layout={layout.layout_json || []} />
+      <SEOHead
+        title={seo.seoTitle || layout.page_title}
+        description={seo.seoDescription || `${layout.page_title} - Smilz Dental`}
+        keywords={seo.seoKeywords || undefined}
+        canonicalUrl={seo.seoCanonicalUrl || undefined}
+        ogImage={seo.seoOgImage || undefined}
+        robots={seo.seoRobots || undefined}
+      />
+      <VisualRenderer layout={blocks} />
     </>
   );
 };

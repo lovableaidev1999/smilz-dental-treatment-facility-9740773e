@@ -141,9 +141,22 @@ const ServiceDetailSmart = () => {
   if (layoutLoading) return <PageFallback />;
 
   if (layout?.layout_json?.length > 0) {
+    const seoEntry = (layout.layout_json as any[]).find((n: any) => n._seo);
+    const seo = seoEntry?._seo || {};
+    const blocks = (layout.layout_json as any[]).filter((n: any) => !n._seo);
+
+    const SEOHead = lazy(() => import('@/components/SEOHead'));
     return (
       <Suspense fallback={<PageFallback />}>
-        <VisualRenderer layout={layout.layout_json} />
+        <SEOHead
+          title={seo.seoTitle || layout.page_title || serviceId || ''}
+          description={seo.seoDescription || `${layout.page_title} - Smilz Dental`}
+          keywords={seo.seoKeywords || undefined}
+          canonicalUrl={seo.seoCanonicalUrl || undefined}
+          ogImage={seo.seoOgImage || undefined}
+          robots={seo.seoRobots || undefined}
+        />
+        <VisualRenderer layout={blocks} />
       </Suspense>
     );
   }
