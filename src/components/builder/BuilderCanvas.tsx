@@ -144,6 +144,27 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
     );
   }
 
+  // Container block — preserve visual styling in editor
+  if (node.type === 'container') {
+    const containerStyle: React.CSSProperties = {
+      background: node.props.background || undefined,
+      padding: node.props.padding || '1.5rem',
+      borderRadius: node.props.borderRadius || '1rem',
+      border: node.props.borderColor ? `1px solid ${node.props.borderColor}` : undefined,
+      boxShadow: node.props.shadow ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' : undefined,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem',
+    };
+    return (
+      <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
+        <div ref={setNodeRef} className="min-h-[60px] w-full" style={containerStyle}>
+          {children}
+        </div>
+      </SortableContext>
+    );
+  }
+
   // Column / generic container
   return (
     <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
