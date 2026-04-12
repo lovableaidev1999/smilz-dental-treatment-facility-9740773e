@@ -110,7 +110,7 @@ const AdminServices = () => {
                   </Button>
                   <Button
                     variant="ghost" size="icon"
-                    onClick={() => handleOpenBuilder(s.slug, s.title)}
+                    onClick={() => handleOpenBuilder(s)}
                     title="Edit in Visual Page Builder"
                   >
                     <Paintbrush className="h-4 w-4" />
