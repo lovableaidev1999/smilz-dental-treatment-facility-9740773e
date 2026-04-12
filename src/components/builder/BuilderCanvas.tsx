@@ -102,11 +102,13 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
   if (node.type === 'section') {
     const gridColumns = node.props.gridColumns || '1fr';
     const colCount = gridColumns.split(' ').filter(Boolean).length;
+    const responsiveStyles = node.responsive?.desktop || {};
     const sectionStyle: React.CSSProperties = {
       background: node.props.background || undefined,
       backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
+      padding: responsiveStyles.padding || undefined,
     };
     const gridStyle: React.CSSProperties = {
       display: 'grid',
@@ -114,8 +116,11 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
       columnGap: node.props.columnGap || '1.5rem',
       rowGap: node.props.rowGap || '1.5rem',
     };
+    const sectionClasses = responsiveStyles.padding
+      ? 'relative w-full min-h-[60px]'
+      : 'relative w-full py-12 md:py-16 px-4 md:px-6 min-h-[60px]';
     return (
-      <section className="relative w-full py-12 md:py-16 px-4 md:px-6 min-h-[60px]" style={sectionStyle}>
+      <section className={sectionClasses} style={sectionStyle}>
         <div className="w-full mx-auto" style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}>
           <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
             <div ref={setNodeRef} className={`min-h-[60px] ${colCount > 1 ? 'vb-responsive-grid' : ''}`} style={gridStyle}>
@@ -138,6 +143,27 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
     return (
       <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
         <div ref={setNodeRef} className="vb-responsive-grid min-h-[60px] w-full" style={gridStyle}>
+          {children}
+        </div>
+      </SortableContext>
+    );
+  }
+
+  // Container block — preserve visual styling in editor
+  if (node.type === 'container') {
+    const containerStyle: React.CSSProperties = {
+      background: node.props.background || undefined,
+      padding: node.props.padding || '1.5rem',
+      borderRadius: node.props.borderRadius || '1rem',
+      border: node.props.borderColor ? `1px solid ${node.props.borderColor}` : undefined,
+      boxShadow: node.props.shadow ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' : undefined,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem',
+    };
+    return (
+      <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
+        <div ref={setNodeRef} className="min-h-[60px] w-full" style={containerStyle}>
           {children}
         </div>
       </SortableContext>
