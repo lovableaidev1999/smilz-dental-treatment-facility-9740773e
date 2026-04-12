@@ -33,11 +33,12 @@ import { Separator } from '@/components/ui/separator';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
 // ─── Inner builder with DnD ─────────────────────────────
-const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished }: {
+const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished, initialSeo }: {
   layoutId?: string;
   pageSlug: string;
   pageTitle: string;
   isPublished?: boolean;
+  initialSeo?: { seoTitle?: string; seoDescription?: string; seoOgImage?: string; seoKeywords?: string; seoCanonicalUrl?: string; seoRobots?: string };
 }) => {
   const { state, dispatch, addBlock } = useBuilder();
   const { toast } = useToast();
@@ -48,12 +49,12 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [showSeoDialog, setShowSeoDialog] = useState(false);
-  const [seoTitle, setSeoTitle] = useState('');
-  const [seoDescription, setSeoDescription] = useState('');
-  const [seoOgImage, setSeoOgImage] = useState('');
-  const [seoKeywords, setSeoKeywords] = useState('');
-  const [seoCanonicalUrl, setSeoCanonicalUrl] = useState('');
-  const [seoRobots, setSeoRobots] = useState('index, follow');
+  const [seoTitle, setSeoTitle] = useState(initialSeo?.seoTitle || '');
+  const [seoDescription, setSeoDescription] = useState(initialSeo?.seoDescription || '');
+  const [seoOgImage, setSeoOgImage] = useState(initialSeo?.seoOgImage || '');
+  const [seoKeywords, setSeoKeywords] = useState(initialSeo?.seoKeywords || '');
+  const [seoCanonicalUrl, setSeoCanonicalUrl] = useState(initialSeo?.seoCanonicalUrl || '');
+  const [seoRobots, setSeoRobots] = useState(initialSeo?.seoRobots || 'index, follow');
   const undoRedo = useUndoRedo();
   const prevLayoutRef = useRef<string>('');
 
@@ -433,8 +434,17 @@ const AdminPageBuilder = () => {
     );
   }
 
-  // Load template from sessionStorage if creating new page with template
+  // Extract _seo from layout_json and separate blocks
   let initialLayout = existingLayout?.layout_json || [];
+  let extractedSeo: any = {};
+  if (Array.isArray(initialLayout)) {
+    const seoEntry = initialLayout.find((n: any) => n._seo);
+    if (seoEntry) {
+      extractedSeo = (seoEntry as any)._seo || {};
+      initialLayout = initialLayout.filter((n: any) => !n._seo);
+    }
+  }
+
   if (!id && hasTemplate) {
     try {
       const tmpl = sessionStorage.getItem('builder_template');
@@ -450,7 +460,7 @@ const AdminPageBuilder = () => {
 
   return (
     <BuilderProvider initialLayout={initialLayout}>
-      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} isPublished={existingLayout?.is_published} />
+      <BuilderInner layoutId={id} pageSlug={slug} pageTitle={pageTitle} isPublished={existingLayout?.is_published} initialSeo={extractedSeo} />
     </BuilderProvider>
   );
 };
