@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveTemplateVars } from "@/lib/resolveTemplateVars";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -138,12 +139,37 @@ const ServiceDetailSmart = () => {
     enabled: !!serviceId,
   });
 
+  // Fetch actual service data for template variable resolution
+  const { data: service } = useQuery({
+    queryKey: ['services', serviceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('slug', serviceId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!serviceId && !!layout,
+  });
+
   if (layoutLoading) return <PageFallback />;
 
   if (layout?.layout_json?.length > 0) {
     const seoEntry = (layout.layout_json as any[]).find((n: any) => n._seo);
     const seo = seoEntry?._seo || {};
-    const blocks = (layout.layout_json as any[]).filter((n: any) => !n._seo);
+    let blocks = (layout.layout_json as any[]).filter((n: any) => !n._seo);
+
+    // Resolve template variables with actual service data
+    if (service) {
+      blocks = resolveTemplateVars(blocks, {
+        Service_Title: service.title,
+        Service_Short_Desc: service.short_desc || '',
+        Service_Image: service.featured_image || '',
+        Service_Content: service.description || '',
+      });
+    }
 
     const SEOHead = lazy(() => import('@/components/SEOHead'));
     return (

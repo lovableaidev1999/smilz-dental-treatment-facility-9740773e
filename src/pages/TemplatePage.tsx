@@ -5,31 +5,7 @@ import { usePageLayout } from '@/hooks/usePageLayouts';
 import VisualRenderer from '@/components/builder/VisualRenderer';
 import SEOHead from '@/components/SEOHead';
 import type { LayoutNode } from '@/types/visual-builder';
-
-// Replace template placeholders with actual data
-const resolveTemplateVars = (layout: LayoutNode[], data: Record<string, any>): LayoutNode[] => {
-  const resolve = (text: string): string => {
-    return text.replace(/\{(\w+)\}/g, (match, key) => {
-      return data[key] !== undefined && data[key] !== null ? String(data[key]) : match;
-    });
-  };
-
-  const walk = (nodes: LayoutNode[]): LayoutNode[] =>
-    nodes.map(node => {
-      const newProps = { ...node.props };
-      // Resolve string props
-      for (const [k, v] of Object.entries(newProps)) {
-        if (typeof v === 'string') newProps[k] = resolve(v);
-      }
-      return {
-        ...node,
-        props: newProps,
-        children: node.children ? walk(node.children) : undefined,
-      };
-    });
-
-  return walk(layout);
-};
+import { resolveTemplateVars } from '@/lib/resolveTemplateVars';
 
 // ─── Blog Post Template Page ────────────────────────────
 export const BlogPostTemplate = () => {
