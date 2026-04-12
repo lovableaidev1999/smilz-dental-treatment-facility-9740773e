@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronRight as ArrowRight } from "lucide-re
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 
 interface ServiceItem {
   title: string;
@@ -190,7 +191,7 @@ function ServiceCard({ item }: { item: ServiceItem }) {
     <div className="group bg-card rounded-xl p-6 shadow-card hover:shadow-hover border border-border hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
       {item.image ? (
         <img
-          src={item.image}
+          src={resolveImageUrl(item.image)}
           alt={item.title}
           className="h-12 w-12 object-contain mb-4 rounded"
           loading="lazy"
