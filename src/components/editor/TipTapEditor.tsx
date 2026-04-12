@@ -43,6 +43,42 @@ const TipTapEditor = ({ content, onChange, placeholder = "Start writing your con
         class:
           "prose prose-sm max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground prose-a:text-primary focus:outline-none min-h-[400px] px-4 py-3",
       },
+      transformPastedHTML(html) {
+        // Create a temporary DOM to clean and preserve structure
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        // Remove all inline styles and classes that break formatting
+        doc.querySelectorAll('*').forEach((el) => {
+          el.removeAttribute('style');
+          el.removeAttribute('class');
+          el.removeAttribute('id');
+        });
+
+        // Convert <div> wrappers (common from ChatGPT/Google Docs) to <p>
+        doc.querySelectorAll('div').forEach((div) => {
+          // Only convert leaf divs (no block children) to paragraphs
+          const hasBlockChild = div.querySelector('p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre, table, div');
+          if (!hasBlockChild) {
+            const p = doc.createElement('p');
+            p.innerHTML = div.innerHTML;
+            div.replaceWith(p);
+          }
+        });
+
+        // Convert <b> to <strong> and <i> to <em> for consistency
+        doc.querySelectorAll('b').forEach((b) => {
+          const strong = doc.createElement('strong');
+          strong.innerHTML = b.innerHTML;
+          b.replaceWith(strong);
+        });
+        doc.querySelectorAll('i').forEach((i) => {
+          const em = doc.createElement('em');
+          em.innerHTML = i.innerHTML;
+          i.replaceWith(em);
+        });
+
+        return doc.body.innerHTML;
+      },
     },
   });
 
