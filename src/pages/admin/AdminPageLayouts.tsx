@@ -287,7 +287,7 @@ const AdminPageLayouts = () => {
           </DialogHeader>
           <div className="grid gap-3 py-2 max-h-[60vh] overflow-y-auto">
             {/* "Edit Existing Design" option for core pages */}
-            {pendingCreate && CORE_PAGES.some(cp => cp.slug === pendingCreate.slug) && (() => {
+            {pendingCreate && (CORE_PAGES.some(cp => cp.slug === pendingCreate.slug) || pendingCreate.slug.startsWith('service-')) && (() => {
               const existingLayout = getExistingDesign(pendingCreate.slug);
               if (!existingLayout) return null;
               return (
