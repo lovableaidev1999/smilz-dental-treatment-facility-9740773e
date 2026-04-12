@@ -596,17 +596,20 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       return <ContactFormWidget key={key} node={node} rClasses={rClasses} baseStyles={baseStyles} />;
 
     // ─── ICON LIST ──────────────────────────────────────
-    case 'icon-list':
+    case 'icon-list': {
+      const listColor = node.props.color || undefined;
+      const iconMap: Record<string, string> = { MapPin: '📍', Clock: '🕐', Phone: '📞', Check: '✓' };
       return (
-        <ul key={key} className={`space-y-2 ${rClasses}`} style={baseStyles}>
+        <ul key={key} className={`space-y-2 ${rClasses}`} style={{ ...baseStyles, color: listColor }}>
           {(node.props.items || []).map((item: any, i: number) => (
-            <li key={i} className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-primary">✓</span>
+            <li key={i} className="flex items-center gap-2" style={{ color: listColor }}>
+              <span>{iconMap[item.icon] || '✓'}</span>
               <span>{item.text}</span>
             </li>
           ))}
         </ul>
       );
+    }
 
     // ─── VIDEO ──────────────────────────────────────────
     case 'video': {
