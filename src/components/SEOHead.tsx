@@ -7,6 +7,7 @@ interface SEOHeadProps {
   keywords?: string;
   canonicalUrl?: string;
   ogImage?: string;
+  robots?: string;
   type?: "website" | "article";
   article?: {
     publishedTime?: string;
@@ -25,7 +26,7 @@ interface SEOHeadProps {
 }
 
 const SEOHead = ({
-  title, description, keywords, canonicalUrl, ogImage,
+  title, description, keywords, canonicalUrl, ogImage, robots,
   type = "website", article, breadcrumbs, faqs, service,
 }: SEOHeadProps) => {
   const { data: settings } = useSiteSettings();
@@ -161,7 +162,7 @@ const SEOHead = ({
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={url} />
-      <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+      <meta name="robots" content={robots || "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"} />
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
