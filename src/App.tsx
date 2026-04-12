@@ -143,7 +143,7 @@ const App = () => (
                 <Route element={<Layout />}>
                   <Route path="/" element={<SmartPage slug="home" fallback={Home} />} />
                   <Route path="/services" element={<SmartPage slug="services" fallback={ServicesPage} />} />
-                  <Route path="/services/:serviceId" element={<ServiceDetail />} />
+                  <Route path="/services/:serviceId" element={<ServiceDetailSmart />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
                   <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} />} />
