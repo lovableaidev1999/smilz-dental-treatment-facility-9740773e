@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Paintbrush } from "lucide-react";
 import { getExistingDesign } from "@/lib/existingDesignTemplates";
+import { resolveTemplateVars } from "@/lib/resolveTemplateVars";
 
 const AdminServices = () => {
   const qc = useQueryClient();
@@ -54,18 +55,24 @@ const AdminServices = () => {
     },
   });
 
-  const handleOpenBuilder = (slug: string, title: string) => {
-    const layoutSlug = `service-${slug}`;
+  const handleOpenBuilder = (service: any) => {
+    const layoutSlug = `service-${service.slug}`;
     const existing = layouts?.find(l => l.page_slug === layoutSlug);
     if (existing) {
       navigate(`/admin/page-builder/${existing.id}`);
     } else {
-      // Auto-load service detail template
+      // Auto-load service detail template with resolved content
       const template = getExistingDesign(layoutSlug);
       if (template) {
-        sessionStorage.setItem('builder_template', JSON.stringify(template));
+        const resolved = resolveTemplateVars(template, {
+          Service_Title: service.title,
+          Service_Short_Desc: service.short_desc || '',
+          Service_Image: service.featured_image || '',
+          Service_Content: service.description || '',
+        });
+        sessionStorage.setItem('builder_template', JSON.stringify(resolved));
       }
-      navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(title)}${template ? '&template=true' : ''}`);
+      navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(service.title)}${template ? '&template=true' : ''}`);
     }
   };
 
