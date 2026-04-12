@@ -49,6 +49,9 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [seoOgImage, setSeoOgImage] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
+  const [seoCanonicalUrl, setSeoCanonicalUrl] = useState('');
+  const [seoRobots, setSeoRobots] = useState('index, follow');
   const undoRedo = useUndoRedo();
   const prevLayoutRef = useRef<string>('');
 
@@ -151,11 +154,15 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
       // Preserve current publish state unless explicitly changing it
       const publishState = publish !== undefined ? publish : (initialPublished || false);
 
+      // Inject _seo metadata into layout_json
+      const seoMeta = { _seo: { seoTitle, seoDescription, seoOgImage, seoKeywords, seoCanonicalUrl, seoRobots } };
+      const layoutWithSeo = [...state.layout.filter((n: any) => !n._seo), seoMeta as any];
+
       const result = await saveLayout.mutateAsync({
         id: currentLayoutId.current,
         page_slug: pageSlug,
         page_title: pageTitle,
-        layout_json: state.layout,
+        layout_json: layoutWithSeo,
         is_published: publishState,
       });
       dispatch({ type: 'MARK_SAVED' });
