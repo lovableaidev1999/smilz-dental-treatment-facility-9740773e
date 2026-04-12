@@ -59,7 +59,13 @@ const AdminServices = () => {
     if (existing) {
       navigate(`/admin/page-builder/${existing.id}`);
     } else {
-      navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(title)}`);
+      // Auto-load service detail template
+      const { getExistingDesign } = require('@/lib/existingDesignTemplates');
+      const template = getExistingDesign(layoutSlug);
+      if (template) {
+        sessionStorage.setItem('builder_template', JSON.stringify(template));
+      }
+      navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(title)}${template ? '&template=true' : ''}`);
     }
   };
 
