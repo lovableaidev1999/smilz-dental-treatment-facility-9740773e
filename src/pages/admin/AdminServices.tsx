@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Paintbrush } from "lucide-react";
+import { getExistingDesign } from "@/lib/existingDesignTemplates";
 
 const AdminServices = () => {
   const qc = useQueryClient();
@@ -60,7 +61,6 @@ const AdminServices = () => {
       navigate(`/admin/page-builder/${existing.id}`);
     } else {
       // Auto-load service detail template
-      const { getExistingDesign } = require('@/lib/existingDesignTemplates');
       const template = getExistingDesign(layoutSlug);
       if (template) {
         sessionStorage.setItem('builder_template', JSON.stringify(template));
