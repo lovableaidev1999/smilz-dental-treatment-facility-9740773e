@@ -783,7 +783,8 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       const barBg = node.props.bgColor || 'hsl(var(--primary) / 0.95)';
       const bookBg = node.props.bookBgColor || 'hsl(var(--destructive))';
       const callBg = node.props.callBgColor || '';
-      const stickyClass = node.props.sticky ? 'fixed top-0 left-0 z-[9999]' : '';
+      // In editor mode, never use fixed positioning — it covers the builder toolbar
+      const stickyClass = node.props.sticky && !editorMode ? 'fixed top-0 left-0 z-[9999]' : '';
 
       return (
         <div
