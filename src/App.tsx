@@ -116,6 +116,44 @@ const PageFallback = () => (
   </div>
 );
 
+// Smart wrapper for service detail pages – checks for a visual builder layout
+const ServiceDetailSmart = () => {
+  const { serviceId } = useParams<{ serviceId: string }>();
+  const slug = `service-${serviceId}`;
+
+  const { data: layout, isLoading: layoutLoading } = useQuery({
+    queryKey: ['page_layouts', slug, 'published'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('page_layouts')
+        .select('*')
+        .eq('page_slug', slug)
+        .eq('is_published', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!serviceId,
+  });
+
+  if (layoutLoading) return <PageFallback />;
+
+  if (layout?.layout_json?.length > 0) {
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <VisualRenderer layout={layout.layout_json} />
+      </Suspense>
+    );
+  }
+
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <ServiceDetail />
+    </Suspense>
+  );
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
