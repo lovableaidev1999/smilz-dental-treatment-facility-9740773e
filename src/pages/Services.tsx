@@ -139,7 +139,7 @@ const ServicesPage = () => {
                   <Link to={`/services/${service.slug}`} className="group block bg-card rounded-2xl shadow-card hover:shadow-hover hover:-translate-y-1.5 hover:border-primary/30 transition-all duration-300 h-full border border-border overflow-hidden">
                     {service.featured_image && (
                       <div className="aspect-[4/3] overflow-hidden">
-                        <img src={service.featured_image} alt={`${service.title} at ${general?.clinic_name ?? "Smilz"} - dental treatment services in Garia, Kolkata`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width={400} height={300} />
+                        <img src={resolveImageUrl(service.featured_image)} alt={`${service.title} at ${general?.clinic_name ?? "Smilz"} - dental treatment services in Garia, Kolkata`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width={400} height={300} />
                       </div>
                     )}
                     <div className="p-6">
