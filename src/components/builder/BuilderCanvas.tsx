@@ -102,11 +102,13 @@ const ContainerDropZone = ({ node, children }: { node: LayoutNode; children: Rea
   if (node.type === 'section') {
     const gridColumns = node.props.gridColumns || '1fr';
     const colCount = gridColumns.split(' ').filter(Boolean).length;
+    const responsiveStyles = node.responsive?.desktop || {};
     const sectionStyle: React.CSSProperties = {
       background: node.props.background || undefined,
       backgroundImage: node.props.backgroundImage ? `url(${node.props.backgroundImage})` : undefined,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
+      padding: responsiveStyles.padding || undefined,
     };
     const gridStyle: React.CSSProperties = {
       display: 'grid',
