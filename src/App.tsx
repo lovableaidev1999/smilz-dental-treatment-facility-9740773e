@@ -118,85 +118,12 @@ const PageFallback = () => (
   </div>
 );
 
-// Smart wrapper for service detail pages – checks for a visual builder layout
-// Services that should always use the hardcoded ServiceDetail template
-const FORCE_HARDCODED_SERVICES = ['comprehensive-consultation', 'preventive-dental-care', 'cosmetic-dentistry'];
-
-const ServiceDetailSmart = () => {
-  const { serviceId } = useParams<{ serviceId: string }>();
-  const slug = `service-${serviceId}`;
-  const useHardcoded = FORCE_HARDCODED_SERVICES.includes(serviceId || '');
-
-  const { data: layout, isLoading: layoutLoading } = useQuery({
-    queryKey: ['page_layouts', slug, 'published'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('page_layouts')
-        .select('*')
-        .eq('page_slug', slug)
-        .eq('is_published', true)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 5 * 60 * 1000,
-    enabled: !!serviceId && !useHardcoded,
-  });
-
-  // Fetch actual service data for template variable resolution
-  const { data: service } = useQuery({
-    queryKey: ['services', serviceId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('slug', serviceId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!serviceId && !!layout,
-  });
-
-  if (layoutLoading) return <PageFallback />;
-
-  if (layout?.layout_json?.length > 0) {
-    const seoEntry = (layout.layout_json as any[]).find((n: any) => n._seo);
-    const seo = seoEntry?._seo || {};
-    let blocks = (layout.layout_json as any[]).filter((n: any) => !n._seo);
-
-    // Resolve template variables with actual service data
-    if (service) {
-      blocks = resolveTemplateVars(blocks, {
-        Service_Title: service.title,
-        Service_Short_Desc: service.short_desc || '',
-        Service_Image: service.featured_image || '',
-        Service_Content: service.description || '',
-      });
-    }
-
-    const SEOHead = lazy(() => import('@/components/SEOHead'));
-    return (
-      <Suspense fallback={<PageFallback />}>
-        <SEOHead
-          title={seo.seoTitle || layout.page_title || serviceId || ''}
-          description={seo.seoDescription || `${layout.page_title} - Smilz Dental`}
-          keywords={seo.seoKeywords || undefined}
-          canonicalUrl={seo.seoCanonicalUrl || undefined}
-          ogImage={seo.seoOgImage || undefined}
-          robots={seo.seoRobots || undefined}
-        />
-        <VisualRenderer layout={blocks} />
-      </Suspense>
-    );
-  }
-
-  return (
-    <Suspense fallback={<PageFallback />}>
-      <ServiceDetail />
-    </Suspense>
-  );
-};
+// All service detail pages use the hardcoded ServiceDetail template
+const ServiceDetailSmart = () => (
+  <Suspense fallback={<PageFallback />}>
+    <ServiceDetail />
+  </Suspense>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
