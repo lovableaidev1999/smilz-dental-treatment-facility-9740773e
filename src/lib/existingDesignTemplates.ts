@@ -15,7 +15,10 @@ export const getExistingDesign = (slug: string): LayoutNode[] | null => {
     case 'contact': return contactDesign();
     case 'gallery': return galleryDesign();
     case 'blog': return blogDesign();
-    default: return null;
+    default:
+      // Match service-* slugs to the service detail template
+      if (slug.startsWith('service-')) return serviceDetailDesign();
+      return null;
   }
 };
 
