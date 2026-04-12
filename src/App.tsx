@@ -23,6 +23,7 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const BlogPreview = lazy(() => import("@/pages/BlogPreview"));
 const Referral = lazy(() => import("@/pages/Referral"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const VisualRenderer = lazy(() => import("@/components/builder/VisualRenderer"));
 const Sitemap = lazy(() => import("@/pages/Sitemap"));
 const BuiltPage = lazy(() => import("@/pages/BuiltPage"));
 
