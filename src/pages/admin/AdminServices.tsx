@@ -5,13 +5,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Database } from "lucide-react";
-import { seedServices } from "@/lib/seedServices";
+import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Paintbrush } from "lucide-react";
 
 const AdminServices = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [seeding, setSeeding] = useState(false);
+  const navigate = useNavigate();
 
   const { data: services, isLoading } = useQuery({
     queryKey: ["admin_services"],
@@ -19,6 +18,15 @@ const AdminServices = () => {
       const { data, error } = await supabase.from("services").select("*").order("sort_order");
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: layouts } = useQuery({
+    queryKey: ["page_layouts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("page_layouts").select("id, page_slug");
+      if (error) throw error;
+      return data as { id: string; page_slug: string }[];
     },
   });
 
@@ -45,17 +53,13 @@ const AdminServices = () => {
     },
   });
 
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const result = await seedServices();
-      qc.invalidateQueries({ queryKey: ["admin_services"] });
-      qc.invalidateQueries({ queryKey: ["services"] });
-      toast({ title: "Services seeded!", description: `${result.count} services added/updated from smilz.net data.` });
-    } catch (err: any) {
-      toast({ title: "Seed error", description: err.message, variant: "destructive" });
-    } finally {
-      setSeeding(false);
+  const handleOpenBuilder = (slug: string, title: string) => {
+    const layoutSlug = `service-${slug}`;
+    const existing = layouts?.find(l => l.page_slug === layoutSlug);
+    if (existing) {
+      navigate(`/admin/page-builder/${existing.id}`);
+    } else {
+      navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(title)}`);
     }
   };
 
@@ -63,14 +67,9 @@ const AdminServices = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-heading font-bold text-foreground">Services</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2" onClick={handleSeed} disabled={seeding}>
-            <Database className="h-4 w-4" /> {seeding ? "Seeding..." : "Seed from Website"}
-          </Button>
-          <Button asChild className="gap-2">
-            <Link to="/admin/services/new"><Plus className="h-4 w-4" /> Add Service</Link>
-          </Button>
-        </div>
+        <Button asChild className="gap-2">
+          <Link to="/admin/services/new"><Plus className="h-4 w-4" /> Add Service</Link>
+        </Button>
       </div>
 
       {isLoading ? (
@@ -95,6 +94,13 @@ const AdminServices = () => {
                     title={s.is_active ? "Deactivate" : "Activate"}
                   >
                     {s.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost" size="icon"
+                    onClick={() => handleOpenBuilder(s.slug, s.title)}
+                    title="Edit in Visual Page Builder"
+                  >
+                    <Paintbrush className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" asChild>
                     <Link to={`/admin/services/${s.id}`}><Edit className="h-4 w-4" /></Link>
