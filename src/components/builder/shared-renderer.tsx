@@ -145,6 +145,23 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
       </div>
     </Link>
   );
+  // List display — simple text links with chevron
+  if (props.displayType === 'list') {
+    return (
+      <ul className="space-y-1">
+        {(services || []).map((svc: any) => (
+          <li key={svc.id}>
+            <Link
+              to={`/services/${svc.slug}`}
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
+            >
+              {svc.title} <span className="text-muted-foreground">›</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   if (props.displayType === 'carousel') return <EmblaCarousel items={services || []} renderItem={(svc) => renderCard(svc)} autoplay={props.autoplay} showNavigation={props.showNavigation} />;
   const cols = props.columns || 3;
   return (
