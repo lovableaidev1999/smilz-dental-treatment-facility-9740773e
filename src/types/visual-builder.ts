@@ -3,6 +3,7 @@ export type BlockType =
   | 'section'
   | 'column'
   | 'grid'
+  | 'container'
   | 'heading'
   | 'text'
   | 'image'
@@ -30,7 +31,7 @@ export type BlockType =
   | 'cta-bar';
 
 // Container types that can hold children
-export const CONTAINER_TYPES: BlockType[] = ['section', 'column', 'grid'];
+export const CONTAINER_TYPES: BlockType[] = ['section', 'column', 'grid', 'container'];
 
 // ─── Responsive Values ──────────────────────────────────
 export type DeviceMode = 'desktop' | 'tablet' | 'mobile';

@@ -3,7 +3,7 @@ import {
   Layout, Columns, Type, AlignLeft, ImageIcon, MousePointerClick,
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
-  Video, MapPin, Star, PanelTop, ChevronsUpDown, Image as ImageLucide,
+  Video, MapPin, Star, PanelTop, ChevronsUpDown, Image as ImageLucide, Square,
   Box, GalleryHorizontal, Images, Share2, Phone,
 } from 'lucide-react';
 
@@ -53,6 +53,21 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
       props: { width: '100%' },
       children: [],
     })),
+  },
+  {
+    type: 'container',
+    label: 'Container',
+    icon: 'Square',
+    category: 'layout',
+    canHaveChildren: true,
+    defaultProps: {
+      background: '',
+      padding: '1.5rem',
+      borderRadius: '1rem',
+      borderColor: '',
+      shadow: false,
+    },
+    defaultChildren: [],
   },
 
   // Basic
@@ -255,7 +270,7 @@ export const BLOCK_ICON_MAP: Record<string, React.FC<any>> = {
   Minus, ArrowUpDown, Code, ListOrdered, MessageSquareQuote,
   HelpCircle, Newspaper, Briefcase, Mail, FileText, Grid3X3,
   Video, MapPin, Star, PanelTop, ChevronsUpDown, ImageLucide,
-  Box, GalleryHorizontal, Images, Share2, Phone,
+  Box, GalleryHorizontal, Images, Share2, Phone, Square,
 };
 
 export const getBlockIcon = (def: BlockDefinition) =>

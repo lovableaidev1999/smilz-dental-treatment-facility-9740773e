@@ -145,6 +145,23 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
       </div>
     </Link>
   );
+  // List display — simple text links with chevron
+  if (props.displayType === 'list') {
+    return (
+      <ul className="space-y-1">
+        {(services || []).map((svc: any) => (
+          <li key={svc.id}>
+            <Link
+              to={`/services/${svc.slug}`}
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
+            >
+              {svc.title} <span className="text-muted-foreground">›</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   if (props.displayType === 'carousel') return <EmblaCarousel items={services || []} renderItem={(svc) => renderCard(svc)} autoplay={props.autoplay} showNavigation={props.showNavigation} />;
   const cols = props.columns || 3;
   return (
@@ -339,6 +356,23 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       };
       return (
         <div key={key} className={rClasses} style={colStyle}>
+          {node.children?.map((child, i) => renderNodeContent(child, i, opts))}
+        </div>
+      );
+    }
+
+    // ─── CONTAINER ──────────────────────────────────────
+    case 'container': {
+      const containerStyle: React.CSSProperties = {
+        ...baseStyles,
+        background: node.props.background || undefined,
+        padding: node.props.padding || '1.5rem',
+        borderRadius: node.props.borderRadius || '1rem',
+        border: node.props.borderColor ? `1px solid ${node.props.borderColor}` : undefined,
+        boxShadow: node.props.shadow ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' : undefined,
+      };
+      return (
+        <div key={key} className={rClasses} style={containerStyle}>
           {node.children?.map((child, i) => renderNodeContent(child, i, opts))}
         </div>
       );
