@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
-import { Bold, Italic, Underline, Type } from 'lucide-react';
+import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow } from 'lucide-react';
 
 interface Props {
   blockId: string;
@@ -75,6 +75,11 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     ref.current?.focus();
   };
 
+  const formatBlock = (tag: string) => {
+    document.execCommand('formatBlock', false, tag);
+    ref.current?.focus();
+  };
+
   return (
     <div className="relative">
       {/* Floating toolbar */}
@@ -82,30 +87,29 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
         <div
           ref={toolbarRef}
           className="absolute -top-9 left-0 z-50 flex items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5"
-          onMouseDown={e => e.preventDefault()} // prevent blur
+          onMouseDown={e => e.preventDefault()}
         >
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-accent text-foreground"
-            onClick={() => execCommand('bold')}
-            title="Bold"
-          >
+          {/* Heading buttons */}
+          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('p')} title="Paragraph">
+            <Pilcrow className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('h1')} title="Heading 1">
+            <Heading1 className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('h2')} title="Heading 2">
+            <Heading2 className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('h3')} title="Heading 3">
+            <Heading3 className="h-3.5 w-3.5" />
+          </button>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('bold')} title="Bold">
             <Bold className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-accent text-foreground"
-            onClick={() => execCommand('italic')}
-            title="Italic"
-          >
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('italic')} title="Italic">
             <Italic className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-accent text-foreground"
-            onClick={() => execCommand('underline')}
-            title="Underline"
-          >
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('underline')} title="Underline">
             <Underline className="h-3.5 w-3.5" />
           </button>
           <div className="w-px h-4 bg-border mx-0.5" />
