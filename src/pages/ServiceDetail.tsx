@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, Phone, MessageCircle, MapPin, Clock } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useService, useServices } from "@/integrations/supabase/hooks";
 import NotFound from "./NotFound";
@@ -99,7 +100,7 @@ const ServiceDetail = () => {
                 {service.featured_image && (
                   <div className="rounded-2xl overflow-hidden mb-8 shadow-elevated">
                     <img
-                      src={service.featured_image}
+                      src={resolveImageUrl(service.featured_image)}
                       alt={`${service.title} treatment at ${general?.clinic_name ?? "Smilz"} dental clinic in Garia, Kolkata`}
                       className="w-full h-auto object-cover"
                       loading="lazy"

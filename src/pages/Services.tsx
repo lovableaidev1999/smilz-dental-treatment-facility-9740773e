@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight, Phone, MessageCircle } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
