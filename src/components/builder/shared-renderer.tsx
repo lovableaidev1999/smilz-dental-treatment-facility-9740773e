@@ -464,8 +464,11 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         gold: 'bg-[hsl(40,80%,55%)] text-foreground hover:opacity-90',
         outline: 'border-2 border-primary text-primary hover:bg-primary/10',
+        danger: 'bg-red-600 text-white hover:bg-red-700',
+        'outline-light': 'border-2 border-white/60 text-white hover:bg-white/10',
       };
-      const btnClass = `inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${btnStyles[node.props.style] || btnStyles.primary}`;
+      const alignStyle = node.props.align === 'stretch' ? 'block w-full text-center' : '';
+      const btnClass = `inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${alignStyle} ${btnStyles[node.props.style] || btnStyles.primary}`;
 
       if (editorMode) {
         return (
