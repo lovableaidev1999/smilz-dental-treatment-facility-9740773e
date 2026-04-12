@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,6 +24,7 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const BlogPreview = lazy(() => import("@/pages/BlogPreview"));
 const Referral = lazy(() => import("@/pages/Referral"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const VisualRenderer = lazy(() => import("@/components/builder/VisualRenderer"));
 const Sitemap = lazy(() => import("@/pages/Sitemap"));
 const BuiltPage = lazy(() => import("@/pages/BuiltPage"));
 
@@ -115,6 +117,44 @@ const PageFallback = () => (
   </div>
 );
 
+// Smart wrapper for service detail pages – checks for a visual builder layout
+const ServiceDetailSmart = () => {
+  const { serviceId } = useParams<{ serviceId: string }>();
+  const slug = `service-${serviceId}`;
+
+  const { data: layout, isLoading: layoutLoading } = useQuery({
+    queryKey: ['page_layouts', slug, 'published'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('page_layouts')
+        .select('*')
+        .eq('page_slug', slug)
+        .eq('is_published', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!serviceId,
+  });
+
+  if (layoutLoading) return <PageFallback />;
+
+  if (layout?.layout_json?.length > 0) {
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <VisualRenderer layout={layout.layout_json} />
+      </Suspense>
+    );
+  }
+
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <ServiceDetail />
+    </Suspense>
+  );
+};
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -143,7 +183,7 @@ const App = () => (
                 <Route element={<Layout />}>
                   <Route path="/" element={<SmartPage slug="home" fallback={Home} />} />
                   <Route path="/services" element={<SmartPage slug="services" fallback={ServicesPage} />} />
-                  <Route path="/services/:serviceId" element={<ServiceDetail />} />
+                  <Route path="/services/:serviceId" element={<ServiceDetailSmart />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
                   <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} />} />
