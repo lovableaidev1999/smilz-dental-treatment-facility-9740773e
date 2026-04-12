@@ -219,7 +219,7 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
     description: 'Locked-layout service page with hero, content, sidebar, FAQs & CTA — matches smilz.net design exactly',
     icon: '🦷',
     layout: () => {
-      // Hero Section — blue gradient, breadcrumbs, H1, desc, 2 CTA buttons
+      // Hero Section
       const heroSection: LayoutNode = {
         id: genId(), type: 'section',
         props: {
@@ -229,10 +229,10 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
         responsive: { desktop: { padding: '3rem 2rem' }, mobile: { padding: '2rem 1rem' } },
         children: [{
           id: genId(), type: 'column', props: { width: '100%' }, children: [
-            { id: genId(), type: 'text', props: { text: 'Home  ›  Services  ›  {Service_Title}', align: 'left', color: 'hsla(var(--primary-foreground) / 0.7)' } },
-            { id: genId(), type: 'heading', props: { text: '{Service_Title}', level: 1, align: 'left', color: 'hsl(var(--primary-foreground))' } },
-            { id: genId(), type: 'text', props: { text: '{Service_Short_Desc}', align: 'left', color: 'hsla(var(--primary-foreground) / 0.85)' } },
-            { id: genId(), type: 'button', props: { text: '💬 Book Appointment', url: 'https://wa.me/918961775554?text=Hi, I\'m interested in {Service_Title} treatment.', style: 'gold', align: 'left', openInNewTab: true } },
+            { id: genId(), type: 'text', props: { text: 'Home  ›  Services  ›  Sample Dental Service', align: 'left', color: 'hsla(var(--primary-foreground) / 0.7)' } },
+            { id: genId(), type: 'heading', props: { text: 'Sample Dental Service', level: 1, align: 'left', color: 'hsl(var(--primary-foreground))' } },
+            { id: genId(), type: 'text', props: { text: 'This is a short introduction about the dental service explaining its benefits and purpose. Our experienced dental team provides comprehensive care using the latest techniques.', align: 'left', color: 'hsla(var(--primary-foreground) / 0.85)' } },
+            { id: genId(), type: 'button', props: { text: '💬 Book Appointment', url: 'https://wa.me/918961775554?text=Hi, I\'m interested in this treatment.', style: 'gold', align: 'left', openInNewTab: true } },
             { id: genId(), type: 'button', props: { text: '📞 Call 8961 77 5554', url: 'tel:8961775554', style: 'outline', align: 'left' } },
           ],
         }],
@@ -250,26 +250,61 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
           // Left content column
           {
             id: genId(), type: 'column', props: { width: '100%' }, children: [
-              { id: genId(), type: 'image', props: { src: '{Service_Image}', alt: '{Service_Title} treatment at Smilz Dental', caption: '', objectFit: 'cover', borderRadius: '1rem' } },
+              { id: genId(), type: 'image', props: { src: '', alt: 'Sample dental service treatment at Smilz Dental', caption: '', objectFit: 'cover', borderRadius: '1rem' } },
               { id: genId(), type: 'spacer', props: { height: '24px' } },
-              { id: genId(), type: 'heading', props: { text: 'About {Service_Title}', level: 2, align: 'left' } },
-              { id: genId(), type: 'text', props: { text: '{Service_Content}', align: 'left' } },
+
+              // Overview
+              { id: genId(), type: 'heading', props: { text: 'About Sample Dental Service', level: 2, align: 'left' } },
+              { id: genId(), type: 'text', props: { text: 'At Smilz Dental Treatment Facility, we provide comprehensive dental services designed to improve your oral health and restore your confidence. Our experienced team uses the latest technology and techniques to deliver outstanding results with minimal discomfort.\n\nWhether you are looking for preventive care, restorative treatments, or cosmetic enhancements, our clinic in Garia, South Kolkata, offers personalized solutions tailored to your unique needs. We believe in transparent communication and will guide you through every step of your treatment journey.\n\nBook your consultation today at Smilz or call us at 8961775554 to learn more about how this service can benefit you.', align: 'left' } },
+              { id: genId(), type: 'spacer', props: { height: '24px' } },
+
+              // Benefits
+              { id: genId(), type: 'heading', props: { text: 'Benefits of This Treatment', level: 2, align: 'left' } },
+              { id: genId(), type: 'icon-list', props: { items: [
+                { icon: 'Check', text: 'Improves overall oral health and hygiene' },
+                { icon: 'Check', text: 'Reduces pain and discomfort effectively' },
+                { icon: 'Check', text: 'Long-lasting and durable results' },
+                { icon: 'Check', text: 'Enhances your smile and self-confidence' },
+                { icon: 'Check', text: 'Uses modern, minimally invasive techniques' },
+              ] } },
+              { id: genId(), type: 'spacer', props: { height: '24px' } },
+
+              // Treatment Options
+              { id: genId(), type: 'heading', props: { text: 'Treatment Options Available', level: 2, align: 'left' } },
+              { id: genId(), type: 'text', props: { text: 'Option 1: Conservative Treatment\nIdeal for early-stage conditions, this approach focuses on preserving natural tooth structure while addressing the underlying issue with minimal intervention.\n\nOption 2: Advanced Restorative Treatment\nFor moderate to severe cases, we use advanced materials and techniques to restore full function and aesthetics to your teeth.\n\nOption 3: Comprehensive Full-Arch Treatment\nA complete solution for patients requiring extensive work, combining multiple procedures for optimal long-term results.', align: 'left' } },
+              { id: genId(), type: 'spacer', props: { height: '24px' } },
+
+              // Procedure
+              { id: genId(), type: 'heading', props: { text: 'What to Expect: The Procedure', level: 2, align: 'left' } },
+              { id: genId(), type: 'icon-list', props: { items: [
+                { icon: 'CircleDot', text: 'Step 1: Consultation — A thorough examination and discussion of your treatment goals' },
+                { icon: 'CircleDot', text: 'Step 2: Treatment Planning — Custom treatment plan designed for your specific needs' },
+                { icon: 'CircleDot', text: 'Step 3: Treatment — The procedure is performed with care using modern techniques' },
+                { icon: 'CircleDot', text: 'Step 4: Follow-up — Post-treatment care instructions and scheduled check-ups' },
+              ] } },
               { id: genId(), type: 'spacer', props: { height: '32px' } },
-              { id: genId(), type: 'heading', props: { text: 'Frequently Asked Questions about {Service_Title}', level: 2, align: 'left' } },
-              { id: genId(), type: 'faq', props: { items: '{Service_FAQs}' } },
+
+              // FAQs
+              { id: genId(), type: 'heading', props: { text: 'Frequently Asked Questions', level: 2, align: 'left' } },
+              { id: genId(), type: 'faq', props: { items: [
+                { question: 'Is this treatment painful?', answer: 'Most patients experience little to no discomfort during the procedure. We use modern anesthesia and gentle techniques to ensure your comfort throughout the treatment.' },
+                { question: 'How long does the treatment take?', answer: 'The duration depends on the complexity of your case. A single session typically takes 30 to 90 minutes. Your dentist will provide a detailed timeline during the consultation.' },
+                { question: 'Is it expensive?', answer: 'We offer competitive pricing and flexible payment options to make quality dental care accessible. The exact cost depends on your specific treatment plan, which we will discuss transparently before starting.' },
+                { question: 'How long do the results last?', answer: 'With proper oral hygiene and regular dental check-ups, the results of this treatment can last many years. We will provide you with detailed aftercare instructions to maximize longevity.' },
+              ] } },
             ],
           },
           // Right sidebar column
           {
             id: genId(), type: 'column', props: { width: '100%' }, children: [
-              // Appointment CTA card (primary bg, sticky)
+              // Appointment CTA card
               {
                 id: genId(), type: 'container',
                 props: { background: 'hsl(var(--primary))', padding: '1.5rem', borderRadius: '1rem', borderColor: '', shadow: false, sticky: true, stickyTop: '96px' },
                 children: [
                   { id: genId(), type: 'heading', props: { text: 'Book Your Appointment', level: 3, align: 'left', color: 'hsl(var(--primary-foreground))' } },
-                  { id: genId(), type: 'text', props: { text: 'Get expert {Service_Title} treatment at Smilz Dental Treatment Facility.', align: 'left', color: 'hsla(var(--primary-foreground) / 0.8)' } },
-                  { id: genId(), type: 'button', props: { text: '💬 WhatsApp Us', url: 'https://wa.me/918961775554?text=Hi, I\'m interested in {Service_Title} treatment.', style: 'gold', align: 'left', openInNewTab: true } },
+                  { id: genId(), type: 'text', props: { text: 'Get expert dental treatment at Smilz Dental Treatment Facility.', align: 'left', color: 'hsla(var(--primary-foreground) / 0.8)' } },
+                  { id: genId(), type: 'button', props: { text: '💬 WhatsApp Us', url: 'https://wa.me/918961775554', style: 'gold', align: 'left', openInNewTab: true } },
                   { id: genId(), type: 'button', props: { text: '📞 Call 8961 77 5554', url: 'tel:8961775554', style: 'outline', align: 'left' } },
                   { id: genId(), type: 'divider', props: { color: 'hsla(var(--primary-foreground) / 0.2)' } },
                   { id: genId(), type: 'icon-list', props: { items: [
@@ -303,9 +338,9 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
         responsive: { desktop: { padding: '3rem 1.5rem', textAlign: 'center' }, mobile: { padding: '1.5rem 1rem' } },
         children: [{
           id: genId(), type: 'column', props: { width: '100%' }, children: [
-            { id: genId(), type: 'heading', props: { text: 'Ready for Expert {Service_Title} Treatment?', level: 2, align: 'center', color: 'hsl(var(--primary-foreground))' } },
+            { id: genId(), type: 'heading', props: { text: 'Take the First Step Towards a Healthier Smile', level: 2, align: 'center', color: 'hsl(var(--primary-foreground))' } },
             { id: genId(), type: 'text', props: { text: 'Book your appointment today at Smilz Dental, Garia.', align: 'center', color: 'hsl(var(--primary-foreground))' } },
-            { id: genId(), type: 'button', props: { text: 'Book on WhatsApp', url: 'https://wa.me/918961775554', style: 'gold', align: 'center', openInNewTab: true } },
+            { id: genId(), type: 'button', props: { text: 'Book Appointment', url: 'https://wa.me/918961775554', style: 'gold', align: 'center', openInNewTab: true } },
           ],
         }],
       };
