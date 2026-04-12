@@ -484,6 +484,20 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
         </>
       );
 
+    case 'container':
+      return (
+        <>
+          <PropField label="Background" value={props.background} onChange={v => updateProp('background', v)} placeholder="e.g. hsl(var(--primary))" />
+          <PropField label="Padding" value={props.padding} onChange={v => updateProp('padding', v)} placeholder="e.g. 1.5rem" />
+          <PropField label="Border Radius" value={props.borderRadius} onChange={v => updateProp('borderRadius', v)} placeholder="e.g. 1rem" />
+          <PropField label="Border Color" value={props.borderColor} onChange={v => updateProp('borderColor', v)} placeholder="e.g. hsl(var(--border))" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Shadow</Label>
+            <Switch checked={!!props.shadow} onCheckedChange={v => updateProp('shadow', v)} />
+          </div>
+        </>
+      );
+
     case 'grid':
       return (
         <>
