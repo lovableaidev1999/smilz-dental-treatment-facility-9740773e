@@ -119,9 +119,13 @@ const PageFallback = () => (
 );
 
 // Smart wrapper for service detail pages – checks for a visual builder layout
+// Services that should always use the hardcoded ServiceDetail template
+const FORCE_HARDCODED_SERVICES = ['comprehensive-consultation', 'preventive-dental-care'];
+
 const ServiceDetailSmart = () => {
   const { serviceId } = useParams<{ serviceId: string }>();
   const slug = `service-${serviceId}`;
+  const useHardcoded = FORCE_HARDCODED_SERVICES.includes(serviceId || '');
 
   const { data: layout, isLoading: layoutLoading } = useQuery({
     queryKey: ['page_layouts', slug, 'published'],
@@ -136,7 +140,7 @@ const ServiceDetailSmart = () => {
       return data;
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!serviceId,
+    enabled: !!serviceId && !useHardcoded,
   });
 
   // Fetch actual service data for template variable resolution
