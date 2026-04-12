@@ -304,13 +304,14 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
                 children: [
                   { id: genId(), type: 'heading', props: { text: 'Book Your Appointment', level: 3, align: 'left', color: 'hsl(var(--primary-foreground))' } },
                   { id: genId(), type: 'text', props: { text: 'Get expert dental treatment at Smilz Dental Treatment Facility.', align: 'left', color: 'hsla(var(--primary-foreground) / 0.8)' } },
-                  { id: genId(), type: 'button', props: { text: '💬 WhatsApp Us', url: 'https://wa.me/918961775554', style: 'gold', align: 'left', openInNewTab: true } },
-                  { id: genId(), type: 'button', props: { text: '📞 Call 8961 77 5554', url: 'tel:8961775554', style: 'outline', align: 'left' } },
+                  { id: genId(), type: 'text', props: { text: 'Get expert comprehensive consultation treatment at Smilz Dental Treatment Facility.', align: 'left', color: 'hsla(var(--primary-foreground) / 0.85)' } },
+                  { id: genId(), type: 'button', props: { text: '🔗 WhatsApp Us', url: 'https://wa.me/918961775554', style: 'danger', align: 'stretch', openInNewTab: true } },
+                  { id: genId(), type: 'button', props: { text: '📞 Call 8961 77 5554', url: 'tel:8961775554', style: 'outline-light', align: 'stretch' } },
                   { id: genId(), type: 'divider', props: { color: 'hsla(var(--primary-foreground) / 0.2)' } },
                   { id: genId(), type: 'icon-list', props: { items: [
-                    { icon: 'MapPin', text: '21, Garia Park, South Kolkata - 700084' },
+                    { icon: 'MapPin', text: '21, Garia Park, Kolkata 700084' },
                     { icon: 'Clock', text: 'Mon-Sat: 9AM-1PM & 5PM-9PM' },
-                  ] } },
+                  ], color: 'hsla(var(--primary-foreground) / 0.8)' } },
                 ],
               },
               { id: genId(), type: 'spacer', props: { height: '16px' } },

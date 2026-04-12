@@ -363,6 +363,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
 
     // ─── CONTAINER ──────────────────────────────────────
     case 'container': {
+      const isSticky = node.props.sticky && !editorMode;
       const containerStyle: React.CSSProperties = {
         ...baseStyles,
         background: node.props.background || undefined,
@@ -370,6 +371,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         borderRadius: node.props.borderRadius || '1rem',
         border: node.props.borderColor ? `1px solid ${node.props.borderColor}` : undefined,
         boxShadow: node.props.shadow ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)' : undefined,
+        ...(isSticky ? { position: 'sticky' as const, top: node.props.stickyTop || '96px', zIndex: 10 } : {}),
       };
       return (
         <div key={key} className={rClasses} style={containerStyle}>
@@ -462,8 +464,11 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         gold: 'bg-[hsl(40,80%,55%)] text-foreground hover:opacity-90',
         outline: 'border-2 border-primary text-primary hover:bg-primary/10',
+        danger: 'bg-red-600 text-white hover:bg-red-700',
+        'outline-light': 'border-2 border-white/60 text-white hover:bg-white/10',
       };
-      const btnClass = `inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${btnStyles[node.props.style] || btnStyles.primary}`;
+      const alignStyle = node.props.align === 'stretch' ? 'block w-full text-center' : '';
+      const btnClass = `inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${alignStyle} ${btnStyles[node.props.style] || btnStyles.primary}`;
 
       if (editorMode) {
         return (
@@ -591,17 +596,20 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       return <ContactFormWidget key={key} node={node} rClasses={rClasses} baseStyles={baseStyles} />;
 
     // ─── ICON LIST ──────────────────────────────────────
-    case 'icon-list':
+    case 'icon-list': {
+      const listColor = node.props.color || undefined;
+      const iconMap: Record<string, string> = { MapPin: '📍', Clock: '🕐', Phone: '📞', Check: '✓' };
       return (
-        <ul key={key} className={`space-y-2 ${rClasses}`} style={baseStyles}>
+        <ul key={key} className={`space-y-2 ${rClasses}`} style={{ ...baseStyles, color: listColor }}>
           {(node.props.items || []).map((item: any, i: number) => (
-            <li key={i} className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-primary">✓</span>
+            <li key={i} className="flex items-center gap-2" style={{ color: listColor }}>
+              <span>{iconMap[item.icon] || '✓'}</span>
               <span>{item.text}</span>
             </li>
           ))}
         </ul>
       );
+    }
 
     // ─── VIDEO ──────────────────────────────────────────
     case 'video': {
