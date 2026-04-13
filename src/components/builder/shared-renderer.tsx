@@ -473,20 +473,21 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
 
       if (editorMode) {
         return (
-          <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align || 'left' }}>
+          <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align === 'stretch' ? undefined : (node.props.align || 'left') }}>
             <InlineEditable
               blockId={node.id}
               propKey="text"
               value={node.props.text}
               tag="span"
               className={btnClass}
+              style={fontColorStyle}
             />
           </div>
         );
       }
       return (
-        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align || 'left' }}>
-          <Link to={node.props.url || '/contact'} className={btnClass}>
+        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align === 'stretch' ? undefined : (node.props.align || 'left') }}>
+          <Link to={node.props.url || '/contact'} className={btnClass} style={fontColorStyle}>
             {node.props.text}
           </Link>
         </div>
