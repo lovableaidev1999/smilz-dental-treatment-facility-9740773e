@@ -17,9 +17,10 @@ interface ServiceSidebarProps {
 
 const ServiceSidebar = ({ serviceTitle, clinicName, contact, otherServices }: ServiceSidebarProps) => {
   return (
-    <div className="space-y-6 lg:sticky lg:top-24 self-start">
-      {/* Appointment CTA */}
-      <div 
+    <div className="space-y-6">
+      {/* Appointment CTA - sticky independently */}
+      <div className="lg:sticky lg:top-24">
+      <div
         className="bg-primary text-primary-foreground rounded-2xl p-6"
       >
         <h3 className="font-heading font-bold text-lg mb-3">Book Your Appointment</h3>
