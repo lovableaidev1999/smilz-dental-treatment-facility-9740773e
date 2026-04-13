@@ -44,10 +44,10 @@ const ServiceSidebar = ({ serviceTitle, clinicName, contact, otherServices, cont
   }, [contentRef]);
 
   return (
-    <div className="space-y-6" ref={sidebarRef}>
+    <div className={`space-y-6 ${stickyStyle === "sticky" ? "lg:sticky lg:top-24" : ""}`} ref={sidebarRef}>
       {/* Appointment CTA */}
       <div 
-        className={`bg-primary text-primary-foreground rounded-2xl p-6 ${stickyStyle === "sticky" ? "sticky top-24" : ""}`}
+        className="bg-primary text-primary-foreground rounded-2xl p-6"
       >
         <h3 className="font-heading font-bold text-lg mb-3">Book Your Appointment</h3>
         <p className="text-sm text-primary-foreground/80 mb-5">
