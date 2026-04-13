@@ -392,10 +392,17 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
               <SelectContent>
                 <SelectItem value="primary">Navy</SelectItem>
                 <SelectItem value="gold">Gold</SelectItem>
+                <SelectItem value="danger">Red</SelectItem>
                 <SelectItem value="outline">Outline</SelectItem>
+                <SelectItem value="outline-light">Outline Light</SelectItem>
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Full Width</Label>
+            <Switch checked={props.align === 'stretch'} onCheckedChange={v => updateProp('align', v ? 'stretch' : 'left')} />
+          </div>
+          <PropField label="Font Color" value={props.fontColor} onChange={v => updateProp('fontColor', v)} placeholder="CSS color override" />
         </>
       );
 

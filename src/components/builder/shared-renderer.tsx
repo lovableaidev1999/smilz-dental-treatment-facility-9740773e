@@ -468,24 +468,26 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         'outline-light': 'border-2 border-white/60 text-white hover:bg-white/10',
       };
       const alignStyle = node.props.align === 'stretch' ? 'block w-full text-center' : '';
+      const fontColorStyle = node.props.fontColor ? { color: node.props.fontColor } : {};
       const btnClass = `inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${alignStyle} ${btnStyles[node.props.style] || btnStyles.primary}`;
 
       if (editorMode) {
         return (
-          <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align || 'left' }}>
+          <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align === 'stretch' ? undefined : (node.props.align || 'left') }}>
             <InlineEditable
               blockId={node.id}
               propKey="text"
               value={node.props.text}
               tag="span"
               className={btnClass}
+              style={fontColorStyle}
             />
           </div>
         );
       }
       return (
-        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align || 'left' }}>
-          <Link to={node.props.url || '/contact'} className={btnClass}>
+        <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align === 'stretch' ? undefined : (node.props.align || 'left') }}>
+          <Link to={node.props.url || '/contact'} className={btnClass} style={fontColorStyle}>
             {node.props.text}
           </Link>
         </div>
