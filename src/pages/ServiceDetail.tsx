@@ -73,7 +73,7 @@ const ServiceDetail = () => {
       {/* Main Content */}
       <section className="section-padding">
         <div className="container-narrow mx-auto">
-          <div className="grid lg:grid-cols-3 gap-12" ref={contentRef}>
+          <div className="grid lg:grid-cols-3 gap-12 items-start" ref={contentRef}>
             <ServiceContent
               service={service}
               faqs={faqs}
