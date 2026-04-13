@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, RefObject } from "react";
+import { RefObject } from "react";
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, MapPin, Clock, ChevronRight } from "lucide-react";
 
@@ -15,36 +15,9 @@ interface ServiceSidebarProps {
   contentRef: RefObject<HTMLDivElement>;
 }
 
-const ServiceSidebar = ({ serviceTitle, clinicName, contact, otherServices, contentRef }: ServiceSidebarProps) => {
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const [stickyStyle, setStickyStyle] = useState<"sticky" | "relative">("sticky");
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!contentRef.current || !sidebarRef.current) return;
-      
-      const contentRect = contentRef.current.getBoundingClientRect();
-      const sidebarRect = sidebarRef.current.getBoundingClientRect();
-      
-      // When the bottom of the content grid is near the bottom of the sidebar,
-      // stop sticky behavior to prevent overlapping footer
-      const contentBottom = contentRect.bottom;
-      const sidebarHeight = sidebarRect.height;
-      
-      if (contentBottom <= sidebarHeight + 96 + 40) {
-        setStickyStyle("relative");
-      } else {
-        setStickyStyle("sticky");
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [contentRef]);
-
+const ServiceSidebar = ({ serviceTitle, clinicName, contact, otherServices }: ServiceSidebarProps) => {
   return (
-    <div className={`space-y-6 ${stickyStyle === "sticky" ? "lg:sticky lg:top-24" : ""}`} ref={sidebarRef}>
+    <div className="space-y-6 lg:sticky lg:top-24 self-start">
       {/* Appointment CTA */}
       <div 
         className="bg-primary text-primary-foreground rounded-2xl p-6"
