@@ -468,6 +468,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         'outline-light': 'border-2 border-white/60 text-white hover:bg-white/10',
       };
       const alignStyle = node.props.align === 'stretch' ? 'block w-full text-center' : '';
+      const fontColorStyle = node.props.fontColor ? { color: node.props.fontColor } : {};
       const btnClass = `inline-block px-8 py-3.5 rounded-lg font-semibold text-sm transition-all hover:shadow-elevated ${alignStyle} ${btnStyles[node.props.style] || btnStyles.primary}`;
 
       if (editorMode) {
