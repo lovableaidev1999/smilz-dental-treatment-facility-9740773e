@@ -120,7 +120,8 @@ export const useBlogPost = (slug: string) => {
         .from("blog_posts")
         .select("*")
         .eq("slug", slug)
-        .single();
+        .eq("is_published", true)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },

@@ -39,8 +39,8 @@ const ServiceDetail = () => {
   const otherServices = (allServices ?? []).filter((s) => s.slug !== serviceId);
   const faqs = Array.isArray(service.faqs) ? (service.faqs as Array<{ q: string; a: string }>) : [];
 
-  const seoTitle = service.seo_title || `${service.title} in Garia, Kolkata | ${general?.clinic_name ?? "Smilz"}`;
-  const seoDesc = service.seo_description || `${service.short_desc} Expert ${service.title.toLowerCase()} by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}, Garia, South Kolkata. Call ${contact?.phone_formatted ?? "8961 77 5554"}. Book now!`;
+  const seoTitle = (service.seo_title && service.seo_title !== "null") ? service.seo_title : `${service.title} in Garia, Kolkata | ${general?.clinic_name ?? "Smilz"}`;
+  const seoDesc = (service.seo_description && service.seo_description !== "null") ? service.seo_description : `${service.short_desc || service.title} – Expert ${service.title.toLowerCase()} by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}, Garia, South Kolkata. Call ${contact?.phone_formatted ?? "8961 77 5554"}. Book now!`;
 
   return (
     <>
