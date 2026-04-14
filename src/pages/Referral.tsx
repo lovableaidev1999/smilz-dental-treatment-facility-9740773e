@@ -33,10 +33,7 @@ const Referral = () => {
         title="Referral Registration"
         description={`Refer a patient to ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"}.`}
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/referral`}
-        breadcrumbs={[
-          { name: "Home", url: links?.website ?? "https://smilz.net" },
-          { name: "Referral Registration", url: `${links?.website ?? "https://smilz.net"}/referral` },
-        ]}
+        robots="noindex, nofollow"
       />
 
       <section className="bg-gradient-primary text-primary-foreground section-padding">

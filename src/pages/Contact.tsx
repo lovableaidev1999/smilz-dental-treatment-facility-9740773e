@@ -59,8 +59,8 @@ const Contact = () => {
     <>
       <StickyCtaBar />
       <SEOHead
-        title="Contact Us"
-        description={`Contact ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} at ${contact?.address ?? "21, Garia Park, Kolkata 700084"}. Call ${contact?.phone_formatted ?? "8961 77 5554"} or WhatsApp for appointments.`}
+        title="Contact Dentist in Kolkata | Smilz"
+        description={`Contact ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} at Garia Park, Kolkata 700084. Call ${contact?.phone_formatted ?? "8961 77 5554"} or WhatsApp to book your dental appointment today!`}
         keywords="dental clinic near Garia Park, dentist contact Kolkata"
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/contact`}
         breadcrumbs={[

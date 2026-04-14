@@ -91,7 +91,7 @@ const Blog = () => {
       <StickyCtaBar />
       <SEOHead
         title="Dental Insights & Blog"
-        description={`Expert dental insights, oral health tips, and treatment guides from ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"} Kolkata.`}
+        description={`Expert dental insights, oral health tips & treatment guides from ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} Kolkata. Stay informed about your dental health!`}
         keywords="dental blog Kolkata, oral health tips, dental treatment guides"
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/blog`}
         breadcrumbs={[

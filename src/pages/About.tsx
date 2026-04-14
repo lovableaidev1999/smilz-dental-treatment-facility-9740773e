@@ -207,8 +207,8 @@ const About = () => {
     <>
       <StickyCtaBar />
       <SEOHead
-        title={`About Us - ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}`}
-        description={`Learn about ${general?.clinic_name ?? "Smilz Dental Treatment Facility"}, led by ${general?.doctor_name ?? "Dr. Dibyendu Dutta"}. Trusted dental care in Garia, South Kolkata since ${general?.year_established ?? 1999}.`}
+        title="About Smilz Dental Clinic in Kolkata"
+        description={`Meet ${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz Dental Clinic"}, Garia, South Kolkata. 25+ years of trusted dental care with advanced technology. Book your visit today!`}
         keywords="best dentist Garia, Dr Dibyendu Dutta, dental clinic South Kolkata"
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/about`}
         breadcrumbs={[
