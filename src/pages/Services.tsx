@@ -105,7 +105,8 @@ const ServicesPage = () => {
       <SEOHead
         title="Dental Services in Kolkata"
         description={`Complete dental services at ${general?.clinic_name ?? "Smilz Dental Clinic"}, Kolkata – implants, root canal, braces, cosmetic dentistry & more. Call ${contact?.phone_formatted ?? "8961 77 5554"} to book now!`}
-        keywords="dental treatment services Kolkata, dental services Garia, dental implants Kolkata, root canal Garia, orthodontics South Kolkata, cosmetic dentistry Kolkata, pediatric dentist Garia, clear aligners Kolkata, teeth whitening Garia, smile designing Kolkata, dental clinic near me"
+        keywords="dental services Kolkata, dental implants Kolkata, root canal Garia, orthodontics South Kolkata, cosmetic dentistry Kolkata"
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}/services`}
         breadcrumbs={[
           { name: "Home", url: links?.website ?? "https://smilz.net" },
           { name: "Dental Treatment Services", url: `${links?.website ?? "https://smilz.net"}/services` },
