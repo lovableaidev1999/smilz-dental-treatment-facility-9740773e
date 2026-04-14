@@ -224,9 +224,9 @@ const Home = () => {
   return (
     <>
       <SEOHead
-        title={settings?.seo?.default_title ?? "Best Dental Clinic in Garia, South Kolkata"}
-        description={settings?.seo?.default_description ?? "Smilz Dental Treatment Facility - Trusted dental clinic in Garia Park, Kolkata since 1999."}
-        keywords={settings?.seo?.default_keywords ?? "dental clinic Garia Kolkata, dentist South Kolkata"}
+        title={settings?.seo?.default_title ?? "Dentist in Kolkata"}
+        description={settings?.seo?.default_description ?? "Smilz Dental Clinic – trusted dentist in Garia, South Kolkata since 1999. Dental implants, root canal, braces & cosmetic dentistry. Call 8961 77 5554. Book now!"}
+        keywords={settings?.seo?.default_keywords ?? "dentist Kolkata, dental clinic Garia, best dentist South Kolkata, dental implants Kolkata"}
         breadcrumbs={[{ name: "Home", url: links?.website ?? "https://smilz.net" }]}
         faqs={homepageFaqs}
       />
