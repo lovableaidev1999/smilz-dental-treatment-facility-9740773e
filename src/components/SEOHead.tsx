@@ -37,7 +37,7 @@ const SEOHead = ({
 
   const clinicName = general?.clinic_name ?? "Smilz Dental Treatment Facility";
   const website = links?.website ?? "https://smilz.net";
-  const fullTitle = `${title} | ${clinicName}`;
+  const fullTitle = title.includes(clinicName) || title.includes("Smilz") ? title : `${title} | ${clinicName}`;
   const url = canonicalUrl || `${website}${typeof window !== 'undefined' ? window.location.pathname : '/'}`;
 
   // Collect social sameAs links
