@@ -40,8 +40,8 @@ const Gallery = () => {
     <>
       <StickyCtaBar />
       <SEOHead
-        title="Before & After Gallery"
-        description={`See real before and after dental treatment results at ${settings?.general?.clinic_name ?? "Smilz Dental"} Kolkata.`}
+        title="Dental Treatment Gallery in Kolkata"
+        description={`See real before & after dental treatment results at ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} Kolkata. Smile makeovers, implants & more. Book your consultation!`}
         keywords="dental before after Kolkata, smile makeover results"
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/gallery`}
         breadcrumbs={[
