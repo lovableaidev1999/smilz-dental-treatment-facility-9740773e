@@ -17,7 +17,7 @@ const staticPages = [
 ];
 
 /** Routes explicitly excluded from the sitemap */
-const EXCLUDED = new Set(["/login", "/admin", "/referral-register", "/referral", "/admin/login", "/admin/reset-password"]);
+const EXCLUDED = new Set(["/login", "/admin", "/referral-register", "/referral", "/admin/login", "/admin/reset-password", "/preview"]);
 
 const Sitemap = () => {
   useEffect(() => {
