@@ -109,6 +109,51 @@ async function fetchDynamicRoutes() {
   return [...serviceRoutes, ...blogRoutes];
 }
 
+/**
+ * Wait for the page to be fully rendered with actual content.
+ * Uses multiple strategies to detect content readiness.
+ */
+async function waitForContent(page, route) {
+  // Strategy 1: Wait for network to settle (API calls to Supabase)
+  await page.goto(`http://localhost:${PORT}${route}`, {
+    waitUntil: "networkidle0",
+    timeout: 45000,
+  });
+
+  // Strategy 2: Wait for React to finish rendering — either:
+  //   a) Skeletons disappear AND h1 has text, OR
+  //   b) #root has substantial content (>500 chars of inner HTML)
+  const contentReady = await page.waitForFunction(() => {
+    const root = document.querySelector('#root');
+    if (!root) return false;
+    const rootLen = root.innerHTML.length;
+    const skeletons = document.querySelectorAll('.animate-pulse');
+    const h1 = document.querySelector('h1');
+
+    // Condition A: No skeletons + h1 with text
+    const condA = skeletons.length === 0 && h1 && h1.textContent.trim().length > 0;
+    // Condition B: Substantial content rendered (covers pages without h1 initially)
+    const condB = skeletons.length === 0 && rootLen > 2000;
+
+    return condA || condB;
+  }, { timeout: 25000 }).then(() => true).catch(() => false);
+
+  if (!contentReady) {
+    console.warn(`[prerender] ⚠ Content not fully ready for ${route} — capturing anyway`);
+  }
+
+  // Strategy 3: Wait for react-helmet-async to inject proper <title>
+  await page.waitForFunction(() => {
+    const title = document.querySelector('title');
+    return title && title.textContent && !title.textContent.includes('Vite');
+  }, { timeout: 8000 }).catch(() => {
+    console.warn(`[prerender] ⚠ Helmet title not detected for ${route}`);
+  });
+
+  // Extra settle time for any final state updates
+  await new Promise((r) => setTimeout(r, 1000));
+}
+
 async function prerender() {
   const server = await startServer();
 
@@ -120,6 +165,13 @@ async function prerender() {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
+
+  // Expose console logs from the page for debugging
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      console.log(`[prerender:page-error] ${msg.text()}`);
+    }
+  });
 
   const dynamicRoutes = await fetchDynamicRoutes();
   const allRoutes = [...STATIC_ROUTES, ...dynamicRoutes];
@@ -133,38 +185,21 @@ async function prerender() {
     if (SKIP_PREFIXES.some((p) => route.startsWith(p))) continue;
 
     try {
-      const url = `http://localhost:${PORT}${route}`;
       console.log(`[prerender] → ${route}`);
 
-      await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
+      await waitForContent(page, route);
 
-      // 1. Wait for loading skeletons to disappear and real content to appear
-      await page.waitForFunction(() => {
-        const skeletons = document.querySelectorAll('.animate-pulse');
-        const h1 = document.querySelector('h1');
-        return skeletons.length === 0 && h1 && h1.textContent.trim().length > 0;
-      }, { timeout: 15000 }).catch(() => {
-        console.warn(`[prerender] ⚠ Skeletons may still be present for ${route}`);
-      });
-
-      // 2. Wait for react-helmet-async to inject proper <title>
-      await page.waitForFunction(() => {
-        const title = document.querySelector('title');
-        return title && title.textContent && !title.textContent.includes('Vite');
-      }, { timeout: 5000 }).catch(() => {
-        console.warn(`[prerender] ⚠ Helmet title not detected for ${route}`);
-      });
-
-      // 3. Small extra delay for any final renders
-      await new Promise((r) => setTimeout(r, 500));
-
-      // 4. Capture full HTML (includes <head> with meta tags, JSON-LD, etc.)
+      // Capture full HTML (includes <head> with meta tags, JSON-LD, etc.)
       const html = await page.content();
 
-      // 5. Verify content quality
+      // Verify content quality
       const h1Text = await page.evaluate(() => {
         const h1 = document.querySelector('h1');
         return h1 ? h1.textContent.trim() : '';
+      });
+      const rootLength = await page.evaluate(() => {
+        const root = document.querySelector('#root');
+        return root ? root.innerHTML.length : 0;
       });
       const hasJsonLd = html.includes('application/ld+json');
       const hasSkeletons = html.includes('animate-pulse');
@@ -176,11 +211,14 @@ async function prerender() {
       if (!h1Text) {
         console.warn(`[prerender] ⚠ ${route} — No h1 text found`);
       }
+      if (rootLength < 500) {
+        console.warn(`[prerender] ⚠ ${route} — #root content very short (${rootLength} chars) — may be empty!`);
+      }
       if (contentLength < 1000) {
         console.warn(`[prerender] ⚠ ${route} — Suspiciously short HTML (${contentLength} chars)`);
       }
 
-      // 6. Write the full document to dist/
+      // Write the full document to dist/
       const filePath = route === "/"
         ? join(DIST, "index.html")
         : join(DIST, route, "index.html");
@@ -192,7 +230,7 @@ async function prerender() {
       writeFileSync(filePath, finalHtml);
 
       console.log(
-        `[prerender] ✅ ${route} — h1: "${h1Text.slice(0, 50)}" | JSON-LD: ${hasJsonLd ? 'yes' : 'no'} | ${contentLength} chars`
+        `[prerender] ✅ ${route} — h1: "${h1Text.slice(0, 50)}" | root: ${rootLength} chars | JSON-LD: ${hasJsonLd ? 'yes' : 'no'} | total: ${contentLength} chars`
       );
       successCount++;
     } catch (err) {
