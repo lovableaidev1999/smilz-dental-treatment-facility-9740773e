@@ -61,6 +61,8 @@ function startServer() {
 
   const server = createServer((req, res) => {
     let filePath = join(DIST, req.url === "/" ? "/index.html" : req.url.split("?")[0]);
+    // Don't override the real sitemap.xml with index.html
+    if (filePath.endsWith("/")) filePath = join(filePath, "index.html");
     if (!existsSync(filePath) || !filePath.includes(".")) {
       filePath = join(DIST, "index.html");
     }
