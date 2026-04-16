@@ -181,7 +181,7 @@ const SEOHead = ({
           {...(preloadHero.type ? { type: preloadHero.type } : {})}
           {...(preloadHero.srcset ? { imagesrcset: preloadHero.srcset } : {})}
           {...(preloadHero.sizes ? { imagesizes: preloadHero.sizes } : {})}
-          fetchpriority="high"
+          fetchPriority="high"
         />
       )}
       <meta property="og:type" content={type} />
