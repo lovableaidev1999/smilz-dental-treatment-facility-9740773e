@@ -1,46 +1,13 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-function inlineBuildCss(): Plugin {
-  return {
-    name: "inline-build-css",
-    apply: "build",
-    enforce: "post",
-    generateBundle(_, bundle) {
-      const cssAssets = Object.values(bundle).filter(
-        (file): file is Extract<(typeof bundle)[string], { type: "asset" }> =>
-          file.type === "asset" && file.fileName.endsWith(".css"),
-      );
-
-      const htmlAssets = Object.values(bundle).filter(
-        (file): file is Extract<(typeof bundle)[string], { type: "asset" }> =>
-          file.type === "asset" && file.fileName.endsWith(".html"),
-      );
-
-      if (!cssAssets.length || !htmlAssets.length) return;
-
-      for (const htmlAsset of htmlAssets) {
-        let html = String(htmlAsset.source);
-
-        for (const cssAsset of cssAssets) {
-          const safeFileName = cssAsset.fileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const inlineStyleTag = `<style data-inlined-from="${cssAsset.fileName}">${String(cssAsset.source).replace(/<\/style>/g, "<\\/style>")}</style>`;
-
-          html = html.replace(
-            new RegExp(`<link rel="stylesheet"[^>]*href="/?${safeFileName}"[^>]*>`, "g"),
-            inlineStyleTag,
-          );
-
-          delete bundle[cssAsset.fileName];
-        }
-
-        htmlAsset.source = html;
-      }
-    },
-  };
-}
+// NOTE: We intentionally DO NOT inline CSS into HTML anymore.
+// Inlining CSS bloats every prerendered HTML page (17+ pages × ~50KB),
+// inflates HTML payload and prevents the browser from caching CSS across pages.
+// External CSS with long-lived cache headers is significantly faster on mobile
+// and improves PageSpeed "Use efficient cache lifetimes" score.
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -51,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), inlineBuildCss(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
