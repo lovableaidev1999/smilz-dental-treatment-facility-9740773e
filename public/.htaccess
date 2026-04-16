@@ -13,6 +13,14 @@ AddType application/json .json
 RewriteRule ^(\d{4})/(\d{2})/([^/]+)/?$ /blog/$3 [R=301,L]
 RewriteRule ^(\d{4})/(\d{2})/(\d{2})/([^/]+)/?$ /blog/$4 [R=301,L]
 
+# ── Legacy WordPress page redirects → modern equivalents ──
+RedirectMatch 301 ^/diestema/?$ /services/diastema-correction
+RedirectMatch 301 ^/smile-designing/?$ /services/smile-designing
+RedirectMatch 301 ^/referral-register/?$ /referral
+RedirectMatch 301 ^/login-form/?$ /admin/login
+RedirectMatch 301 ^/wp-admin/?.*$ /admin/login
+RedirectMatch 301 ^/wp-login\.php.*$ /admin/login
+
 # ── Skip static assets from SPA fallback ──
 RewriteCond %{REQUEST_URI} \.(css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|json|map)$ [NC]
 RewriteRule ^ - [L]

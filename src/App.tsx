@@ -29,6 +29,13 @@ const VisualRenderer = lazy(() => import("@/components/builder/VisualRenderer"))
 const Sitemap = lazy(() => import("@/pages/Sitemap"));
 const BuiltPage = lazy(() => import("@/pages/BuiltPage"));
 
+// SEO landing pages
+const DentistInKolkata = lazy(() => import("@/pages/seo/DentistInKolkata"));
+const DentalClinicGariaKolkata = lazy(() => import("@/pages/seo/DentalClinicGariaKolkata"));
+const RootCanalKolkata = lazy(() => import("@/pages/seo/RootCanalKolkata"));
+const DentalImplantsKolkata = lazy(() => import("@/pages/seo/DentalImplantsKolkata"));
+const BracesAlignersKolkata = lazy(() => import("@/pages/seo/BracesAlignersKolkata"));
+
 // Lazy-loaded admin pages
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
 const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
@@ -162,6 +169,13 @@ const App = () => (
                   <Route path="/preview/blog/:id" element={<BlogPreview />} />
                   <Route path="/referral" element={<Referral />} />
                   <Route path="/p/:slug" element={<BuiltPage />} />
+
+                  {/* SEO landing pages */}
+                  <Route path="/dentist-in-kolkata" element={<DentistInKolkata />} />
+                  <Route path="/dental-clinic-in-garia-kolkata" element={<DentalClinicGariaKolkata />} />
+                  <Route path="/root-canal-treatment-kolkata" element={<RootCanalKolkata />} />
+                  <Route path="/dental-implants-kolkata" element={<DentalImplantsKolkata />} />
+                  <Route path="/braces-aligners-kolkata" element={<BracesAlignersKolkata />} />
                 </Route>
 
                 {/* WordPress date-based URL redirects */}
