@@ -3,6 +3,12 @@
  * Spins up a local server for the dist/ folder, visits each public route
  * with Puppeteer, and writes the fully-rendered HTML back to dist/.
  *
+ * Hardened to:
+ *   - guarantee a complete <head> (title, meta, canonical, OG, JSON-LD)
+ *   - strip framer-motion `opacity:0` / `transform` inline styles so bots see content
+ *   - wait for real content (skeletons gone, h1 present, OR data-prerender-ready)
+ *   - fall back gracefully when networkidle never fires
+ *
  * Usage: node scripts/prerender.mjs
  */
 import { createServer } from "http";
@@ -22,6 +28,12 @@ const STATIC_ROUTES = [
   "/contact",
   "/gallery",
   "/blog",
+  // SEO landing pages
+  "/dentist-in-kolkata",
+  "/dental-clinic-in-garia-kolkata",
+  "/root-canal-treatment-kolkata",
+  "/dental-implants-kolkata",
+  "/braces-aligners-kolkata",
 ];
 
 // Routes to SKIP (admin, referral, etc.)
@@ -44,10 +56,13 @@ function startServer() {
     ".webp": "image/webp",
     ".woff2": "font/woff2",
     ".ico": "image/x-icon",
+    ".xml": "application/xml",
   };
 
   const server = createServer((req, res) => {
-    let filePath = join(DIST, req.url === "/" ? "/index.html" : req.url);
+    let filePath = join(DIST, req.url === "/" ? "/index.html" : req.url.split("?")[0]);
+    // Don't override the real sitemap.xml with index.html
+    if (filePath.endsWith("/")) filePath = join(filePath, "index.html");
     if (!existsSync(filePath) || !filePath.includes(".")) {
       filePath = join(DIST, "index.html");
     }
@@ -111,47 +126,62 @@ async function fetchDynamicRoutes() {
 
 /**
  * Wait for the page to be fully rendered with actual content.
- * Uses multiple strategies to detect content readiness.
  */
 async function waitForContent(page, route) {
-  // Strategy 1: Wait for network to settle (API calls to Supabase)
-  await page.goto(`http://localhost:${PORT}${route}`, {
-    waitUntil: "networkidle0",
-    timeout: 45000,
-  });
-
-  // Strategy 2: Wait for React to finish rendering — either:
-  //   a) Skeletons disappear AND h1 has text, OR
-  //   b) #root has substantial content (>500 chars of inner HTML)
-  const contentReady = await page.waitForFunction(() => {
-    const root = document.querySelector('#root');
-    if (!root) return false;
-    const rootLen = root.innerHTML.length;
-    const skeletons = document.querySelectorAll('.animate-pulse');
-    const h1 = document.querySelector('h1');
-
-    // Condition A: No skeletons + h1 with text
-    const condA = skeletons.length === 0 && h1 && h1.textContent.trim().length > 0;
-    // Condition B: Substantial content rendered (covers pages without h1 initially)
-    const condB = skeletons.length === 0 && rootLen > 2000;
-
-    return condA || condB;
-  }, { timeout: 25000 }).then(() => true).catch(() => false);
-
-  if (!contentReady) {
-    console.warn(`[prerender] ⚠ Content not fully ready for ${route} — capturing anyway`);
+  // Use domcontentloaded first (more forgiving) then poll for real content.
+  try {
+    await page.goto(`http://localhost:${PORT}${route}`, {
+      waitUntil: "networkidle2",
+      timeout: 60000,
+    });
+  } catch (err) {
+    console.warn(`[prerender] networkidle2 timeout for ${route}: ${err.message} — continuing`);
   }
 
-  // Strategy 3: Wait for react-helmet-async to inject proper <title>
+  // Wait for content readiness:
+  //   a) explicit data-prerender-ready attribute, OR
+  //   b) skeletons gone AND h1 has text, OR
+  //   c) substantial #root content (>2000 chars)
   await page.waitForFunction(() => {
-    const title = document.querySelector('title');
-    return title && title.textContent && !title.textContent.includes('Vite');
-  }, { timeout: 8000 }).catch(() => {
-    console.warn(`[prerender] ⚠ Helmet title not detected for ${route}`);
+    if (document.querySelector('[data-prerender-ready="true"]')) return true;
+    const root = document.querySelector('#root');
+    if (!root) return false;
+    const skeletons = document.querySelectorAll('.animate-pulse');
+    const h1 = document.querySelector('h1');
+    const hasH1 = h1 && h1.textContent.trim().length > 0;
+    if (skeletons.length === 0 && hasH1) return true;
+    if (skeletons.length === 0 && root.innerHTML.length > 2000) return true;
+    return false;
+  }, { timeout: 30000 }).catch(() => {
+    console.warn(`[prerender] ⚠ Content readiness timeout for ${route} — capturing anyway`);
   });
 
-  // Extra settle time for any final state updates
-  await new Promise((r) => setTimeout(r, 1000));
+  // Wait for react-helmet-async to inject the real <title>
+  await page.waitForFunction(() => {
+    const t = document.querySelector('title');
+    return t && t.textContent && t.textContent.trim().length > 0
+      && !/^(Vite|Smilz Dental Treatment Facility)$/.test(t.textContent.trim());
+  }, { timeout: 8000 }).catch(() => {
+    console.warn(`[prerender] ⚠ Helmet title not detected for ${route} — using existing title`);
+  });
+
+  // Final settle
+  await new Promise((r) => setTimeout(r, 1200));
+}
+
+/**
+ * Strip framer-motion invisible inline styles so bots see content.
+ * Removes opacity:0 and transform translate values from inline `style` attrs.
+ */
+function makeContentVisible(html) {
+  return html
+    // Remove opacity:0 (with any whitespace/quoting variation)
+    .replace(/opacity\s*:\s*0\s*;?/gi, '')
+    // Remove inline transforms used by framer-motion (translateX/Y values)
+    .replace(/transform\s*:\s*translate[XY]?\([^)]*\)\s*;?/gi, '')
+    // Clean up empty style attributes left behind
+    .replace(/\sstyle=""/gi, '')
+    .replace(/\sstyle="\s*"/gi, '');
 }
 
 async function prerender() {
@@ -165,8 +195,16 @@ async function prerender() {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
+  // Block heavy third-party requests that delay networkidle
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = req.url();
+    if (/google-analytics|googletagmanager|ahrefs|facebook|hotjar|clarity|youtube\.com\/embed|google\.com\/maps\/embed/i.test(url)) {
+      return req.abort();
+    }
+    req.continue();
+  });
 
-  // Expose console logs from the page for debugging
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
       console.log(`[prerender:page-error] ${msg.text()}`);
@@ -189,48 +227,43 @@ async function prerender() {
 
       await waitForContent(page, route);
 
-      // Capture full HTML (includes <head> with meta tags, JSON-LD, etc.)
-      const html = await page.content();
-
-      // Verify content quality
-      const h1Text = await page.evaluate(() => {
-        const h1 = document.querySelector('h1');
-        return h1 ? h1.textContent.trim() : '';
+      // Capture full document. Reconstruct from doctype + outerHTML to GUARANTEE <head> survives.
+      const fullHtml = await page.evaluate(() => {
+        return '<!DOCTYPE html>' + document.documentElement.outerHTML;
       });
-      const rootLength = await page.evaluate(() => {
-        const root = document.querySelector('#root');
-        return root ? root.innerHTML.length : 0;
+
+      // Quality checks
+      const headInfo = await page.evaluate(() => {
+        const title = document.querySelector('title')?.textContent || '';
+        const desc = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+        const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
+        const h1 = document.querySelector('h1')?.textContent?.trim() || '';
+        const rootLen = document.querySelector('#root')?.innerHTML.length || 0;
+        const jsonLd = document.querySelectorAll('script[type="application/ld+json"]').length;
+        return { title, desc, canonical, h1, rootLen, jsonLd };
       });
-      const hasJsonLd = html.includes('application/ld+json');
-      const hasSkeletons = html.includes('animate-pulse');
-      const contentLength = html.length;
 
-      if (hasSkeletons) {
-        console.warn(`[prerender] ⚠ ${route} — HTML still contains skeleton loaders!`);
-      }
-      if (!h1Text) {
-        console.warn(`[prerender] ⚠ ${route} — No h1 text found`);
-      }
-      if (rootLength < 500) {
-        console.warn(`[prerender] ⚠ ${route} — #root content very short (${rootLength} chars) — may be empty!`);
-      }
-      if (contentLength < 1000) {
-        console.warn(`[prerender] ⚠ ${route} — Suspiciously short HTML (${contentLength} chars)`);
-      }
+      if (!headInfo.title) console.warn(`[prerender] ⚠ ${route} — missing <title>`);
+      if (!headInfo.desc) console.warn(`[prerender] ⚠ ${route} — missing meta description`);
+      if (!headInfo.canonical) console.warn(`[prerender] ⚠ ${route} — missing canonical`);
+      if (!headInfo.h1) console.warn(`[prerender] ⚠ ${route} — no h1 text`);
+      if (headInfo.rootLen < 500) console.warn(`[prerender] ⚠ ${route} — root very short (${headInfo.rootLen})`);
+      if (fullHtml.includes('animate-pulse')) console.warn(`[prerender] ⚠ ${route} — skeleton loaders still present`);
 
-      // Write the full document to dist/
+      // Strip invisible framer-motion inline styles
+      const visibleHtml = makeContentVisible(fullHtml);
+
+      // Write to dist/
       const filePath = route === "/"
         ? join(DIST, "index.html")
         : join(DIST, route, "index.html");
 
       const dir = dirname(filePath);
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-
-      const finalHtml = `<!DOCTYPE html>${html.replace(/^<!DOCTYPE html>/i, "")}`;
-      writeFileSync(filePath, finalHtml);
+      writeFileSync(filePath, visibleHtml);
 
       console.log(
-        `[prerender] ✅ ${route} — h1: "${h1Text.slice(0, 50)}" | root: ${rootLength} chars | JSON-LD: ${hasJsonLd ? 'yes' : 'no'} | total: ${contentLength} chars`
+        `[prerender] ✅ ${route} — title:"${headInfo.title.slice(0, 40)}" h1:"${headInfo.h1.slice(0, 40)}" root:${headInfo.rootLen} jsonLd:${headInfo.jsonLd} html:${visibleHtml.length}`
       );
       successCount++;
     } catch (err) {

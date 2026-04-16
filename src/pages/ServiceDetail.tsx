@@ -90,6 +90,9 @@ const ServiceDetail = () => {
           </div>
         </div>
       </section>
+
+      {/* Marker for prerender script — content is fully loaded */}
+      <span data-prerender-ready="true" className="sr-only" aria-hidden="true" />
     </>
   );
 };
