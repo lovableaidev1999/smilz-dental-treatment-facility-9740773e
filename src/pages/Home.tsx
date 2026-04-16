@@ -229,6 +229,12 @@ const Home = () => {
         keywords={settings?.seo?.default_keywords ?? "dentist Kolkata, dental clinic Garia, best dentist South Kolkata, dental implants Kolkata"}
         breadcrumbs={[{ name: "Home", url: links?.website ?? "https://smilz.net" }]}
         faqs={homepageFaqs}
+        preloadHero={{
+          src: "/images/hero-dental.webp",
+          srcset: "/images/hero-dental-600.webp 600w, /images/hero-dental.webp 1200w",
+          sizes: "100vw",
+          type: "image/webp",
+        }}
       />
 
       {sections.map(renderSection)}

@@ -23,11 +23,21 @@ interface SEOHeadProps {
     image?: string;
     url: string;
   };
+  /**
+   * LCP hero image to preload (only set on pages with an above-the-fold hero
+   * to avoid wasting mobile bandwidth on pages that don't render it).
+   */
+  preloadHero?: {
+    src: string;
+    srcset?: string;
+    sizes?: string;
+    type?: string;
+  };
 }
 
 const SEOHead = ({
   title, description, keywords, canonicalUrl, ogImage, robots,
-  type = "website", article, breadcrumbs, faqs, service,
+  type = "website", article, breadcrumbs, faqs, service, preloadHero,
 }: SEOHeadProps) => {
   const { data: settings } = useSiteSettings();
   const general = settings?.general;
@@ -163,6 +173,17 @@ const SEOHead = ({
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={url} />
       <meta name="robots" content={robots || "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"} />
+      {preloadHero && (
+        <link
+          rel="preload"
+          as="image"
+          href={preloadHero.src}
+          {...(preloadHero.type ? { type: preloadHero.type } : {})}
+          {...(preloadHero.srcset ? { imagesrcset: preloadHero.srcset } : {})}
+          {...(preloadHero.sizes ? { imagesizes: preloadHero.sizes } : {})}
+          fetchpriority="high"
+        />
+      )}
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
