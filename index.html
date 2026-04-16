@@ -7,12 +7,24 @@
     <title>Smilz Dental Treatment Facility</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://bfroehnkexchdboydaob.supabase.co" />
-    <link rel="preload" as="image" href="/images/hero-dental.webp" type="image/webp" fetchpriority="high" imagesrcset="/images/hero-dental-600.webp 600w, /images/hero-dental.webp 1200w" imagesizes="100vw" />
+    <link rel="preconnect" href="https://bfroehnkexchdboydaob.supabase.co" crossorigin />
+    <!--
+      Hero image preload is injected per-page via SEOHead (only on / and SEO landing pages),
+      so non-home pages don't pay for the unused preload on mobile.
+    -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" /></noscript>
-    <!-- Hero image preloaded at runtime via Vite asset bundling -->
-    <script src="https://analytics.ahrefs.com/analytics.js" data-key="VHgy6LHj/y0/d6Ullyzd/g" async defer></script>
+    <!-- Ahrefs analytics: defer until after page load so it never blocks LCP/TBT -->
+    <script>
+      window.addEventListener('load', function() {
+        var s = document.createElement('script');
+        s.src = 'https://analytics.ahrefs.com/analytics.js';
+        s.setAttribute('data-key', 'VHgy6LHj/y0/d6Ullyzd/g');
+        s.async = true;
+        s.defer = true;
+        document.head.appendChild(s);
+      });
+    </script>
   </head>
 
   <body>
