@@ -219,6 +219,61 @@ const About = () => {
 
       {sections.map(renderSection)}
 
+      {/* WHO / WHAT / WHERE — SEO + GEO structured content */}
+      <section className="section-padding bg-background" aria-labelledby="about-wwhw-heading">
+        <div className="container-narrow mx-auto">
+          <h2 id="about-wwhw-heading" className="text-3xl md:text-4xl font-heading font-bold text-foreground text-center mb-4">
+            About Smilz Dental Clinic in Garia, South Kolkata
+          </h2>
+          <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+            A trusted neighbourhood dental clinic serving families across Garia, South Kolkata and the wider Kolkata region since {general?.year_established ?? 1999}.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* WHO */}
+            <article className="bg-card rounded-2xl p-6 shadow-card">
+              <h3 className="text-xl font-heading font-bold text-primary mb-3">Who We Are</h3>
+              <p className="text-muted-foreground text-sm mb-3">
+                Smilz Dental Treatment Facility is led by <strong>{general?.doctor_name ?? "Dr. Dibyendu Dutta"}</strong>, a senior dentist with over 25 years of clinical experience. Our team includes specialists in implantology, orthodontics, endodontics and pediatric dentistry — supported by trained dental hygienists and front-desk staff.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                We are committed to honest, ethical dental care — no unnecessary treatments, transparent pricing, and a calm, modern clinic environment that families across <Link to="/dentist-in-kolkata" className="text-primary hover:underline">South Kolkata</Link> have trusted for over two decades.
+              </p>
+            </article>
+
+            {/* WHAT */}
+            <article className="bg-card rounded-2xl p-6 shadow-card">
+              <h3 className="text-xl font-heading font-bold text-primary mb-3">What We Offer</h3>
+              <p className="text-muted-foreground text-sm mb-3">
+                A complete range of dental treatments under one roof, delivered with current-generation equipment and sterilisation protocols:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
+                <li><Link to="/services/dental-implants" className="text-primary hover:underline">Dental implants</Link> with stent-guided placement</li>
+                <li><Link to="/services/painless-root-canal-treatment" className="text-primary hover:underline">Painless root canal treatment</Link></li>
+                <li><Link to="/services/orthodontic-braces" className="text-primary hover:underline">Braces &amp; clear aligners</Link></li>
+                <li><Link to="/services/smile-designing" className="text-primary hover:underline">Smile designing &amp; cosmetic dentistry</Link></li>
+                <li><Link to="/services/scaling-polishing" className="text-primary hover:underline">Scaling, polishing &amp; whitening</Link></li>
+                <li><Link to="/services/pediatric-dentistry" className="text-primary hover:underline">Pediatric &amp; family dentistry</Link></li>
+              </ul>
+            </article>
+
+            {/* WHERE */}
+            <article className="bg-card rounded-2xl p-6 shadow-card">
+              <h3 className="text-xl font-heading font-bold text-primary mb-3">Where to Find Us</h3>
+              <p className="text-muted-foreground text-sm mb-3">
+                Our clinic is located at <strong>21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084</strong> — easily reachable from Garia Metro (Kavi Subhash), the EM Bypass and the Sonarpur–Garia Road.
+              </p>
+              <p className="text-muted-foreground text-sm mb-3">
+                We serve patients from Garia, Patuli, Naktala, Baghajatin, Sonarpur, Jadavpur and the wider South Kolkata area. If you are looking for a <Link to="/dental-clinic-in-garia-kolkata" className="text-primary hover:underline">dental clinic in Garia</Link> or a <Link to="/dentist-in-kolkata" className="text-primary hover:underline">dentist in Kolkata</Link>, we are minutes away.
+              </p>
+              <p className="text-sm">
+                <Link to="/contact" className="text-primary font-medium hover:underline">Get directions &amp; book an appointment →</Link>
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       {/* Clinic Info - always shown after all CMS sections */}
       <section className="section-padding bg-secondary/30">
         <div className="container-narrow mx-auto">
@@ -229,7 +284,7 @@ const About = () => {
             <motion.div className="bg-card rounded-xl p-6 shadow-card text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4"><MapPin className="h-7 w-7 text-primary" /></div>
               <h3 className="font-heading font-semibold text-foreground mb-2">Our Address</h3>
-              <p className="text-muted-foreground text-sm">{contact?.address_full ?? contact?.address ?? "21, Garia Park, Kolkata 700084"}</p>
+              <p className="text-muted-foreground text-sm">{contact?.address_full ?? contact?.address ?? "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084"}</p>
               {links?.google_maps_url && (
                 <a href={links.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm font-medium mt-3 inline-block hover:underline">Get Directions →</a>
               )}

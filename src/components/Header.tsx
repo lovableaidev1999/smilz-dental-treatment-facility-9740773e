@@ -36,7 +36,7 @@ const Header = () => {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-6 justify-center md:justify-start">
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>{contact?.address ?? "21, Garia Park, Kolkata 700084"}</span>
+                <span>{contact?.address ?? "21, Garia Park, Garia, Kolkata 700084"}</span>
               </span>
               <span className="hidden md:flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
