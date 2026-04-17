@@ -2,8 +2,8 @@
 export const CLINIC_INFO = {
   name: "Smilz Dental Treatment Facility",
   tagline: "Bridging Gaps... Spreading Smiles!",
-  address: "21, Garia Park, Kolkata 700084",
-  addressFull: "21, Garia Park, Garia Park Buddha Temple, Garia, South Kolkata 700084",
+  address: "21, Garia Park, Garia, Kolkata 700084",
+  addressFull: "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084",
   phone: "8961775554",
   phoneFormatted: "8961 77 5554",
   emergency: "9831070248",

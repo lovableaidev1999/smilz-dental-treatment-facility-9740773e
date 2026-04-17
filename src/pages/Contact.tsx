@@ -78,7 +78,7 @@ const Contact = () => {
               <h2 className="text-2xl font-heading font-bold text-foreground mb-6">Get In Touch</h2>
               <div className="space-y-5 mb-8">
                 {[
-                  { icon: MapPin, label: "Address", value: contact?.address_full ?? "21, Garia Park, South Kolkata 700084" },
+                  { icon: MapPin, label: "Address", value: contact?.address_full ?? "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084" },
                   { icon: Phone, label: "Phone", value: contact?.phone_formatted ?? "8961 77 5554", href: `tel:${contact?.phone ?? "8961775554"}` },
                   { icon: Phone, label: "Emergency", value: contact?.emergency ?? "9831070248", href: `tel:${contact?.emergency ?? "9831070248"}` },
                   { icon: Mail, label: "Email", value: contact?.email ?? "dr.d.dutta@gmail.com", href: `mailto:${contact?.email ?? "dr.d.dutta@gmail.com"}` },

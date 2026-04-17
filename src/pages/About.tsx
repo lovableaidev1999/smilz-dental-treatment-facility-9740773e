@@ -229,7 +229,7 @@ const About = () => {
             <motion.div className="bg-card rounded-xl p-6 shadow-card text-center" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4"><MapPin className="h-7 w-7 text-primary" /></div>
               <h3 className="font-heading font-semibold text-foreground mb-2">Our Address</h3>
-              <p className="text-muted-foreground text-sm">{contact?.address_full ?? contact?.address ?? "21, Garia Park, Kolkata 700084"}</p>
+              <p className="text-muted-foreground text-sm">{contact?.address_full ?? contact?.address ?? "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084"}</p>
               {links?.google_maps_url && (
                 <a href={links.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-primary text-sm font-medium mt-3 inline-block hover:underline">Get Directions →</a>
               )}

@@ -109,7 +109,7 @@ const Footer = () => {
             <div className="md:text-right">
               {showContact && (
                 <div className="space-y-2 text-sm opacity-80">
-                  <p>{contact?.address_full ?? "21, Garia Park, Garia, South Kolkata 700084"}</p>
+                  <p>{contact?.address_full ?? "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084"}</p>
                   <p>{contact?.phone_formatted ?? "8961 77 5554"} | {contact?.email ?? "dr.d.dutta@gmail.com"}</p>
                   <p>{hours?.days ?? "Monday – Saturday"}: {hours?.morning ?? "9 AM – 1 PM"} & {hours?.evening ?? "5 PM – 9 PM"}</p>
                 </div>
@@ -186,7 +186,7 @@ const Footer = () => {
               <ul className="space-y-3 text-sm">
                 <li className="flex items-start gap-2 opacity-80">
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>{contact?.address_full ?? "21, Garia Park, Garia Park Buddha Temple, Garia, South Kolkata 700084"}</span>
+                  <span>{contact?.address_full ?? "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084"}</span>
                 </li>
                 <li>
                   <a href={`tel:${contact?.phone ?? "8961775554"}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">

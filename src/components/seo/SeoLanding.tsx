@@ -124,7 +124,7 @@ const SeoLanding = ({
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                  <span>21, Garia Park, Kolkata 700084, West Bengal</span>
+                  <span>21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Phone className="h-4 w-4 mt-0.5 text-primary shrink-0" />
