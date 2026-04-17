@@ -1,0 +1,323 @@
+{
+  "exportedAt": "2026-04-17T04:55:33.212Z",
+  "source": "https://smilz.net",
+  "totalUrls": 77,
+  "succeeded": 77,
+  "failed": 0,
+  "pages": [
+    {
+      "url": "https://smilz.net/",
+      "file": "index.html"
+    },
+    {
+      "url": "https://smilz.net/dentist-in-kolkata/",
+      "file": "dentist-in-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/",
+      "file": "services/index.html"
+    },
+    {
+      "url": "https://smilz.net/gallery/",
+      "file": "gallery/index.html"
+    },
+    {
+      "url": "https://smilz.net/about/",
+      "file": "about/index.html"
+    },
+    {
+      "url": "https://smilz.net/contact/",
+      "file": "contact/index.html"
+    },
+    {
+      "url": "https://smilz.net/dental-clinic-in-garia-kolkata/",
+      "file": "dental-clinic-in-garia-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/",
+      "file": "blog/index.html"
+    },
+    {
+      "url": "https://smilz.net/root-canal-treatment-kolkata/",
+      "file": "root-canal-treatment-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/dental-implants-kolkata/",
+      "file": "dental-implants-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/orthodontics/",
+      "file": "services/orthodontics/index.html"
+    },
+    {
+      "url": "https://smilz.net/braces-aligners-kolkata/",
+      "file": "braces-aligners-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/tooth-whitening/",
+      "file": "services/tooth-whitening/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/scaling-polishing/",
+      "file": "services/scaling-polishing/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/preventive-dental-care/",
+      "file": "services/preventive-dental-care/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/clear-aligners/",
+      "file": "services/clear-aligners/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/scaling-polishing-whitening/",
+      "file": "services/scaling-polishing-whitening/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/general-dentistry/",
+      "file": "services/general-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/orthodontic-braces/",
+      "file": "services/orthodontic-braces/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/crown-bridge/",
+      "file": "services/crown-bridge/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/pediatric-dentistry/",
+      "file": "services/pediatric-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/dental-gaps/",
+      "file": "services/dental-gaps/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/comprehensive-consultation/",
+      "file": "services/comprehensive-consultation/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/restorative-dentistry/",
+      "file": "services/restorative-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/painless-root-canal-treatment/",
+      "file": "services/painless-root-canal-treatment/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/cosmetic-dentistry/",
+      "file": "services/cosmetic-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/dental-implants/",
+      "file": "services/dental-implants/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/smile-designing/",
+      "file": "services/smile-designing/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/oral-dental-surgery/",
+      "file": "services/oral-dental-surgery/index.html"
+    },
+    {
+      "url": "https://smilz.net/services/root-canal-treatment-garia/",
+      "file": "services/root-canal-treatment-garia/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/do-you-really-need-to-visit-the-dentist-every-6-months/",
+      "file": "blog/do-you-really-need-to-visit-the-dentist-every-6-months/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-implants-in-kolkata/",
+      "file": "blog/dental-implants-in-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-scaling-and-polishing/",
+      "file": "blog/dental-scaling-and-polishing/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-treatments-in-kolkata/",
+      "file": "blog/dental-treatments-in-kolkata/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/invisalign-or-braces/",
+      "file": "blog/invisalign-or-braces/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/guide-to-cosmetic-dentistry/",
+      "file": "blog/guide-to-cosmetic-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/pediatric-dentistry/",
+      "file": "blog/pediatric-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/preventive-dentistry-the-key-to-lifelong-oral-health/",
+      "file": "blog/preventive-dentistry-the-key-to-lifelong-oral-health/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/holistic-alternative-dentistry/",
+      "file": "blog/holistic-alternative-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/techniques-of-dental-flossing/",
+      "file": "blog/techniques-of-dental-flossing/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-clinic-near-me/",
+      "file": "blog/dental-clinic-near-me/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/implants-vs-bridges/",
+      "file": "blog/implants-vs-bridges/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/how-to-brush-teeth-properly/",
+      "file": "blog/how-to-brush-teeth-properly/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/importance-of-tooth-brushing/",
+      "file": "blog/importance-of-tooth-brushing/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/benefits-of-brushing-teeth/",
+      "file": "blog/benefits-of-brushing-teeth/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/tooth-brushing-tips/",
+      "file": "blog/tooth-brushing-tips/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/gum-bleeding-home-remedies/",
+      "file": "blog/gum-bleeding-home-remedies/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/natural-remedies-for-gum-bleeding/",
+      "file": "blog/natural-remedies-for-gum-bleeding/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/gum-bleeding-treatment/",
+      "file": "blog/gum-bleeding-treatment/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/how-to-stop-gum-bleeding/",
+      "file": "blog/how-to-stop-gum-bleeding/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/home-remedies-for-bleeding-gums/",
+      "file": "blog/home-remedies-for-bleeding-gums/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/%f0%9f%98%8a-veneers-or-crowns-which-is-right-for-you-%f0%9f%98%81/",
+      "file": "blog/%f0%9f%98%8a-veneers-or-crowns-which-is-right-for-you-%f0%9f%98%81/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/best-age-for-braces-when-should-kids-get-them/",
+      "file": "blog/best-age-for-braces-when-should-kids-get-them/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/7-ways-to-treat-bad-breath/",
+      "file": "blog/7-ways-to-treat-bad-breath/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/oral-care-for-heart-patients/",
+      "file": "blog/oral-care-for-heart-patients/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/5-effective-alternatives-to-braces/",
+      "file": "blog/5-effective-alternatives-to-braces/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-caries-prevention-and-treatment-options/",
+      "file": "blog/dental-caries-prevention-and-treatment-options/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/home-tooth-whitening/",
+      "file": "blog/home-tooth-whitening/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/regular-dental-checkup-near-me/",
+      "file": "blog/regular-dental-checkup-near-me/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/how-to-choose-the-right-toothbrush-and-toothpaste-f/",
+      "file": "blog/how-to-choose-the-right-toothbrush-and-toothpaste-f/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/home-remedies-for-wisdom-tooth-pain/",
+      "file": "blog/home-remedies-for-wisdom-tooth-pain/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-emergencies-quick-tips-to-handle-common-issues/",
+      "file": "blog/dental-emergencies-quick-tips-to-handle-common-issues/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/teeth-brushing-techniques/",
+      "file": "blog/teeth-brushing-techniques/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/diabetic-dental-care-essential-tips-for-a-healthy-smile/",
+      "file": "blog/diabetic-dental-care-essential-tips-for-a-healthy-smile/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/guided-implant-placement-the-future-of-precise-dental-implants/",
+      "file": "blog/guided-implant-placement-the-future-of-precise-dental-implants/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/how-to-care-for-your-childs-teeth-a-dentists-advice/",
+      "file": "blog/how-to-care-for-your-childs-teeth-a-dentists-advice/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/the-complete-guide-to-restorative-dentistry/",
+      "file": "blog/the-complete-guide-to-restorative-dentistry/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/rehabilitation-dentistry-restoring-smiles/",
+      "file": "blog/rehabilitation-dentistry-restoring-smiles/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/tooth-brushing-techniques/",
+      "file": "blog/tooth-brushing-techniques/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/proper-tooth-brushing-techniques/",
+      "file": "blog/proper-tooth-brushing-techniques/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/best-oral-hygiene-practices/",
+      "file": "blog/best-oral-hygiene-practices/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/unveiling-the-mystery-why-is-your-gum-bleeding/",
+      "file": "blog/unveiling-the-mystery-why-is-your-gum-bleeding/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/braces-journey-8-essential-tips-for-preparation/",
+      "file": "blog/braces-journey-8-essential-tips-for-preparation/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/proper-teeth-brushing-techniques-for-optimal-oral-health/",
+      "file": "blog/proper-teeth-brushing-techniques-for-optimal-oral-health/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/how-to-stop-tooth-decay-prevention-and-treatment-options/",
+      "file": "blog/how-to-stop-tooth-decay-prevention-and-treatment-options/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/diabetes-and-oral-health/",
+      "file": "blog/diabetes-and-oral-health/index.html"
+    },
+    {
+      "url": "https://smilz.net/blog/dental-implants-guided-approach/",
+      "file": "blog/dental-implants-guided-approach/index.html"
+    }
+  ],
+  "failures": [],
+  "notes": [
+    "This export is a READ-ONLY mirror. Nothing was published or deployed.",
+    "Each page was downloaded as the prerendered HTML the live site already serves to search engines.",
+    "All canonical tags point back to https://smilz.net to avoid duplicate-index risk."
+  ]
+}
