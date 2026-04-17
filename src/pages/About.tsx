@@ -261,10 +261,10 @@ const About = () => {
             <article className="bg-card rounded-2xl p-6 shadow-card">
               <h3 className="text-xl font-heading font-bold text-primary mb-3">Where to Find Us</h3>
               <p className="text-muted-foreground text-sm mb-3">
-                Our clinic is located at <strong>21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084</strong> — easily reachable from Garia Metro (Kavi Subhash), the EM Bypass and the Sonarpur–Garia Road.
+                Our clinic is located at <strong>21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084</strong> — just a short walk from <strong>Garia Buddha Mandir</strong> and easily reachable from Garia Metro (Kavi Subhash), the EM Bypass and the Sonarpur–Garia Road.
               </p>
               <p className="text-muted-foreground text-sm mb-3">
-                We serve patients from Garia, Patuli, Naktala, Baghajatin, Sonarpur, Jadavpur and the wider South Kolkata area. If you are looking for a <Link to="/dental-clinic-in-garia-kolkata" className="text-primary hover:underline">dental clinic in Garia</Link> or a <Link to="/dentist-in-kolkata" className="text-primary hover:underline">dentist in Kolkata</Link>, we are minutes away.
+                We serve patients from Garia, Patuli, Naktala, Baghajatin, Sonarpur, Jadavpur and the wider South Kolkata area. If you are searching for "dentists near me in Garia" or the <strong>best dentists in Garia</strong> for complete dental treatment, our <Link to="/dental-clinic-in-garia-kolkata" className="text-primary hover:underline">dental clinic in Garia</Link> and team of <Link to="/dentist-in-kolkata" className="text-primary hover:underline">dentists in Kolkata</Link> are minutes away.
               </p>
               <p className="text-sm">
                 <Link to="/contact" className="text-primary font-medium hover:underline">Get directions &amp; book an appointment →</Link>

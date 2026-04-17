@@ -103,7 +103,7 @@ const Home = () => {
                   {section.heading ?? <>Your Trusted <span className="text-dental-gold">Dental Partner</span> in South Kolkata</>}
                 </h1>
                 <p className="text-lg text-primary-foreground/85 mb-8 max-w-xl">
-                  {section.subheading ?? `Comprehensive, affordable dental care since ${general?.year_established ?? 1999}. From routine check-ups to advanced treatments, we deliver exceptional results with a gentle touch.`}
+                  {section.subheading ?? `Among the best dentists in Garia, Kolkata — Smilz Dental Treatment Facility has delivered comprehensive, affordable dental care since ${general?.year_established ?? 1999}. Located near Andrews College and Garia Buddha Mandir, we are the trusted choice when you search for "dentists near me in Garia".`}
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <a href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}?text=Hi, I would like to book an appointment.`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gradient-accent text-accent-foreground px-7 py-3.5 rounded-lg font-semibold text-base hover:opacity-90 transition-opacity">

@@ -102,12 +102,16 @@ const SEOHead = ({
     ...(sameAs.length > 0 && { sameAs }),
     areaServed: [
       { "@type": "Place", name: "Garia, Kolkata" },
+      { "@type": "Place", name: "Garia Buddha Mandir, Kolkata" },
+      { "@type": "Place", name: "Near Andrews College, Garia" },
       { "@type": "Place", name: "South Kolkata" },
       { "@type": "Place", name: "Kolkata" },
       { "@type": "Place", name: "Patuli" },
       { "@type": "Place", name: "Naktala" },
       { "@type": "Place", name: "Baghajatin" },
       { "@type": "Place", name: "Sonarpur" },
+      { "@type": "Place", name: "Jadavpur" },
+      { "@type": "Place", name: "Kavi Subhash Metro Area" },
       {
         "@type": "GeoCircle",
         geoMidpoint: { "@type": "GeoCoordinates", latitude: coords?.lat ?? 22.4625, longitude: coords?.lng ?? 88.3942 },
