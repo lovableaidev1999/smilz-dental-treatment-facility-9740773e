@@ -14,7 +14,14 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
-import { XMLParser } from "fast-xml-parser";
+
+function extractLocs(xml) {
+  const locs = [];
+  const re = /<loc>\s*([^<\s]+)\s*<\/loc>/gi;
+  let m;
+  while ((m = re.exec(xml))) locs.push(m[1]);
+  return locs;
+}
 
 const SITE_ORIGIN = "https://smilz.net";
 const SITEMAP_URL = `${SITE_ORIGIN}/sitemap.xml`;
