@@ -29,33 +29,38 @@ const Header = () => {
 
   return (
     <>
-      {/* Top bar */}
+      {/* Top bar — visible on mobile too for local SEO (NAP) and quick contact */}
       {showTopBar && (
-        <div className="bg-primary text-primary-foreground text-sm hidden md:block">
-          <div className="container-narrow mx-auto flex items-center justify-between py-2 px-4">
-            <div className="flex items-center gap-6">
+        <div className="bg-primary text-primary-foreground text-xs md:text-sm">
+          <div className="container-narrow mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-1 md:gap-0 py-1.5 md:py-2 px-3 md:px-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-6 justify-center md:justify-start">
               <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
-                {contact?.address ?? "21, Garia Park, Kolkata 700084"}
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{contact?.address ?? "21, Garia Park, Kolkata 700084"}</span>
               </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
+              <span className="hidden md:flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 Mon-Sat: {hours?.morning ?? "9:00 AM – 1:00 PM"} & {hours?.evening ?? "5:00 PM – 9:00 PM"}
               </span>
             </div>
-            <div className="flex items-center gap-4">
-              <a href={`tel:${contact?.phone ?? "8961775554"}`} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
-                <Phone className="h-3.5 w-3.5" />
-                {contact?.phone_formatted ?? "8961 77 5554"}
+            <div className="flex items-center gap-4 justify-center md:justify-end">
+              <a
+                href={`tel:${contact?.phone ?? "8961775554"}`}
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity min-h-[32px]"
+                aria-label={`Call ${contact?.phone_formatted ?? "8961 77 5554"}`}
+              >
+                <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{contact?.phone_formatted ?? "8961 77 5554"}</span>
               </a>
               <a
                 href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity min-h-[32px]"
+                aria-label="Chat with us on WhatsApp"
               >
-                <MessageCircle className="h-3.5 w-3.5" />
-                WhatsApp
+                <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>WhatsApp</span>
               </a>
             </div>
           </div>
@@ -105,18 +110,20 @@ const Header = () => {
             </a>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
-              aria-label="Toggle menu"
+              className="lg:hidden inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2.5 rounded-lg hover:bg-secondary transition-colors"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
             >
-              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
             </button>
           </div>
         </div>
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-border bg-card animate-fade-in">
-            <nav className="container-narrow mx-auto flex flex-col py-4 px-4 gap-1">
+          <div id="mobile-nav" className="lg:hidden border-t border-border bg-card animate-fade-in">
+            <nav aria-label="Mobile navigation" className="container-narrow mx-auto flex flex-col py-4 px-4 gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
