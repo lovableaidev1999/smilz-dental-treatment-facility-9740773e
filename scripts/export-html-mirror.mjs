@@ -101,12 +101,7 @@ async function pool(items, worker, size) {
 async function main() {
   console.log(`▶ Fetching sitemap: ${SITEMAP_URL}`);
   const sitemapXml = await fetchText(SITEMAP_URL);
-
-  const parser = new XMLParser({ ignoreAttributes: false });
-  const parsed = parser.parse(sitemapXml);
-  const urls = (parsed?.urlset?.url ?? [])
-    .map((u) => (typeof u === "string" ? u : u.loc))
-    .filter(Boolean);
+  const urls = extractLocs(sitemapXml).filter(Boolean);
 
   if (urls.length === 0) {
     throw new Error("No <loc> entries found in sitemap.xml");
