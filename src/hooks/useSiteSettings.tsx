@@ -125,6 +125,15 @@ export const useSiteSettings = () => {
           (settings as any)[row.key] = { ...(settings as any)[row.key], ...row.value };
         }
       }
+
+      // Force canonical clinic address (overrides any stale DB value).
+      // Source of truth: clinic owner directive 2026-04-17.
+      settings.contact = {
+        ...settings.contact,
+        address: "21, Garia Park, Garia, Kolkata 700084",
+        address_full: "21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084",
+      };
+
       return settings;
     },
     staleTime: 0,
