@@ -179,38 +179,26 @@ const Footer = () => {
             </div>
           )}
 
-          {/* Areas We Serve — collapsible internal link cluster for local SEO */}
-          <div>
-            <details className="group">
-              <summary className="flex items-center justify-between cursor-pointer list-none mb-4">
-                <h3 className="text-lg font-heading font-bold">Areas We Serve</h3>
-                <span className="text-sm opacity-70 transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
-              </summary>
-              <ul className="space-y-2 text-sm">
-                {[
-                  { slug: "dentist-in-garia", label: "Dentist in Garia" },
-                  { slug: "dentist-in-narendrapur", label: "Dentist in Narendrapur" },
-                  { slug: "dentist-in-sonarpur", label: "Dentist in Sonarpur" },
-                  { slug: "dentist-in-baghajatin", label: "Dentist in Baghajatin" },
-                  { slug: "dentist-in-patuli", label: "Dentist in Patuli" },
-                  { slug: "dentist-in-naktala", label: "Dentist in Naktala" },
-                  { slug: "dentist-in-jadavpur", label: "Dentist in Jadavpur" },
-                  { slug: "dentist-in-tollygunge", label: "Dentist in Tollygunge" },
-                  { slug: "dental-implants-in-garia", label: "Implants in Garia" },
-                  { slug: "guided-implants-in-garia", label: "Guided Implants in Garia" },
-                  { slug: "root-canal-treatment-in-garia", label: "Root Canal in Garia" },
-                  { slug: "braces-treatment-in-garia", label: "Braces in Garia" },
-                  { slug: "smile-designing-in-tollygunge", label: "Smile Designing in Tollygunge" },
-                ].map((a) => (
-                  <li key={a.slug}>
-                    <Link to={`/${a.slug}/`} className="opacity-80 hover:opacity-100 transition-opacity">
-                      {a.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </div>
+          {/* Areas We Serve — collapsible internal link cluster for local SEO (CMS-managed) */}
+          {(footer?.show_areas_we_serve ?? true) && (footer?.areas_we_serve?.length ?? 0) > 0 && (
+            <div>
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer list-none mb-4">
+                  <h3 className="text-lg font-heading font-bold">Areas We Serve</h3>
+                  <span className="text-sm opacity-70 transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
+                </summary>
+                <ul className="space-y-2 text-sm">
+                  {(footer?.areas_we_serve ?? []).map((a, idx) => (
+                    <li key={`${a.path}-${idx}`}>
+                      <Link to={a.path} className="opacity-80 hover:opacity-100 transition-opacity">
+                        {a.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+          )}
 
           {/* Contact */}
           {showContact && (

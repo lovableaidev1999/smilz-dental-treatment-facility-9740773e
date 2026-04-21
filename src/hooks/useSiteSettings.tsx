@@ -55,7 +55,9 @@ export interface SiteSettings {
     show_quick_links: boolean;
     show_services: boolean;
     show_contact: boolean;
+    show_areas_we_serve: boolean;
     quick_links: { label: string; path: string }[];
+    areas_we_serve: { label: string; path: string }[];
     custom_copyright: string;
     layout: "standard" | "minimal" | "centered";
     show_social_icons: boolean;
@@ -91,6 +93,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     show_quick_links: true,
     show_services: true,
     show_contact: true,
+    show_areas_we_serve: true,
     quick_links: [
       { label: "Home", path: "/" },
       { label: "About Us", path: "/about" },
@@ -99,6 +102,21 @@ const DEFAULT_SETTINGS: SiteSettings = {
       { label: "Blog", path: "/blog" },
       { label: "Contact", path: "/contact" },
       { label: "Referral Registration", path: "/referral" },
+    ],
+    areas_we_serve: [
+      { label: "Dentist in Garia", path: "/dentist-in-garia/" },
+      { label: "Dentist in Narendrapur", path: "/dentist-in-narendrapur/" },
+      { label: "Dentist in Sonarpur", path: "/dentist-in-sonarpur/" },
+      { label: "Dentist in Baghajatin", path: "/dentist-in-baghajatin/" },
+      { label: "Dentist in Patuli", path: "/dentist-in-patuli/" },
+      { label: "Dentist in Naktala", path: "/dentist-in-naktala/" },
+      { label: "Dentist in Jadavpur", path: "/dentist-in-jadavpur/" },
+      { label: "Dentist in Tollygunge", path: "/dentist-in-tollygunge/" },
+      { label: "Implants in Garia", path: "/dental-implants-in-garia/" },
+      { label: "Guided Implants in Garia", path: "/guided-implants-in-garia/" },
+      { label: "Root Canal in Garia", path: "/root-canal-treatment-in-garia/" },
+      { label: "Braces in Garia", path: "/braces-treatment-in-garia/" },
+      { label: "Smile Designing in Tollygunge", path: "/smile-designing-in-tollygunge/" },
     ],
     custom_copyright: "",
     layout: "standard",

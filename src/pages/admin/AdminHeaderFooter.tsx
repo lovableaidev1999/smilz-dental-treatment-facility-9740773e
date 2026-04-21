@@ -136,6 +136,19 @@ const AdminHeaderFooter = () => {
     updateFooterLinks(form.footer.quick_links.filter((_: any, i: number) => i !== idx));
   };
 
+  // ── Areas We Serve Helpers ──
+  const updateAreas = (areas: { label: string; path: string }[]) => {
+    setForm((p: any) => ({ ...p, footer: { ...p.footer, areas_we_serve: areas } }));
+  };
+
+  const addArea = () => {
+    updateAreas([...(form.footer.areas_we_serve || []), { label: "New Area", path: "/" }]);
+  };
+
+  const removeArea = (idx: number) => {
+    updateAreas((form.footer.areas_we_serve || []).filter((_: any, i: number) => i !== idx));
+  };
+
   return (
     <div className="max-w-4xl">
       <h1 className="text-2xl font-heading font-bold text-foreground mb-2">Header & Footer</h1>
@@ -370,6 +383,7 @@ const AdminHeaderFooter = () => {
                 { key: "show_quick_links", label: "Quick Links", desc: "Navigation links column" },
                 { key: "show_services", label: "Services List", desc: "Auto-populated from services" },
                 { key: "show_contact", label: "Contact Info", desc: "Phone, email, address, hours" },
+                { key: "show_areas_we_serve", label: "Areas We Serve", desc: "Collapsible list of local-SEO area pages" },
                 { key: "show_social_icons", label: "Social Icons", desc: "Facebook, Instagram, YouTube links" },
               ].map((toggle) => (
                 <div key={toggle.key} className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
@@ -427,6 +441,56 @@ const AdminHeaderFooter = () => {
                       </Button>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Areas We Serve Editor */}
+            {(form.footer?.show_areas_we_serve ?? true) && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <LinkIcon className="h-4 w-4" /> Areas We Serve
+                  </p>
+                  <Button variant="outline" size="sm" onClick={addArea} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Add Area
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Local-SEO link cluster shown as a collapsible list in the footer. Use absolute paths like <code>/dentist-in-garia/</code>.
+                </p>
+                <div className="space-y-2">
+                  {(form.footer?.areas_we_serve || []).map((link: any, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 bg-secondary/20 rounded-lg p-2">
+                      <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <Input
+                        value={link.label}
+                        onChange={(e) => {
+                          const updated = [...(form.footer.areas_we_serve || [])];
+                          updated[idx] = { ...updated[idx], label: e.target.value };
+                          updateAreas(updated);
+                        }}
+                        placeholder="e.g. Dentist in Garia"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={link.path}
+                        onChange={(e) => {
+                          const updated = [...(form.footer.areas_we_serve || [])];
+                          updated[idx] = { ...updated[idx], path: e.target.value };
+                          updateAreas(updated);
+                        }}
+                        placeholder="/dentist-in-garia/"
+                        className="flex-1"
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => removeArea(idx)} className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {(form.footer?.areas_we_serve || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground italic px-2">No areas added yet. Click "Add Area" to start.</p>
+                  )}
                 </div>
               </div>
             )}
