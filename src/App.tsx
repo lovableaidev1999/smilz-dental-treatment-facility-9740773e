@@ -163,7 +163,7 @@ const App = () => (
                   <Route path="/services/:serviceId" element={<ServiceDetailSmart />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
-                  <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} />} />
+                  <Route path="/gallery" element={<SmartPage slug="gallery" fallback={Gallery} fallbackSeoProps={{ title: "Dental Treatment Gallery in Kolkata | Smilz Dental Clinic", description: "Browse real before & after dental treatment results at Smilz Dental Clinic, Kolkata. Smile makeovers, implants, braces & more. Book your consultation today." }} />} />
                   <Route path="/blog" element={<SmartPage slug="blog" fallback={Blog} />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/preview/blog/:id" element={<BlogPreview />} />
