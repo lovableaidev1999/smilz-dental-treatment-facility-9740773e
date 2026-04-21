@@ -111,7 +111,10 @@ function buildLayout({ intent, area, vars, h1, description }) {
           props: {
             html: `
               <p>${CLINIC.name}, led by ${CLINIC.doctor} (BDS, 25+ years' experience), is a trusted dental clinic serving ${area.name} and the wider South Kolkata neighbourhood. Our flagship clinic at <strong>${CLINIC.address}</strong> is just <strong>${area.distanceFromClinicKm} km</strong> from ${area.name}, with easy access from ${landmarks}.</p>
-              <p>Whether you're searching for a <em>dentist near me in ${area.name}</em>, the <em>best dentist in ${area.name}</em>, or a <em>highest-rated dentist near ${nearby}</em>, our team delivers world-class care across implants, root canal, orthodontics, cosmetic dentistry and emergency treatment — all under one roof.</p>
+              ${area.uniqueIntro ? `<p>${area.uniqueIntro}</p>` : ""}
+              ${area.uniqueAngle ? `<p>${area.uniqueAngle}</p>` : ""}
+              <p>Patients from ${nearby} frequently visit us for second opinions, complex implant cases and orthodontic treatment. If you are near ${area.landmarks[0] || area.name}, you can walk in or book a same-day slot by phone or WhatsApp.</p>
+              <p>Whether you're searching for a <em>dentist in ${area.name}</em>, the <em>best dentist in ${area.name}</em>, or a <em>top-rated dentist near ${nearby}</em>, our team delivers world-class care across implants, root canal, orthodontics, cosmetic dentistry and emergency treatment — all under one roof.</p>
               <ul>
                 <li><strong>${CLINIC.rating}★ Google rating</strong> with ${CLINIC.reviewCount}+ verified patient reviews.</li>
                 <li>Established in <strong>${CLINIC.yearEstablished}</strong> — over 25 years serving ${area.name} and Garia.</li>
