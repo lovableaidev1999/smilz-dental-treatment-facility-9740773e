@@ -54,7 +54,7 @@ const BuiltPage = () => {
         canonicalUrl={seo.seoCanonicalUrl || seo.canonical || undefined}
         ogImage={seo.seoOgImage || seo.ogImage || undefined}
         robots={seo.seoRobots || seo.robots || undefined}
-        jsonLd={jsonLd as any}
+        customJsonLd={jsonLd}
       />
       <VisualRenderer layout={blocks} />
     </>
