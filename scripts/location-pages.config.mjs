@@ -37,6 +37,10 @@ export const AREAS = [
     landmarks: ["Garia Buddha Mandir", "Garia Park", "Garia Park Club", "Andrews College"],
     nearby: ["Naktala", "Patuli", "Baghajatin"],
     distanceFromClinicKm: 0,
+    uniqueIntro:
+      "Garia is the heart of our practice — Smilz Dental has served families across the Garia neighbourhood since 1999, just steps from Garia Park.",
+    uniqueAngle:
+      "If you live or work anywhere between Garia Bazaar, Garia Station and Kamdahari, our clinic is the closest fully-equipped dental facility with implant, root-canal and orthodontic specialists under one roof.",
   },
   {
     key: "garia-buddha-mandir",
