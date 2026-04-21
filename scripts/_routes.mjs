@@ -74,7 +74,15 @@ export async function getAllRoutes() {
       lastmod: (p.updated_at || p.published_at || new Date().toISOString()).split("T")[0],
     })),
     ...builtPages
-      .filter((pg) => pg.page_slug && !["home", "about", "services", "contact", "blog", "gallery"].includes(pg.page_slug))
+      .filter((pg) => {
+        if (!pg.page_slug) return false;
+        // Skip core hardcoded pages
+        if (["home", "about", "services", "contact", "blog", "gallery"].includes(pg.page_slug)) return false;
+        // Skip legacy singular `service-*` slugs — these are duplicates of /services/:slug/
+        // from an older seeding format and render empty pages at the root level.
+        if (/^service-[a-z0-9-]+$/i.test(pg.page_slug)) return false;
+        return true;
+      })
       .map((pg) => {
         // Location landing pages and other root-level builder pages live at /:slug/.
         // Anything still expected at /p/:slug/ should be added to LEGACY_P_SLUGS below.
