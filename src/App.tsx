@@ -167,7 +167,7 @@ const App = () => (
                   <Route path="/blog" element={<SmartPage slug="blog" fallback={Blog} />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/preview/blog/:id" element={<BlogPreview />} />
-                  <Route path="/referral" element={<Referral />} />
+                  <Route path="/referral" element={<SmartPage slug="referral" fallback={Referral} fallbackSeoProps={{ title: "Referral Registration | Smilz Dental Clinic", description: "Refer a patient to Smilz Dental Treatment Facility in Garia, Kolkata." }} />} />
                   <Route path="/p/:slug" element={<BuiltPage />} />
 
                   {/* SEO landing pages */}
