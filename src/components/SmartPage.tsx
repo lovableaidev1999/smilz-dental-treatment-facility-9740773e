@@ -74,8 +74,11 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
   // If a published layout exists, render it via VisualRenderer
   if (layout?.is_published && layout.layout_json?.length > 0) {
     const seoMeta = (layout.layout_json as any)._seo || {};
-    const seoTitle = seoMeta.title || layout.page_title;
-    const seoDescription = seoMeta.description || fallbackSeoProps?.description || '';
+    const seoTitle = seoMeta.title || fallbackSeoProps?.title || layout.page_title;
+    const seoDescription =
+      seoMeta.description?.trim() ||
+      fallbackSeoProps?.description?.trim() ||
+      `${layout.page_title} at Smilz Dental Clinic in Kolkata. Trusted dental care, modern treatments, and friendly experts. Book your appointment today.`;
     const ogImage = seoMeta.ogImage || undefined;
 
     return (
