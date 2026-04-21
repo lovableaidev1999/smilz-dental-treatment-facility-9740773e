@@ -33,11 +33,13 @@ interface SEOHeadProps {
     sizes?: string;
     type?: string;
   };
+  /** Optional extra JSON-LD blocks (e.g. from CMS-built location pages). */
+  customJsonLd?: object[];
 }
 
 const SEOHead = ({
   title, description, keywords, canonicalUrl, ogImage, robots,
-  type = "website", article, breadcrumbs, faqs, service, preloadHero,
+  type = "website", article, breadcrumbs, faqs, service, preloadHero, customJsonLd,
 }: SEOHeadProps) => {
   const { data: settings } = useSiteSettings();
   const general = settings?.general;
@@ -223,6 +225,9 @@ const SEOHead = ({
       {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
       {articleSchema && <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>}
       {serviceSchema && <script type="application/ld+json">{JSON.stringify(serviceSchema)}</script>}
+      {customJsonLd?.map((block, i) => (
+        <script key={`custom-ld-${i}`} type="application/ld+json">{JSON.stringify(block)}</script>
+      ))}
     </Helmet>
   );
 };

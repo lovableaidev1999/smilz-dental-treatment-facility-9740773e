@@ -176,6 +176,11 @@ const App = () => (
                   <Route path="/root-canal-treatment-kolkata" element={<RootCanalKolkata />} />
                   <Route path="/dental-implants-kolkata" element={<DentalImplantsKolkata />} />
                   <Route path="/braces-aligners-kolkata" element={<BracesAlignersKolkata />} />
+
+                  {/* Catch-all root-level builder pages (e.g. location landings).
+                      Must be LAST among Layout-wrapped routes so it cannot shadow real ones.
+                      BuiltPage renders <NotFound /> for any slug not in page_layouts. */}
+                  <Route path="/:slug" element={<BuiltPage />} />
                 </Route>
 
                 {/* WordPress date-based URL redirects */}
