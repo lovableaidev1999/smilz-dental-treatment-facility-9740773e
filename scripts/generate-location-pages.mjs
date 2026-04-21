@@ -227,6 +227,25 @@ function buildLayout({ intent, area, vars, h1, description }) {
     {
       id: id(),
       type: "section",
+      props: { padding: "lg" },
+      children: [
+        {
+          id: id(),
+          type: "heading",
+          props: { level: 2, text: `Areas we serve near ${area.name}` },
+        },
+        {
+          id: id(),
+          type: "text",
+          props: {
+            html: buildSiblingLinks({ currentArea: area, currentIntentKey: intent.key }),
+          },
+        },
+      ],
+    },
+    {
+      id: id(),
+      type: "section",
       props: { padding: "lg", background: "bg-muted/40" },
       children: [
         {
