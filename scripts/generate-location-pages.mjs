@@ -465,6 +465,25 @@ function buildServiceLayout({ service, area, h1, description }) {
     {
       id: id(),
       type: "section",
+      props: { padding: "lg" },
+      children: [
+        {
+          id: id(),
+          type: "heading",
+          props: { level: 2, text: `Also serving nearby areas` },
+        },
+        {
+          id: id(),
+          type: "text",
+          props: {
+            html: buildSiblingLinks({ currentArea: area, currentIntentKey: "dentist-in" }),
+          },
+        },
+      ],
+    },
+    {
+      id: id(),
+      type: "section",
       props: { padding: "lg", background: "bg-muted/40" },
       children: [
         {
