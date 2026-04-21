@@ -75,13 +75,21 @@ export async function getAllRoutes() {
     })),
     ...builtPages
       .filter((pg) => pg.page_slug && !["home", "about", "services", "contact", "blog", "gallery"].includes(pg.page_slug))
-      .map((pg) => ({
-        path: `/p/${pg.page_slug}/`,
-        type: "builder",
-        priority: "0.6",
-        changefreq: "monthly",
-        lastmod: (pg.updated_at || new Date().toISOString()).split("T")[0],
-      })),
+      .map((pg) => {
+        // Location landing pages and other root-level builder pages live at /:slug/.
+        // Anything still expected at /p/:slug/ should be added to LEGACY_P_SLUGS below.
+        const LEGACY_P_SLUGS = new Set([]);
+        const path = LEGACY_P_SLUGS.has(pg.page_slug)
+          ? `/p/${pg.page_slug}/`
+          : `/${pg.page_slug}/`;
+        return {
+          path,
+          type: "builder",
+          priority: "0.7",
+          changefreq: "monthly",
+          lastmod: (pg.updated_at || new Date().toISOString()).split("T")[0],
+        };
+      }),
   ];
 
   // Deduplicate by normalized path
