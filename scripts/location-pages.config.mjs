@@ -141,6 +141,17 @@ export const AREAS = [
     uniqueAngle:
       "From Jadavpur 8B bus stand take any Garia-bound bus or auto — we are 12–15 minutes away with EMI options on orthodontic treatments.",
   },
+  {
+    key: "tollygunge",
+    name: "Tollygunge",
+    landmarks: ["Tollygunge Metro", "Rabindra Sarobar", "Tollygunge Club"],
+    nearby: ["Bansdroni", "Naktala", "Jadavpur"],
+    distanceFromClinicKm: 6.2,
+    uniqueIntro:
+      "Tollygunge residents visit Smilz Dental for advanced cosmetic dentistry, smile designing and guided implant procedures unavailable at most local clinics.",
+    uniqueAngle:
+      "From Tollygunge Metro it is a 20-minute drive down Raja S.C. Mallick Road — patients regularly travel from Tollygunge Club and Rabindra Sarobar for our digital smile-design and full-mouth-rehab work.",
+  },
 ];
 
 /**
@@ -226,6 +237,30 @@ export const SERVICES = [
     schemaServiceType: "Orthodontics",
     body:
       "Choose from metal, ceramic, self-ligating braces or virtually invisible clear aligners. Treatment plans typically run 12–24 months with free monthly follow-ups.",
+  },
+  {
+    key: "smile-designing",
+    name: "Smile Designing",
+    serviceSlug: "smile-designing",
+    h1: "Smile Designing in {area}",
+    title: "Smile Designing in {area} | Digital Smile Design | Smilz",
+    description:
+      "Smile designing in {area} with digital previews, veneers, whitening and gum contouring. {doctor} crafts natural, camera-ready smiles tailored to your face.",
+    schemaServiceType: "Cosmetic Dentistry",
+    body:
+      "Our smile designing combines digital smile design (DSD) previews, porcelain veneers, professional whitening and gum contouring — letting you see your new smile before treatment begins.",
+  },
+  {
+    key: "guided-implants",
+    name: "Guided Implants",
+    serviceSlug: "dental-implants",
+    h1: "Guided Implants in {area}",
+    title: "Guided Dental Implants in {area} | Smilz Dental",
+    description:
+      "Guided implant surgery in {area} using 3D CBCT planning and surgical guides for flapless, painless, predictable implant placement. {doctor}, 25+ years' experience.",
+    schemaServiceType: "Dental Implant",
+    body:
+      "Guided implant placement uses CBCT scans and 3D-printed surgical guides for flapless, minimally-invasive surgery — faster healing, less pain, and millimetre-accurate positioning.",
   },
 ];
 
