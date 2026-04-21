@@ -128,7 +128,7 @@ const Footer = () => {
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="container-narrow mx-auto section-padding">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-10">
           {/* Clinic info */}
           <div>
             <h3 className="text-lg font-heading font-bold mb-4">{general?.clinic_name ?? "Smilz Dental Treatment Facility"}</h3>
