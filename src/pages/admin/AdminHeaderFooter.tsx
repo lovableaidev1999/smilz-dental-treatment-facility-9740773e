@@ -136,6 +136,19 @@ const AdminHeaderFooter = () => {
     updateFooterLinks(form.footer.quick_links.filter((_: any, i: number) => i !== idx));
   };
 
+  // ── Areas We Serve Helpers ──
+  const updateAreas = (areas: { label: string; path: string }[]) => {
+    setForm((p: any) => ({ ...p, footer: { ...p.footer, areas_we_serve: areas } }));
+  };
+
+  const addArea = () => {
+    updateAreas([...(form.footer.areas_we_serve || []), { label: "New Area", path: "/" }]);
+  };
+
+  const removeArea = (idx: number) => {
+    updateAreas((form.footer.areas_we_serve || []).filter((_: any, i: number) => i !== idx));
+  };
+
   return (
     <div className="max-w-4xl">
       <h1 className="text-2xl font-heading font-bold text-foreground mb-2">Header & Footer</h1>
@@ -370,6 +383,7 @@ const AdminHeaderFooter = () => {
                 { key: "show_quick_links", label: "Quick Links", desc: "Navigation links column" },
                 { key: "show_services", label: "Services List", desc: "Auto-populated from services" },
                 { key: "show_contact", label: "Contact Info", desc: "Phone, email, address, hours" },
+                { key: "show_areas_we_serve", label: "Areas We Serve", desc: "Collapsible list of local-SEO area pages" },
                 { key: "show_social_icons", label: "Social Icons", desc: "Facebook, Instagram, YouTube links" },
               ].map((toggle) => (
                 <div key={toggle.key} className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
