@@ -1,0 +1,35 @@
+name: Generate Location Landing Pages
+
+# Manually trigger from the GitHub Actions UI to seed/refresh
+# the location-based landing pages in Supabase (page_layouts).
+# Idempotent — safe to re-run. Upserts by page_slug.
+#
+# After seeding, run the "Rebuild Prerendered Pages" workflow
+# (or push to main) to include them in sitemap + prerender + deploy.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install --legacy-peer-deps
+
+      - name: Seed location pages into Supabase
+        run: node scripts/generate-location-pages.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Trigger rebuild + deploy
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: content-updated
