@@ -179,6 +179,31 @@ const Footer = () => {
             </div>
           )}
 
+          {/* Areas We Serve — internal link cluster for local SEO */}
+          <div>
+            <h3 className="text-lg font-heading font-bold mb-4">Areas We Serve</h3>
+            <ul className="space-y-2 text-sm">
+              {[
+                { slug: "dentist-in-garia", label: "Dentist in Garia" },
+                { slug: "dentist-in-narendrapur", label: "Dentist in Narendrapur" },
+                { slug: "dentist-in-sonarpur", label: "Dentist in Sonarpur" },
+                { slug: "dentist-in-baghajatin", label: "Dentist in Baghajatin" },
+                { slug: "dentist-in-patuli", label: "Dentist in Patuli" },
+                { slug: "dentist-in-naktala", label: "Dentist in Naktala" },
+                { slug: "dentist-in-jadavpur", label: "Dentist in Jadavpur" },
+                { slug: "dental-implants-in-garia", label: "Implants in Garia" },
+                { slug: "root-canal-treatment-in-garia", label: "Root Canal in Garia" },
+                { slug: "braces-treatment-in-garia", label: "Braces in Garia" },
+              ].map((a) => (
+                <li key={a.slug}>
+                  <Link to={`/${a.slug}/`} className="opacity-80 hover:opacity-100 transition-opacity">
+                    {a.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Contact */}
           {showContact && (
             <div>
