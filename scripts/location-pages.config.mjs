@@ -48,6 +48,10 @@ export const AREAS = [
     landmarks: ["Garia Buddha Mandir", "Garia Metro Station"],
     nearby: ["Garia Park", "Naktala"],
     distanceFromClinicKm: 0.6,
+    uniqueIntro:
+      "Patients arriving via the Garia Buddha Mandir bus stop or the new Garia Metro terminus reach our clinic in under 10 minutes on foot.",
+    uniqueAngle:
+      "If you are in the Buddha Mandir area, the easiest route is straight down Raja S.C. Mallick Road towards Garia Park — we are opposite the Garia Park Club.",
   },
   {
     key: "garia-park",
@@ -55,6 +59,10 @@ export const AREAS = [
     landmarks: ["Garia Park", "Garia Park Club", "Andrews College"],
     nearby: ["Garia", "Naktala"],
     distanceFromClinicKm: 0.1,
+    uniqueIntro:
+      "Smilz Dental is literally across the road from Garia Park — the most convenient dental clinic for residents of the Garia Park colony and adjoining lanes.",
+    uniqueAngle:
+      "If you walk in Garia Park every morning, drop in for a quick scaling, consultation or follow-up — we keep dedicated walk-in slots for neighbourhood patients.",
   },
   {
     key: "near-andrews-college",
@@ -62,6 +70,10 @@ export const AREAS = [
     landmarks: ["Andrews College", "Garia Park"],
     nearby: ["Garia", "Patuli"],
     distanceFromClinicKm: 0.2,
+    uniqueIntro:
+      "Students and faculty of Andrews College have visited Smilz Dental for over two decades for braces, wisdom-tooth extractions and routine check-ups.",
+    uniqueAngle:
+      "If you are in the Andrews College area, our clinic offers student-friendly evening hours and EMI options on braces and aligners.",
   },
   {
     key: "narendrapur",
@@ -69,6 +81,10 @@ export const AREAS = [
     landmarks: ["Narendrapur Ramakrishna Mission", "Narendrapur Station"],
     nearby: ["Garia", "Sonarpur"],
     distanceFromClinicKm: 3.5,
+    uniqueIntro:
+      "Narendrapur families have trusted Smilz Dental for complex implant and full-mouth-rehabilitation cases for years — a 10-minute drive via Sonarpur Station Road.",
+    uniqueAngle:
+      "Patients from Narendrapur Ramakrishna Mission area frequently visit us for second opinions on implants and root-canal retreatment.",
   },
   {
     key: "sonarpur",
@@ -76,6 +92,10 @@ export const AREAS = [
     landmarks: ["Sonarpur Station", "Rajpur Sonarpur Municipality"],
     nearby: ["Narendrapur", "Garia"],
     distanceFromClinicKm: 5.5,
+    uniqueIntro:
+      "Sonarpur residents choose Smilz Dental for advanced procedures unavailable locally — guided implant surgery, clear aligners and digital smile design.",
+    uniqueAngle:
+      "Patients from Sonarpur and Rajpur typically reach us in 15–20 minutes via the Garia bypass; ample on-street parking is available outside the clinic.",
   },
   {
     key: "baghajatin",
@@ -83,6 +103,10 @@ export const AREAS = [
     landmarks: ["Baghajatin Station", "Baghajatin Bazaar"],
     nearby: ["Patuli", "Garia"],
     distanceFromClinicKm: 2.5,
+    uniqueIntro:
+      "From Baghajatin Station and Bazaar, Smilz Dental is a short auto ride down the Garia main road — a long-time favourite for Baghajatin families.",
+    uniqueAngle:
+      "If you are near Baghajatin colony, we are the nearest clinic offering single-visit root canals and same-day emergency care.",
   },
   {
     key: "patuli",
@@ -90,6 +114,10 @@ export const AREAS = [
     landmarks: ["Patuli Lake", "Patuli Bus Stand"],
     nearby: ["Baghajatin", "Garia"],
     distanceFromClinicKm: 1.8,
+    uniqueIntro:
+      "Patuli residents are among our most regular visitors — the clinic is a 5-minute drive from Patuli Lake along the EM Bypass service road.",
+    uniqueAngle:
+      "If you walk around Patuli Jheel in the evenings, our extended evening hours (5–9 PM) make routine visits effortless.",
   },
   {
     key: "naktala",
@@ -97,6 +125,10 @@ export const AREAS = [
     landmarks: ["Naktala Bazaar", "Naktala High School"],
     nearby: ["Garia", "Bansdroni"],
     distanceFromClinicKm: 1.2,
+    uniqueIntro:
+      "Naktala families have relied on Smilz Dental for paediatric dentistry, braces and family check-ups since the late 1990s.",
+    uniqueAngle:
+      "If you are near Naktala High School or Naktala Bazaar, our clinic is a quick 5-minute drive via Garia Main Road — we offer dedicated kids' slots after school hours.",
   },
   {
     key: "jadavpur",
@@ -104,6 +136,10 @@ export const AREAS = [
     landmarks: ["Jadavpur University", "8B Bus Stand"],
     nearby: ["Baghajatin", "Garia"],
     distanceFromClinicKm: 4.0,
+    uniqueIntro:
+      "Jadavpur University students, faculty and 8B-route commuters visit Smilz Dental for affordable braces, aligners and wisdom-tooth care.",
+    uniqueAngle:
+      "From Jadavpur 8B bus stand take any Garia-bound bus or auto — we are 12–15 minutes away with EMI options on orthodontic treatments.",
   },
 ];
 
