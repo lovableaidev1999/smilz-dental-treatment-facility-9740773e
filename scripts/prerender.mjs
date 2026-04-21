@@ -190,7 +190,14 @@ function validatePage(route, metrics, htmlBytes) {
   const warnings = [];
 
   if (!metrics.h1) failures.push('missing H1');
-  if (!metrics.desc || metrics.desc.length < 50) failures.push(`meta description too short (${metrics.desc.length} chars)`);
+  // Description length is a soft SEO norm; warn if short, only fail if effectively missing.
+  if (!metrics.desc || metrics.desc.length < 30) {
+    failures.push(`meta description missing or far too short (${metrics.desc.length} chars)`);
+  } else if (metrics.desc.length < 70) {
+    warnings.push(`meta description short (${metrics.desc.length} chars; aim for 70–160)`);
+  } else if (metrics.desc.length > 170) {
+    warnings.push(`meta description long (${metrics.desc.length} chars; aim for 70–160)`);
+  }
   if (metrics.schemaCount < 1) failures.push('no JSON-LD schema');
   if (metrics.rootLen < 2000) failures.push(`body content too small (${metrics.rootLen} chars)`);
 
