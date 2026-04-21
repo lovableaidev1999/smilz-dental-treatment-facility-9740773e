@@ -23,7 +23,7 @@
  *   node scripts/generate-location-pages.mjs --dry-run
  *   node scripts/generate-location-pages.mjs --only=best-dentist-in:garia
  */
-import { AREAS, INTENTS, OVERRIDES, CLINIC } from "./location-pages.config.mjs";
+import { AREAS, INTENTS, SERVICES, OVERRIDES, CLINIC } from "./location-pages.config.mjs";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
