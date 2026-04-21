@@ -158,21 +158,21 @@ export const INTENTS = [
     angle: "expertise",
   },
   {
-    key: "dentist-near-me-in",
-    slugTemplate: "dentist-near-me-in-{area}",
-    h1: "Dentist Near Me in {area}",
-    title: "Dentist Near Me in {area} | Smilz Dental Garia",
+    key: "dentist-in",
+    slugTemplate: "dentist-in-{area}",
+    h1: "Dentist in {area}",
+    title: "Dentist in {area} | {clinic}",
     description:
-      "Searching for a dentist near you in {area}? Smilz Dental in Garia is just {distance} away — modern clinic, painless treatments, walk-ins welcome. Call {phone}.",
-    angle: "proximity",
+      "Looking for a dentist in {area}? Smilz Dental, led by {doctor}, offers advanced dental care including implants, root canal, braces and cosmetic dentistry. Rated {rating}★.",
+    angle: "general",
   },
   {
-    key: "highest-rated-dentist-in",
-    slugTemplate: "highest-rated-dentist-in-{area}",
-    h1: "Highest Google-Rated Dentist in {area}",
-    title: "Highest Google-Rated Dentist in {area} | Smilz Dental",
+    key: "top-rated-dentist-in",
+    slugTemplate: "top-rated-dentist-in-{area}",
+    h1: "Top-Rated Dentist in {area}",
+    title: "Top-Rated Dentist in {area} | Smilz Dental",
     description:
-      "Smilz Dental serves {area} with the highest Google rating ({rating}★, {reviews}+ reviews). {doctor} provides world-class implants, braces & cosmetic dentistry.",
+      "Smilz Dental is a top-rated dental clinic serving {area} with {rating}★ on Google ({reviews}+ reviews). {doctor} provides expert implants, braces and cosmetic dentistry.",
     angle: "social-proof",
   },
   {
@@ -183,6 +183,49 @@ export const INTENTS = [
     description:
       "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal & extractions. Call {phone} or WhatsApp now — open Mon–Sat.",
     angle: "urgency",
+  },
+];
+
+/**
+ * Service × area variants. Each generates pages like
+ * "dental-implants-in-garia", "root-canal-treatment-in-patuli".
+ */
+export const SERVICES = [
+  {
+    key: "dental-implants",
+    name: "Dental Implants",
+    serviceSlug: "dental-implants",
+    h1: "Dental Implants in {area}",
+    title: "Dental Implants in {area} | Smilz Dental Garia",
+    description:
+      "Looking for dental implants in {area}? {doctor} at Smilz Dental offers guided, painless implant placement with lifetime-grade titanium implants. {rating}★ rated.",
+    schemaServiceType: "Dental Implant",
+    body:
+      "We provide single-tooth implants, multi-tooth bridges on implants and full-mouth All-on-4/All-on-6 rehabilitation using guided surgery for predictable results.",
+  },
+  {
+    key: "root-canal-treatment",
+    name: "Root Canal Treatment",
+    serviceSlug: "painless-root-canal-treatment",
+    h1: "Root Canal Treatment in {area}",
+    title: "Root Canal Treatment in {area} | Painless RCT | Smilz",
+    description:
+      "Painless root canal treatment in {area} with single-visit options. {doctor} at Smilz Dental uses rotary endodontics and apex locators for precise, comfortable RCT.",
+    schemaServiceType: "Endodontic Therapy",
+    body:
+      "Our painless single-visit RCT uses modern rotary endodontics, apex locators and digital radiographs — most cases finish in one sitting with no post-op pain.",
+  },
+  {
+    key: "braces-treatment",
+    name: "Braces Treatment",
+    serviceSlug: "orthodontic-braces",
+    h1: "Braces Treatment in {area}",
+    title: "Braces & Aligners in {area} | Smilz Dental Garia",
+    description:
+      "Braces and clear aligners in {area} with EMI options. Metal, ceramic, self-ligating and Invisalign-style aligners available. Free orthodontic consultation.",
+    schemaServiceType: "Orthodontics",
+    body:
+      "Choose from metal, ceramic, self-ligating braces or virtually invisible clear aligners. Treatment plans typically run 12–24 months with free monthly follow-ups.",
   },
 ];
 
