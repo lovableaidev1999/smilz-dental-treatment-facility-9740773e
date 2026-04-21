@@ -4,10 +4,14 @@
  * with Puppeteer, and writes the fully-rendered HTML back to dist/.
  *
  * Hardened to:
+ *   - use the central scripts/_routes.mjs as the single route source
  *   - guarantee a complete <head> (title, meta, canonical, OG, JSON-LD)
  *   - strip framer-motion `opacity:0` / `transform` inline styles so bots see content
  *   - wait for real content (skeletons gone, h1 present, OR data-prerender-ready)
- *   - fall back gracefully when networkidle never fires
+ *   - validate every page (H1, meta description, JSON-LD, body, links)
+ *   - run a mobile-first 375px sample audit
+ *   - emit dist/prerender-report.json + a console summary table
+ *   - exit non-zero if any page fails critical checks
  *
  * Usage: node scripts/prerender.mjs
  */
@@ -15,29 +19,14 @@ import { createServer } from "http";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { getAllRoutes, SKIP_PREFIXES } from "./_routes.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
 const PORT = 4173;
 
-// Static routes to prerender
-const STATIC_ROUTES = [
-  "/",
-  "/about",
-  "/services",
-  "/contact",
-  "/gallery",
-  "/blog",
-  // SEO landing pages
-  "/dentist-in-kolkata",
-  "/dental-clinic-in-garia-kolkata",
-  "/root-canal-treatment-kolkata",
-  "/dental-implants-kolkata",
-  "/braces-aligners-kolkata",
-];
-
-// Routes to SKIP (admin, referral, etc.)
-const SKIP_PREFIXES = ["/admin", "/login", "/referral", "/preview"];
+// Sample of routes to audit at 375px mobile viewport
+const MOBILE_SAMPLE = ["/", "/about/", "/services/", "/contact/", "/blog/"];
 
 /**
  * Serve the dist folder as a static SPA server (fallback to index.html).
@@ -61,7 +50,6 @@ function startServer() {
 
   const server = createServer((req, res) => {
     let filePath = join(DIST, req.url === "/" ? "/index.html" : req.url.split("?")[0]);
-    // Don't override the real sitemap.xml with index.html
     if (filePath.endsWith("/")) filePath = join(filePath, "index.html");
     if (!existsSync(filePath) || !filePath.includes(".")) {
       filePath = join(DIST, "index.html");
@@ -86,49 +74,10 @@ function startServer() {
   });
 }
 
-async function fetchDynamicRoutes() {
-  const serviceRoutes = [];
-  const blogRoutes = [];
-
-  try {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-
-    if (supabaseUrl && supabaseKey) {
-      const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
-
-      const servicesResp = await fetch(
-        `${supabaseUrl}/rest/v1/services?select=slug&is_active=eq.true`,
-        { headers }
-      );
-      if (servicesResp.ok) {
-        const services = await servicesResp.json();
-        services.forEach((s) => serviceRoutes.push(`/services/${s.slug}`));
-      }
-
-      const blogResp = await fetch(
-        `${supabaseUrl}/rest/v1/blog_posts?select=slug&is_published=eq.true`,
-        { headers }
-      );
-      if (blogResp.ok) {
-        const posts = await blogResp.json();
-        posts.forEach((p) => blogRoutes.push(`/blog/${p.slug}`));
-      }
-    } else {
-      console.warn("[prerender] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — skipping dynamic routes");
-    }
-  } catch (err) {
-    console.warn("[prerender] Could not fetch dynamic routes:", err.message);
-  }
-
-  return [...serviceRoutes, ...blogRoutes];
-}
-
 /**
  * Wait for the page to be fully rendered with actual content.
  */
 async function waitForContent(page, route) {
-  // Use domcontentloaded first (more forgiving) then poll for real content.
   try {
     await page.goto(`http://localhost:${PORT}${route}`, {
       waitUntil: "networkidle2",
@@ -138,10 +87,6 @@ async function waitForContent(page, route) {
     console.warn(`[prerender] networkidle2 timeout for ${route}: ${err.message} — continuing`);
   }
 
-  // Wait for content readiness:
-  //   a) explicit data-prerender-ready attribute, OR
-  //   b) skeletons gone AND h1 has text, OR
-  //   c) substantial #root content (>2000 chars)
   await page.waitForFunction(() => {
     if (document.querySelector('[data-prerender-ready="true"]')) return true;
     const root = document.querySelector('#root');
@@ -156,7 +101,6 @@ async function waitForContent(page, route) {
     console.warn(`[prerender] ⚠ Content readiness timeout for ${route} — capturing anyway`);
   });
 
-  // Wait for react-helmet-async to inject the real <title>
   await page.waitForFunction(() => {
     const t = document.querySelector('title');
     return t && t.textContent && t.textContent.trim().length > 0
@@ -165,24 +109,112 @@ async function waitForContent(page, route) {
     console.warn(`[prerender] ⚠ Helmet title not detected for ${route} — using existing title`);
   });
 
-  // Final settle
   await new Promise((r) => setTimeout(r, 1200));
 }
 
-/**
- * Strip framer-motion invisible inline styles so bots see content.
- * Removes opacity:0 and transform translate values from inline `style` attrs.
- */
 function makeContentVisible(html) {
   return html
-    // Remove opacity:0 (with any whitespace/quoting variation)
     .replace(/opacity\s*:\s*0\s*;?/gi, '')
-    // Remove inline transforms used by framer-motion (translateX/Y values)
     .replace(/transform\s*:\s*translate[XY]?\([^)]*\)\s*;?/gi, '')
-    // Clean up empty style attributes left behind
     .replace(/\sstyle=""/gi, '')
     .replace(/\sstyle="\s*"/gi, '');
 }
+
+async function captureMetrics(page) {
+  return await page.evaluate(() => {
+    const title = document.querySelector('title')?.textContent?.trim() || '';
+    const desc = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
+    const h1El = document.querySelector('h1');
+    const h1 = h1El?.textContent?.trim() || '';
+    const root = document.querySelector('#root');
+    const rootLen = root?.innerHTML.length || 0;
+    const ldNodes = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+    const schemaTypes = [];
+    ldNodes.forEach((n) => {
+      try {
+        const j = JSON.parse(n.textContent || '{}');
+        const t = j['@type'];
+        if (Array.isArray(t)) schemaTypes.push(...t);
+        else if (t) schemaTypes.push(t);
+      } catch {}
+    });
+    const origin = window.location.origin;
+    const internalLinks = Array.from(document.querySelectorAll('a[href]')).filter((a) => {
+      const href = a.getAttribute('href') || '';
+      return href.startsWith('/') || href.startsWith(origin) || href.startsWith('https://smilz.net');
+    }).length;
+    return {
+      title, desc, canonical, h1,
+      rootLen,
+      schemaCount: ldNodes.length,
+      schemaTypes,
+      internalLinks,
+    };
+  });
+}
+
+async function mobileAudit(page, route) {
+  const issues = [];
+  await page.setViewport({ width: 375, height: 812, isMobile: true });
+  try {
+    await waitForContent(page, route);
+    const result = await page.evaluate(() => {
+      const out = { issues: [] };
+      const vp = document.querySelector('meta[name="viewport"]');
+      if (!vp) out.issues.push('missing viewport meta');
+      if (document.documentElement.scrollWidth > window.innerWidth + 4) {
+        out.issues.push(`horizontal overflow (${document.documentElement.scrollWidth}px > 375px)`);
+      }
+      const imgs = Array.from(document.querySelectorAll('img'));
+      const belowFold = imgs.filter((img) => {
+        const r = img.getBoundingClientRect();
+        return r.top > window.innerHeight;
+      });
+      const noLazy = belowFold.filter((img) => img.getAttribute('loading') !== 'lazy');
+      if (noLazy.length > 0) out.issues.push(`${noLazy.length} below-fold images missing loading="lazy"`);
+      const noSize = imgs.filter((img) => !img.getAttribute('width') || !img.getAttribute('height')).length;
+      if (noSize > 0) out.issues.push(`${noSize} images missing width/height`);
+      return out;
+    });
+    issues.push(...result.issues);
+  } catch (err) {
+    issues.push(`mobile audit error: ${err.message}`);
+  }
+  await page.setViewport({ width: 1280, height: 800, isMobile: false });
+  return issues;
+}
+
+function validatePage(route, metrics, htmlBytes) {
+  const failures = [];
+  const warnings = [];
+
+  if (!metrics.h1) failures.push('missing H1');
+  if (!metrics.desc || metrics.desc.length < 50) failures.push(`meta description too short (${metrics.desc.length} chars)`);
+  if (metrics.schemaCount < 1) failures.push('no JSON-LD schema');
+  if (metrics.rootLen < 2000) failures.push(`body content too small (${metrics.rootLen} chars)`);
+
+  if (metrics.internalLinks < 3) warnings.push(`only ${metrics.internalLinks} internal links`);
+  if (!metrics.canonical) warnings.push('missing canonical');
+  if (!metrics.title || /^(Vite|Smilz Dental Treatment Facility)$/.test(metrics.title)) {
+    warnings.push('default/missing <title>');
+  }
+
+  // Per-page schema expectations (warn only)
+  const expect = (types) => {
+    const missing = types.filter((t) => !metrics.schemaTypes.includes(t));
+    if (missing.length) warnings.push(`expected schema: ${missing.join(', ')}`);
+  };
+  if (route === '/') expect(['LocalBusiness']);
+  else if (route === '/about/') expect(['LocalBusiness']);
+  else if (route === '/contact/') expect(['LocalBusiness']);
+  else if (route.startsWith('/services/') && route !== '/services/') expect(['MedicalProcedure']);
+  else if (route.startsWith('/blog/') && route !== '/blog/') expect(['Article']);
+
+  return { failures, warnings, htmlBytes };
+}
+
+function pad(s, n) { s = String(s); return s.length >= n ? s.slice(0, n) : s + ' '.repeat(n - s.length); }
 
 async function prerender() {
   const server = await startServer();
@@ -195,7 +227,6 @@ async function prerender() {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
-  // Block heavy third-party requests that delay networkidle
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url();
@@ -211,73 +242,103 @@ async function prerender() {
     }
   });
 
-  const dynamicRoutes = await fetchDynamicRoutes();
-  const allRoutes = [...STATIC_ROUTES, ...dynamicRoutes];
+  const allRoutes = await getAllRoutes();
+  const routesToRender = allRoutes.filter((r) => !SKIP_PREFIXES.some((p) => r.path.startsWith(p)));
 
-  console.log(`[prerender] Prerendering ${allRoutes.length} routes...`);
+  console.log(`[prerender] Prerendering ${routesToRender.length} routes...`);
 
-  let successCount = 0;
-  let failCount = 0;
+  const report = {
+    generatedAt: new Date().toISOString(),
+    totalRoutes: routesToRender.length,
+    succeeded: 0,
+    failed: 0,
+    warnings: 0,
+    pages: [],
+  };
 
-  for (const route of allRoutes) {
-    if (SKIP_PREFIXES.some((p) => route.startsWith(p))) continue;
-
+  for (const r of routesToRender) {
+    const route = r.path;
     try {
       console.log(`[prerender] → ${route}`);
-
       await waitForContent(page, route);
 
-      // Capture full document. Reconstruct from doctype + outerHTML to GUARANTEE <head> survives.
-      const fullHtml = await page.evaluate(() => {
-        return '<!DOCTYPE html>' + document.documentElement.outerHTML;
-      });
-
-      // Quality checks
-      const headInfo = await page.evaluate(() => {
-        const title = document.querySelector('title')?.textContent || '';
-        const desc = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-        const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
-        const h1 = document.querySelector('h1')?.textContent?.trim() || '';
-        const rootLen = document.querySelector('#root')?.innerHTML.length || 0;
-        const jsonLd = document.querySelectorAll('script[type="application/ld+json"]').length;
-        return { title, desc, canonical, h1, rootLen, jsonLd };
-      });
-
-      if (!headInfo.title) console.warn(`[prerender] ⚠ ${route} — missing <title>`);
-      if (!headInfo.desc) console.warn(`[prerender] ⚠ ${route} — missing meta description`);
-      if (!headInfo.canonical) console.warn(`[prerender] ⚠ ${route} — missing canonical`);
-      if (!headInfo.h1) console.warn(`[prerender] ⚠ ${route} — no h1 text`);
-      if (headInfo.rootLen < 500) console.warn(`[prerender] ⚠ ${route} — root very short (${headInfo.rootLen})`);
-      if (fullHtml.includes('animate-pulse')) console.warn(`[prerender] ⚠ ${route} — skeleton loaders still present`);
-
-      // Strip invisible framer-motion inline styles
+      const fullHtml = await page.evaluate(() => '<!DOCTYPE html>' + document.documentElement.outerHTML);
       const visibleHtml = makeContentVisible(fullHtml);
+      const metrics = await captureMetrics(page);
+      const validation = validatePage(route, metrics, visibleHtml.length);
 
-      // Write to dist/
       const filePath = route === "/"
         ? join(DIST, "index.html")
         : join(DIST, route, "index.html");
-
       const dir = dirname(filePath);
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
       writeFileSync(filePath, visibleHtml);
 
+      const status = validation.failures.length === 0 ? 'success' : 'failed';
+      if (status === 'success') report.succeeded++;
+      else report.failed++;
+      if (validation.warnings.length > 0) report.warnings++;
+
+      report.pages.push({
+        url: route,
+        type: r.type,
+        status,
+        h1: metrics.h1,
+        descLen: metrics.desc.length,
+        schemaCount: metrics.schemaCount,
+        schemaTypes: metrics.schemaTypes,
+        internalLinks: metrics.internalLinks,
+        htmlBytes: visibleHtml.length,
+        failures: validation.failures,
+        warnings: validation.warnings,
+      });
+
+      const icon = status === 'success' ? '✅' : '❌';
       console.log(
-        `[prerender] ✅ ${route} — title:"${headInfo.title.slice(0, 40)}" h1:"${headInfo.h1.slice(0, 40)}" root:${headInfo.rootLen} jsonLd:${headInfo.jsonLd} html:${visibleHtml.length}`
+        `[prerender] ${icon} ${route} — h1:"${metrics.h1.slice(0, 40)}" desc:${metrics.desc.length} schema:${metrics.schemaCount} links:${metrics.internalLinks}`
       );
-      successCount++;
+      if (validation.failures.length) console.error(`[prerender]    FAIL: ${validation.failures.join('; ')}`);
+      if (validation.warnings.length) console.warn(`[prerender]    WARN: ${validation.warnings.join('; ')}`);
     } catch (err) {
       console.error(`[prerender] ❌ Failed ${route}: ${err.message}`);
-      failCount++;
+      report.failed++;
+      report.pages.push({ url: route, type: r.type, status: 'failed', error: err.message });
     }
+  }
+
+  // Mobile-first sample audit
+  console.log(`[prerender] ── Mobile 375px sample audit ──`);
+  for (const route of MOBILE_SAMPLE) {
+    if (!routesToRender.find((r) => r.path === route)) continue;
+    const issues = await mobileAudit(page, route);
+    const entry = report.pages.find((p) => p.url === route);
+    if (entry) entry.mobileIssues = issues;
+    if (issues.length === 0) console.log(`[prerender] 📱 ${route} — OK`);
+    else console.warn(`[prerender] 📱 ${route} — ${issues.join('; ')}`);
   }
 
   await browser.close();
   server.close();
-  console.log(`[prerender] ✓ Done! ${successCount} succeeded, ${failCount} failed out of ${allRoutes.length} routes.`);
 
-  if (failCount > 0) {
-    console.warn(`[prerender] ⚠ ${failCount} routes failed — check logs above.`);
+  // Write machine report
+  writeFileSync(join(DIST, 'prerender-report.json'), JSON.stringify(report, null, 2));
+
+  // Console summary table
+  console.log(`\n[prerender] ──────────────────────────────────────────────────────────────`);
+  console.log(`[prerender] ${pad('ROUTE', 48)} ${pad('H1', 3)} ${pad('DESC', 5)} ${pad('SCHEMA', 7)} ${pad('LINKS', 6)} STATUS`);
+  console.log(`[prerender] ──────────────────────────────────────────────────────────────`);
+  for (const p of report.pages) {
+    const h1 = p.h1 ? '✓' : '✗';
+    const icon = p.status === 'success' ? '✅' : '❌';
+    console.log(`[prerender] ${pad(p.url, 48)} ${pad(h1, 3)} ${pad(p.descLen ?? 0, 5)} ${pad(p.schemaCount ?? 0, 7)} ${pad(p.internalLinks ?? 0, 6)} ${icon}`);
+  }
+  console.log(`[prerender] ──────────────────────────────────────────────────────────────`);
+  console.log(`[prerender] ${report.succeeded} succeeded · ${report.failed} failed · ${report.warnings} with warnings`);
+  console.log(`[prerender] Report: dist/prerender-report.json\n`);
+
+  if (report.failed > 0) {
+    console.error(`[prerender] ❌ ${report.failed} route(s) failed critical checks. Build should be inspected.`);
+    process.exit(1);
   }
 }
 
