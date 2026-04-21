@@ -445,6 +445,56 @@ const AdminHeaderFooter = () => {
               </div>
             )}
 
+            {/* Areas We Serve Editor */}
+            {(form.footer?.show_areas_we_serve ?? true) && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <LinkIcon className="h-4 w-4" /> Areas We Serve
+                  </p>
+                  <Button variant="outline" size="sm" onClick={addArea} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Add Area
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Local-SEO link cluster shown as a collapsible list in the footer. Use absolute paths like <code>/dentist-in-garia/</code>.
+                </p>
+                <div className="space-y-2">
+                  {(form.footer?.areas_we_serve || []).map((link: any, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 bg-secondary/20 rounded-lg p-2">
+                      <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <Input
+                        value={link.label}
+                        onChange={(e) => {
+                          const updated = [...(form.footer.areas_we_serve || [])];
+                          updated[idx] = { ...updated[idx], label: e.target.value };
+                          updateAreas(updated);
+                        }}
+                        placeholder="e.g. Dentist in Garia"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={link.path}
+                        onChange={(e) => {
+                          const updated = [...(form.footer.areas_we_serve || [])];
+                          updated[idx] = { ...updated[idx], path: e.target.value };
+                          updateAreas(updated);
+                        }}
+                        placeholder="/dentist-in-garia/"
+                        className="flex-1"
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => removeArea(idx)} className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {(form.footer?.areas_we_serve || []).length === 0 && (
+                    <p className="text-xs text-muted-foreground italic px-2">No areas added yet. Click "Add Area" to start.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Custom Copyright */}
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">Custom Copyright Text</label>
