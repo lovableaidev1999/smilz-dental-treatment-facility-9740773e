@@ -54,6 +54,43 @@ const id = () =>
   "blk-" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 
 // ─── content builders ─────────────────────────────────────────────────
+
+/**
+ * Build sibling cross-link HTML so each location page links to other
+ * areas (same intent) and to its service-area variants. Builds an
+ * internal-link cluster Google can crawl for topical authority.
+ */
+function buildSiblingLinks({ currentArea, currentIntentKey }) {
+  // Other areas — same intent
+  const siblingAreas = AREAS.filter((a) => a.key !== currentArea.key).slice(0, 8);
+  const intentSlug = currentIntentKey || "dentist-in";
+  const siblingAreaLinks = siblingAreas
+    .map(
+      (a) =>
+        `<li><a href="/${intentSlug}-${a.key}/">${intentSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} ${a.name}</a></li>`,
+    )
+    .join("");
+
+  // Service variants for this area
+  const serviceVariantLinks = SERVICES.map(
+    (s) =>
+      `<li><a href="/${s.key}-in-${currentArea.key}/">${s.name} in ${currentArea.name}</a></li>`,
+  ).join("");
+
+  return `
+    <div class="grid md:grid-cols-2 gap-6 mt-4">
+      <div>
+        <h3>Dentists in nearby areas</h3>
+        <ul>${siblingAreaLinks}</ul>
+      </div>
+      <div>
+        <h3>Treatments for ${currentArea.name} patients</h3>
+        <ul>${serviceVariantLinks}</ul>
+      </div>
+    </div>
+  `;
+}
+
 function buildLayout({ intent, area, vars, h1, description }) {
   const landmarks = area.landmarks.slice(0, 4).join(", ");
   const nearby = area.nearby.join(", ");
