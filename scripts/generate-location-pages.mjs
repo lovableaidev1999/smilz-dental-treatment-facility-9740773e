@@ -604,16 +604,17 @@ function buildServiceFaqs(service, area) {
   ];
 }
 
-function buildServiceSeo({ service, area, title, description, slug }) {
+function buildServiceSeo({ service, area, title, description, slug, faqs }) {
   const url = `${SITE}/${slug}/`;
   const dentist = {
     "@context": "https://schema.org",
-    "@type": "Dentist",
+    "@type": ["Dentist", "LocalBusiness"],
     name: CLINIC.name,
     image: `${SITE}/og-image.jpg`,
     "@id": `${SITE}/#dentist`,
     url,
     telephone: CLINIC.phone,
+    priceRange: "₹₹",
     address: {
       "@type": "PostalAddress",
       streetAddress: "21, Garia Park, Opposite Garia Park Club, Near Andrews College",
@@ -655,12 +656,25 @@ function buildServiceSeo({ service, area, title, description, slug }) {
       { "@type": "ListItem", position: 3, name: `${service.name} in ${area.name}`, item: url },
     ],
   };
+  const faqPage = (faqs && faqs.length)
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs
+          .filter((f) => f.question && f.answer)
+          .map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+      }
+    : null;
   return {
     title,
     description,
     canonical: url,
     ogImage: `${SITE}/og-image.jpg`,
-    jsonLd: [dentist, serviceLd, breadcrumbs],
+    jsonLd: faqPage ? [dentist, serviceLd, breadcrumbs, faqPage] : [dentist, serviceLd, breadcrumbs],
   };
 }
 
@@ -691,7 +705,8 @@ function generatePages() {
       const description = ov.description || fill(intent.description, vars);
 
       const blocks = buildLayout({ intent, area, vars, h1, description });
-      const seo = buildSeo({ intent, area, vars, title, description, slug });
+      const faqs = buildFaqs(intent, area, vars);
+      const seo = buildSeo({ intent, area, vars, title, description, slug, faqs });
 
       const layout_json = [
         { _seo: { title, description, ogImage: seo.ogImage, jsonLd: seo.jsonLd } },
