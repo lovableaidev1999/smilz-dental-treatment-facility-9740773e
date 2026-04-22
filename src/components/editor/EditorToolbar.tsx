@@ -37,13 +37,33 @@ const ToolBtn = ({
 const EditorToolbar = ({ editor }: Props) => {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkTarget, setLinkTarget] = useState<"_self" | "_blank">("_blank");
+
+  const openLinkInput = () => {
+    const existing = editor.getAttributes("link");
+    setLinkUrl(existing.href || "");
+    setLinkTarget(existing.target === "_self" ? "_self" : "_blank");
+    setShowLinkInput(true);
+  };
 
   const setLink = () => {
     if (linkUrl) {
-      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl, target: "_blank" }).run();
+      const rel = linkTarget === "_blank" ? "noopener noreferrer" : null;
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: linkUrl, target: linkTarget, rel } as any)
+        .run();
     } else {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     }
+    setShowLinkInput(false);
+    setLinkUrl("");
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
     setShowLinkInput(false);
     setLinkUrl("");
   };
