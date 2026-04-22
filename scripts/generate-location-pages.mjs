@@ -745,7 +745,8 @@ function generatePages() {
       const description = ov.description || fill(service.description, vars);
 
       const blocks = buildServiceLayout({ service, area, h1, description });
-      const seo = buildServiceSeo({ service, area, title, description, slug });
+      const faqs = buildServiceFaqs(service, area);
+      const seo = buildServiceSeo({ service, area, title, description, slug, faqs });
 
       pages.push({
         page_slug: slug,
