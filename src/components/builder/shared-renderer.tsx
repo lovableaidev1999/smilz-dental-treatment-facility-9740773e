@@ -485,11 +485,26 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
           </div>
         );
       }
+      const url = node.props.url || '/contact';
+      const isExternal = /^(https?:|tel:|mailto:|\/\/)/i.test(url) || url.startsWith('#');
+      const newTab = !!node.props.openInNewTab;
       return (
         <div key={key} className={rClasses} style={{ ...baseStyles, textAlign: node.props.align === 'stretch' ? undefined : (node.props.align || 'left') }}>
-          <Link to={node.props.url || '/contact'} className={btnClass} style={fontColorStyle}>
-            {node.props.text}
-          </Link>
+          {isExternal || newTab ? (
+            <a
+              href={url}
+              className={btnClass}
+              style={fontColorStyle}
+              target={newTab ? '_blank' : undefined}
+              rel={newTab ? 'noopener noreferrer' : undefined}
+            >
+              {node.props.text}
+            </a>
+          ) : (
+            <Link to={url} className={btnClass} style={fontColorStyle}>
+              {node.props.text}
+            </Link>
+          )}
         </div>
       );
     }
