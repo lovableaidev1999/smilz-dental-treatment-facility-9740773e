@@ -12,13 +12,16 @@
     <title>Smilz Dental Treatment Facility</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://bfroehnkexchdboydaob.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://eukymrxxmvkchxfpjjuz.supabase.co" crossorigin />
     <!--
       Hero image preload is injected per-page via SEOHead (only on / and SEO landing pages),
       so non-home pages don't pay for the unused preload on mobile.
+      Poppins is loaded with only 2 weights (400, 600) on the critical path; extra
+      weights and any user-selected display font are appended lazily by FontApplier
+      after first paint to keep LCP/FCP fast.
     -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" /></noscript>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" /></noscript>
     <!-- Ahrefs analytics: defer until after page load so it never blocks LCP/TBT -->
     <script>
       window.addEventListener('load', function() {
