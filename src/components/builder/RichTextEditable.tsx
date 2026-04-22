@@ -232,6 +232,82 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
           >
             ×
           </button>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-accent text-foreground"
+            onMouseDown={e => { e.preventDefault(); saveSelection(); }}
+            onClick={openLinkPanel}
+            title="Insert / edit link"
+          >
+            <LinkIcon className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-accent text-foreground"
+            onMouseDown={e => e.preventDefault()}
+            onClick={removeLink}
+            title="Remove link"
+          >
+            <Unlink className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Link panel */}
+      {editing && showLinkPanel && (
+        <div
+          ref={el => {
+            // Treat link panel as part of toolbar so blur doesn't close editor
+            if (el && toolbarRef.current && !toolbarRef.current.contains(el)) {
+              // no-op; we use stopPropagation/onMouseDown preventDefault below
+            }
+          }}
+          className="absolute -top-9 left-0 translate-y-[-100%] z-50 bg-card border border-border rounded-md shadow-md p-2 flex flex-col gap-2 w-72"
+          onMouseDown={e => e.preventDefault()}
+        >
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">URL</label>
+            <input
+              type="text"
+              value={linkUrl}
+              onChange={e => setLinkUrl(e.target.value)}
+              placeholder="https://... or /about or mailto:..."
+              className="text-xs px-2 py-1.5 border border-input rounded bg-background"
+              onKeyDown={e => {
+                if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
+                if (e.key === 'Escape') { setShowLinkPanel(false); }
+              }}
+              autoFocus
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Open in</label>
+            <select
+              value={linkTarget}
+              onChange={e => setLinkTarget(e.target.value as '_self' | '_blank')}
+              className="text-xs px-2 py-1.5 border border-input rounded bg-background"
+            >
+              <option value="_blank">New tab</option>
+              <option value="_self">Same tab</option>
+            </select>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              className="text-xs px-2 py-1 rounded border border-input hover:bg-accent text-foreground"
+              onClick={() => setShowLinkPanel(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground hover:opacity-90"
+              onClick={applyLink}
+            >
+              Apply
+            </button>
+          </div>
         </div>
       )}
 
