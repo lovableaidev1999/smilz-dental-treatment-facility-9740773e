@@ -62,3 +62,34 @@ export function resolveHtmlImages(html: string | null | undefined): string | und
     }
   );
 }
+
+/**
+ * Returns a Supabase-transformed image URL (resized, WebP, quality 75).
+ * Falls back to the original URL for non-Supabase storage URLs.
+ *
+ * Supabase Storage supports on-the-fly image transforms via the
+ * /render/image/public/ endpoint. This dramatically reduces payload for
+ * thumbnails (e.g. service icons displayed at 48×48 instead of 1024×1024).
+ *
+ * @param url      The original public Supabase storage URL
+ * @param width    Target rendered width in CSS px (will be 2x for retina)
+ * @param quality  WebP quality 1–100 (default 75)
+ */
+export function resolveResponsiveImage(
+  url: string | null | undefined,
+  width: number,
+  quality = 75
+): string | undefined {
+  const resolved = resolveImageUrl(url);
+  if (!resolved) return undefined;
+  // Only Supabase storage URLs support the render/image transform endpoint.
+  if (!resolved.includes("/storage/v1/object/public/")) return resolved;
+  const transformed = resolved.replace(
+    "/storage/v1/object/public/",
+    "/storage/v1/render/image/public/"
+  );
+  // Request 2x the displayed width for crisp rendering on retina screens
+  const renderWidth = Math.round(width * 2);
+  const sep = transformed.includes("?") ? "&" : "?";
+  return `${transformed}${sep}width=${renderWidth}&quality=${quality}&resize=contain`;
+}
