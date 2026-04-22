@@ -272,3 +272,65 @@ export const SERVICES = [
  *   "best-dentist-in:garia": { h1: "The Most Trusted Dentist in Garia, Kolkata" }
  */
 export const OVERRIDES = {};
+
+/**
+ * Hero image — shown above the H1 on each generated landing page.
+ * Re-uses optimized images already in /public/images so we don't bloat
+ * the repo. Override per-intent or per-service if you have richer assets.
+ */
+export const HERO_IMAGE = {
+  default: "/images/hero-dental.webp",
+  intents: {
+    "best-dentist-in": "/images/doctor.webp",
+    "top-rated-dentist-in": "/images/doctor.webp",
+    "emergency-dentist-in": "/images/hero-dental.webp",
+    "dentist-in": "/images/hero-dental.webp",
+  },
+  services: {
+    "dental-implants": "/images/hero-dental.webp",
+    "root-canal-treatment": "/images/hero-dental.webp",
+    "braces-treatment": "/images/hero-dental.webp",
+    "smile-designing": "/images/hero-dental.webp",
+    "guided-implants": "/images/hero-dental.webp",
+  },
+  forIntent(key) {
+    return this.intents[key] || this.default;
+  },
+  forService(key) {
+    return this.services[key] || this.default;
+  },
+};
+
+/**
+ * "Directions from {area}" — bus / auto / metro routes shown as a
+ * scannable list (huge for "near me" intent + voice search).
+ *
+ * Add an `directions` array on any AREAS entry to override per-area;
+ * otherwise the `default(area)` fallback below is used.
+ */
+export const DIRECTIONS = {
+  default(area) {
+    return [
+      {
+        mode: "By Auto",
+        description: `Take any auto from ${area.name} heading toward Garia Park / Garia Buddha Mandir. Get off at Garia Park Club — the clinic is directly opposite, next to Andrews College.`,
+        duration: `${Math.max(5, Math.round(area.distanceFromClinicKm * 4))} min`,
+      },
+      {
+        mode: "By Bus",
+        description: `Boarding from ${area.landmarks[0] || area.name}, take any Garia / Kamalgazi / Sonarpur-bound bus and alight at Garia Park stop. Walk 1 minute to the clinic.`,
+        duration: `${Math.max(10, Math.round(area.distanceFromClinicKm * 6))} min`,
+      },
+      {
+        mode: "By Metro",
+        description: `The nearest station is Garia Bazar (Kavi Subhash extension) / Kavi Subhash Metro. From the station take a 5-minute auto to Garia Park Club — we are opposite.`,
+        duration: `${Math.max(10, Math.round(area.distanceFromClinicKm * 5))} min`,
+      },
+      {
+        mode: "By Car",
+        description: `From ${area.name} drive via Raja S.C. Mallick Road towards Garia Park. Free street parking is available outside the clinic at 21, Garia Park.`,
+        duration: `${Math.max(5, Math.round(area.distanceFromClinicKm * 3))} min`,
+      },
+    ];
+  },
+};
