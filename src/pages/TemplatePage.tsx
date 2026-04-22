@@ -53,6 +53,8 @@ export const BlogPostTemplate = () => {
       <SEOHead
         title={post.title}
         description={post.excerpt || post.seo_description || ''}
+        canonicalUrl={`https://smilz.net/blog/${post.slug}`}
+        type="article"
       />
       <VisualRenderer layout={resolved} />
     </>
@@ -102,6 +104,7 @@ export const ServiceTemplate = () => {
       <SEOHead
         title={service.title}
         description={service.short_description || service.seo_description || ''}
+        canonicalUrl={`https://smilz.net/services/${service.slug}`}
       />
       <VisualRenderer layout={resolved} />
     </>
