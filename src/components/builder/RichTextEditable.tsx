@@ -24,7 +24,77 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [editing, setEditing] = useState(false);
   const ref = useRef<HTMLElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const [showLinkPanel, setShowLinkPanel] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
   const isSelected = state.selectedBlockId === blockId;
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    const range = savedRangeRef.current;
+    if (range) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+  };
+
+  const openLinkPanel = () => {
+    saveSelection();
+    // Try to read existing anchor under cursor
+    const sel = window.getSelection();
+    let anchor: HTMLAnchorElement | null = null;
+    if (sel && sel.anchorNode) {
+      let n: Node | null = sel.anchorNode;
+      while (n && n !== ref.current) {
+        if ((n as HTMLElement).tagName === 'A') {
+          anchor = n as HTMLAnchorElement;
+          break;
+        }
+        n = n.parentNode;
+      }
+    }
+    setLinkUrl(anchor?.getAttribute('href') || '');
+    setLinkTarget((anchor?.getAttribute('target') as any) === '_self' ? '_self' : '_blank');
+    setShowLinkPanel(true);
+  };
+
+  const applyLink = () => {
+    restoreSelection();
+    if (!linkUrl) {
+      document.execCommand('unlink');
+    } else {
+      // execCommand createLink doesn't set target, so set via temporary id
+      const id = `__lk_${Date.now()}`;
+      document.execCommand('createLink', false, linkUrl);
+      // Find newly created/affected anchors in the contenteditable and set target/rel
+      const anchors = ref.current?.querySelectorAll(`a[href="${CSS.escape(linkUrl)}"]`);
+      anchors?.forEach(a => {
+        a.setAttribute('target', linkTarget);
+        if (linkTarget === '_blank') {
+          a.setAttribute('rel', 'noopener noreferrer');
+        } else {
+          a.removeAttribute('rel');
+        }
+      });
+    }
+    setShowLinkPanel(false);
+    ref.current?.focus();
+  };
+
+  const removeLink = () => {
+    restoreSelection();
+    document.execCommand('unlink');
+    setShowLinkPanel(false);
+    ref.current?.focus();
+  };
 
   useEffect(() => {
     if (editing && ref.current) {
