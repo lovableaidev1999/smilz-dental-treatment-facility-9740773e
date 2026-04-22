@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Heading1, Heading2, Heading3,
   Link, Quote, Minus, Undo, Redo, ImagePlus, MousePointerClick, HelpCircle,
-  AlignLeft, AlignCenter, AlignRight,
+  AlignLeft, AlignCenter, AlignRight, Palette, Highlighter,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -116,6 +116,42 @@ const EditorToolbar = ({ editor }: Props) => {
       </ToolBtn>
       <ToolBtn active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} title="Align Right">
         <AlignRight className="h-4 w-4" />
+      </ToolBtn>
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      {/* Text Color */}
+      <label
+        className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent cursor-pointer"
+        title="Text color"
+      >
+        <Palette className="h-4 w-4" style={{ color: editor.getAttributes('textStyle').color || undefined }} />
+        <input
+          type="color"
+          className="absolute inset-0 opacity-0 cursor-pointer"
+          value={editor.getAttributes('textStyle').color || '#000000'}
+          onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+        />
+      </label>
+      <ToolBtn onClick={() => editor.chain().focus().unsetColor().run()} title="Clear text color">
+        <span className="text-[10px] font-bold">A×</span>
+      </ToolBtn>
+
+      {/* Highlight Color */}
+      <label
+        className="relative h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent cursor-pointer"
+        title="Highlight color"
+      >
+        <Highlighter className="h-4 w-4" style={{ color: editor.getAttributes('highlight').color || undefined }} />
+        <input
+          type="color"
+          className="absolute inset-0 opacity-0 cursor-pointer"
+          value={editor.getAttributes('highlight').color || '#ffff00'}
+          onChange={(e) => editor.chain().focus().toggleHighlight({ color: e.target.value }).run()}
+        />
+      </label>
+      <ToolBtn onClick={() => editor.chain().focus().unsetHighlight().run()} title="Clear highlight">
+        <span className="text-[10px] font-bold">H×</span>
       </ToolBtn>
 
       <div className="w-px h-6 bg-border mx-1" />

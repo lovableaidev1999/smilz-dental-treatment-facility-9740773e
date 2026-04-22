@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
-import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow } from 'lucide-react';
+import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter } from 'lucide-react';
 
 interface Props {
   blockId: string;
@@ -127,6 +127,41 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
               </button>
             ))}
           </div>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          {/* Text color picker */}
+          <label
+            className="relative p-1 rounded hover:bg-accent cursor-pointer inline-flex items-center justify-center"
+            title="Text color"
+            onMouseDown={e => e.preventDefault()}
+          >
+            <Palette className="h-3.5 w-3.5 text-foreground" />
+            <input
+              type="color"
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              onChange={e => execCommand('foreColor', e.target.value)}
+            />
+          </label>
+          {/* Highlight color picker */}
+          <label
+            className="relative p-1 rounded hover:bg-accent cursor-pointer inline-flex items-center justify-center"
+            title="Highlight color"
+            onMouseDown={e => e.preventDefault()}
+          >
+            <Highlighter className="h-3.5 w-3.5 text-foreground" />
+            <input
+              type="color"
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              onChange={e => execCommand('hiliteColor', e.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            className="px-1 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold"
+            onClick={() => execCommand('removeFormat')}
+            title="Clear formatting"
+          >
+            ×
+          </button>
         </div>
       )}
 
