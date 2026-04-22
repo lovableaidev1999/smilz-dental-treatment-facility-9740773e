@@ -27,7 +27,8 @@ const TipTapEditor = ({ content, onChange, placeholder = "Start writing your con
       }),
       LinkExtension.configure({
         openOnClick: false,
-        HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" },
+        autolink: true,
+        HTMLAttributes: { rel: "noopener noreferrer" },
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
