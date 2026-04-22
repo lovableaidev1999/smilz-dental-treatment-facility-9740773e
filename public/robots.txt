@@ -1,10 +1,56 @@
+# Smilz Dental — robots.txt
+# Primary domain: https://smilz.net
+
 User-agent: *
 Allow: /
-Disallow: /admin/
 Disallow: /admin
+Disallow: /admin/
+Disallow: /login
 Disallow: /login-form/
-Disallow: /referral
-Disallow: /referral-register/
 Disallow: /preview/
+Disallow: /referral-register/
+
+# AI / GEO crawlers — explicitly allowed for generative search visibility
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+# Crawl host hint
+Host: https://smilz.net
 
 Sitemap: https://smilz.net/sitemap.xml
