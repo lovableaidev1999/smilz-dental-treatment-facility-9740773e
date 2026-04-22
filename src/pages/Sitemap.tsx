@@ -14,10 +14,11 @@ const staticPages = [
   { loc: "/contact/", priority: "0.7", changefreq: "monthly" },
   { loc: "/gallery/", priority: "0.6", changefreq: "monthly" },
   { loc: "/blog/", priority: "0.8", changefreq: "daily" },
+  { loc: "/referral/", priority: "0.6", changefreq: "monthly" },
 ];
 
 /** Routes explicitly excluded from the sitemap */
-const EXCLUDED = new Set(["/login", "/admin", "/referral-register", "/referral", "/admin/login", "/admin/reset-password", "/preview"]);
+const EXCLUDED = new Set(["/login", "/admin", "/referral-register", "/admin/login", "/admin/reset-password", "/preview"]);
 
 const Sitemap = () => {
   useEffect(() => {
