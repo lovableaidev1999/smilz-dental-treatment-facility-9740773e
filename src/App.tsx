@@ -73,17 +73,35 @@ const FontApplier = () => {
   const font = settings?.appearance?.font_family || "Poppins";
 
   useEffect(() => {
-    const fontParam = FONT_IMPORT_MAP[font] || font.replace(/ /g, "+");
-    const linkId = "dynamic-font-link";
-    let link = document.getElementById(linkId) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement("link");
-      link.id = linkId;
-      link.rel = "stylesheet";
-      document.head.appendChild(link);
+    // Defer all extra font CSS until the browser is idle so it never competes
+    // with hero image / critical CSS on the LCP path. Poppins (400/600) is
+    // already preloaded in index.html for the initial paint; this loader is
+    // responsible for (a) extra Poppins weights and (b) any admin-chosen
+    // display font like Merriweather / Playfair etc.
+    const apply = () => {
+      const fontParam = FONT_IMPORT_MAP[font] || font.replace(/ /g, "+");
+      const linkId = "dynamic-font-link";
+      let link = document.getElementById(linkId) as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement("link");
+        link.id = linkId;
+        link.rel = "stylesheet";
+        // media="print" → onload swap pattern keeps the request non-blocking
+        link.media = "print";
+        link.onload = () => {
+          if (link) link.media = "all";
+        };
+        document.head.appendChild(link);
+      }
+      link.href = `https://fonts.googleapis.com/css2?family=${fontParam}:wght@400;500;600;700&display=swap`;
+      document.documentElement.style.setProperty("--app-font", `'${font}', sans-serif`);
+    };
+
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(apply, { timeout: 2000 });
+    } else {
+      setTimeout(apply, 1500);
     }
-    link.href = `https://fonts.googleapis.com/css2?family=${fontParam}:wght@400;500;600;700&display=swap`;
-    document.documentElement.style.setProperty("--app-font", `'${font}', sans-serif`);
   }, [font]);
 
   return null;
