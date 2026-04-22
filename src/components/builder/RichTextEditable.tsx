@@ -257,12 +257,8 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       {/* Link panel */}
       {editing && showLinkPanel && (
         <div
-          ref={el => {
-            // Treat link panel as part of toolbar so blur doesn't close editor
-            if (el && toolbarRef.current && !toolbarRef.current.contains(el)) {
-              // no-op; we use stopPropagation/onMouseDown preventDefault below
-            }
-          }}
+          data-rt-link-panel
+          tabIndex={-1}
           className="absolute -top-9 left-0 translate-y-[-100%] z-50 bg-card border border-border rounded-md shadow-md p-2 flex flex-col gap-2 w-72"
           onMouseDown={e => e.preventDefault()}
         >
