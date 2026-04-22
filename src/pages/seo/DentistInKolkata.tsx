@@ -4,7 +4,7 @@ const DentistInKolkata = () => (
   <SeoLanding
     slug="dentist-in-kolkata"
     title="Best Dentist in Kolkata | Smilz Dental Clinic, Garia"
-    description="Looking for the best dentist in Kolkata? Dr. Dibyendu Dutta at Smilz Dental Clinic, Garia offers root canal, implants, braces, cosmetic & family dentistry. Book today."
+    description="Looking for the best dentist in Kolkata? Dr. Dibyendu Dutta at Smilz Dental Clinic, Garia offers painless root canal, dental implants, invisible aligners, braces, cosmetic dentistry and complete family dental care. 25+ years' experience, 4.8★ Google rated. Book today."
     keywords="best dentist in Kolkata, dentist near me Kolkata, dental clinic Kolkata, top dentist South Kolkata"
     h1="Best Dentist in Kolkata – Trusted Dental Care Since 1999"
     intro="Searching for a reliable, experienced dentist in Kolkata? Smilz Dental Treatment Facility, led by Dr. Dibyendu Dutta, has served thousands of families across South Kolkata for over 25 years."

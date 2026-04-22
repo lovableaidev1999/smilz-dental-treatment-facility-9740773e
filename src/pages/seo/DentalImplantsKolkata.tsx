@@ -4,7 +4,7 @@ const DentalImplantsKolkata = () => (
   <SeoLanding
     slug="dental-implants-kolkata"
     title="Dental Implants in Kolkata | Cost, Procedure & Best Clinic"
-    description="Dental implants in Kolkata starting ₹25,000. Single tooth, multiple teeth & full-mouth implants by Dr. Dibyendu Dutta at Smilz Dental Clinic, Garia. Book today."
+    description="Dental implants in Kolkata starting ₹25,000. Single tooth, multiple teeth and full-mouth All-on-4 implants by Dr. Dibyendu Dutta at Smilz Dental Clinic, Garia — guided CBCT planning, premium titanium implants, painless placement and lifetime guidance. Book today on +91 8961775554."
     keywords="dental implants Kolkata, dental implant cost Kolkata, single tooth implant, full mouth dental implants Kolkata"
     h1="Dental Implants in Kolkata – Permanent Tooth Replacement"
     intro="Smilz Dental Treatment Facility, Garia offers world-class dental implants in Kolkata using premium implant systems. From single-tooth replacement to full-mouth rehabilitation, we restore both function and confidence."
