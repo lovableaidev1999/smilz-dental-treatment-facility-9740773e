@@ -124,10 +124,13 @@ export const useSavePageLayout = () => {
           .update(payload)
           .eq('id', layout.id)
           .select()
-          .single();
+          .maybeSingle();
         if (error) throw error;
-        return data as PageLayoutRow;
-      } else {
+        if (data) return data as PageLayoutRow;
+        // Row not found (deleted or RLS mismatch) — fall through to insert as new
+        console.warn('[useSavePageLayout] Update returned no row for id', layout.id, '— inserting new row');
+      }
+      {
         const { data, error } = await supabase
           .from('page_layouts')
           .insert(payload)
