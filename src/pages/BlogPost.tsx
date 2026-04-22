@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, ChevronRight, ArrowLeft, User } from "lucide-react";
+import { Calendar, ChevronRight, ArrowLeft, User, Sparkles, UserPlus } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
@@ -8,6 +8,7 @@ import BlockRenderer from "@/components/BlockRenderer";
 import VisualRenderer from "@/components/builder/VisualRenderer";
 import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
 import { sanitizeWpImages } from "@/lib/wpImageSanitizer";
+import { pickServiceForPost } from "@/lib/blogInternalLinks";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
@@ -34,6 +35,14 @@ const BlogPost = () => {
   const related = (relatedPosts ?? []).filter((p) => p.slug !== slug && p.category === post.category).slice(0, 3);
   const visualLayout = getStoredVisualLayout(post as any);
   const hasBlockContent = !!post.content_json && !isVisualLayoutFallbackContent(post.content_json);
+  // Auto-pick the most relevant service page for this post (keyword-matched)
+  // — improves internal-link graph for Googlebot and conversion for readers.
+  const recommendedService = pickServiceForPost({
+    title: post.title,
+    slug: post.slug,
+    category: post.category,
+    tags: post.tags,
+  });
 
   return (
     <>
@@ -92,6 +101,62 @@ const BlogPost = () => {
                 <div className="flex flex-wrap gap-2">{post.tags.map((tag: string) => <span key={tag} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-medium">{tag}</span>)}</div>
               </div>
             )}
+
+            {/* ── Internal-link CTA: keyword-matched service recommendation ── */}
+            <aside
+              aria-label="Recommended treatment"
+              className="mt-10 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-6 md:p-7"
+            >
+              <div className="flex items-start gap-4">
+                <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Recommended for you</p>
+                  <h3 className="text-lg md:text-xl font-heading font-bold text-foreground mb-2">
+                    <Link to={`/services/${recommendedService.slug}`} className="hover:text-primary transition-colors">
+                      {recommendedService.title}
+                    </Link>
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">{recommendedService.blurb}</p>
+                  <Link
+                    to={`/services/${recommendedService.slug}`}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    {recommendedService.ctaLabel}
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </aside>
+
+            {/* ── Internal-link CTA: referral page ── */}
+            <aside
+              aria-label="Refer a patient"
+              className="mt-6 rounded-2xl border border-border bg-card p-6 md:p-7"
+            >
+              <div className="flex items-start gap-4">
+                <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                  <UserPlus className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base md:text-lg font-heading font-semibold text-foreground mb-1">
+                    Know someone who needs this care?
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Refer a friend or family member to Smilz Dental Treatment Facility — it only takes a minute.
+                  </p>
+                  <Link
+                    to="/referral"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    Open the referral form
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </aside>
+
             <div className="mt-10"><Link to="/blog" className="inline-flex items-center gap-2 text-primary font-medium text-sm hover:underline"><ArrowLeft className="h-4 w-4" /> Back to all articles</Link></div>
           </motion.div>
 
