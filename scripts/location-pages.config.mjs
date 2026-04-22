@@ -66,7 +66,7 @@ export const AREAS = [
   },
   {
     key: "near-andrews-college",
-    name: "Andrews College area",
+    name: "Andrews College",
     landmarks: ["Andrews College", "Garia Park"],
     nearby: ["Garia", "Patuli"],
     distanceFromClinicKm: 0.2,
@@ -163,9 +163,9 @@ export const INTENTS = [
     key: "best-dentist-in",
     slugTemplate: "best-dentist-in-{area}",
     h1: "Best Dentist in {area}",
-    title: "Best Dentist in {area} | {clinic}",
+    title: "Best Dentist in {area} | Smilz Dental Garia",
     description:
-      "Looking for the best dentist in {area}? Smilz Dental, led by {doctor}, offers 25+ years of trusted dental care — painless root canal, implants, braces, aligners, cosmetic and family dentistry. {rating}★ Google rated by {reviews}+ patients. Book on {phone} today.",
+      "Looking for the best dentist in {area}? Smilz Dental, led by {doctor}, offers 25+ years of trusted dental care — implants, root canal, braces, aligners and cosmetic dentistry. {rating}★ Google rated. Book on {phone}.",
     angle: "expertise",
   },
   {
@@ -174,7 +174,7 @@ export const INTENTS = [
     h1: "Dentist in {area}",
     title: "Dentist in {area} | {clinic}",
     description:
-      "Looking for a dentist in {area}? Smilz Dental, led by {doctor}, offers advanced dental care — implants, painless root canal, braces, clear aligners and cosmetic dentistry — under one roof in Garia. Rated {rating}★ by {reviews}+ patients. Call {phone} to book.",
+      "Need a dentist in {area}? Smilz Dental, led by {doctor}, delivers implants, painless root canal, braces, clear aligners and cosmetic dentistry under one roof. Rated {rating}★. Call {phone}.",
     angle: "general",
   },
   {
@@ -183,7 +183,7 @@ export const INTENTS = [
     h1: "Top-Rated Dentist in {area}",
     title: "Top-Rated Dentist in {area} | Smilz Dental",
     description:
-      "Smilz Dental is a top-rated dental clinic serving {area} with {rating}★ on Google ({reviews}+ verified reviews). {doctor} provides expert implants, painless root canal, braces, invisible aligners and cosmetic dentistry — established 1999. Book on {phone}.",
+      "Smilz Dental serves {area} with {rating}★ on Google ({reviews}+ reviews). {doctor} provides expert implants, painless root canal, braces, aligners and cosmetic dentistry. Established 1999. Book on {phone}.",
     angle: "social-proof",
   },
   {
@@ -192,7 +192,7 @@ export const INTENTS = [
     h1: "Emergency Dentist in {area}",
     title: "Emergency Dentist in {area} | Same-Day Care | Smilz",
     description:
-      "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal, extractions, broken tooth repair and swelling treatment by {doctor}. Open Mon–Sat, morning and evening sessions. Call {phone} or WhatsApp now for immediate help.",
+      "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal, extractions, broken-tooth repair and swelling treatment by {doctor}. Call {phone} or WhatsApp now.",
     angle: "urgency",
   },
 ];
@@ -219,9 +219,9 @@ export const SERVICES = [
     name: "Root Canal Treatment",
     serviceSlug: "painless-root-canal-treatment",
     h1: "Root Canal Treatment in {area}",
-    title: "Root Canal Treatment in {area} | Painless RCT | Smilz",
+    title: "Root Canal in {area} | Painless RCT | Smilz Dental",
     description:
-      "Painless root canal treatment in {area} with single-visit options. {doctor} at Smilz Dental uses rotary endodontics, apex locators and digital radiographs for precise, comfortable RCT — most cases finished in one sitting with tooth-coloured crowns. Book on {phone}.",
+      "Painless single-visit root canal in {area}. {doctor} at Smilz Dental uses rotary endodontics, apex locators and digital X-rays — finished with tooth-coloured crowns. Call {phone}.",
     schemaServiceType: "Endodontic Therapy",
     body:
       "Our painless single-visit RCT uses modern rotary endodontics, apex locators and digital radiographs — most cases finish in one sitting with no post-op pain.",
@@ -233,7 +233,7 @@ export const SERVICES = [
     h1: "Braces Treatment in {area}",
     title: "Braces & Aligners in {area} | Smilz Dental Garia",
     description:
-      "Braces and clear aligners in {area} with EMI options. Metal, ceramic, self-ligating and Invisalign-style invisible aligners by {doctor} for teens and adults. Free orthodontic consultation, monthly follow-ups and digital treatment previews. Book on {phone}.",
+      "Braces and clear aligners in {area} with EMI options. Metal, ceramic, self-ligating and Invisalign-style invisible aligners by {doctor} for teens and adults. Free orthodontic consultation. Book on {phone}.",
     schemaServiceType: "Orthodontics",
     body:
       "Choose from metal, ceramic, self-ligating braces or virtually invisible clear aligners. Treatment plans typically run 12–24 months with free monthly follow-ups.",
@@ -243,9 +243,9 @@ export const SERVICES = [
     name: "Smile Designing",
     serviceSlug: "smile-designing",
     h1: "Smile Designing in {area}",
-    title: "Smile Designing in {area} | Digital Smile Design | Smilz",
+    title: "Smile Designing in {area} | Smilz Dental Garia",
     description:
-      "Smile designing in {area} with digital previews, porcelain veneers, professional whitening, gum contouring and cosmetic bonding. {doctor} crafts natural, camera-ready smiles tailored to your face — see your new smile before treatment begins. Call {phone}.",
+      "Smile designing in {area} with digital previews, porcelain veneers, professional whitening and gum contouring. {doctor} crafts natural, camera-ready smiles tailored to your face. Call {phone}.",
     schemaServiceType: "Cosmetic Dentistry",
     body:
       "Our smile designing combines digital smile design (DSD) previews, porcelain veneers, professional whitening and gum contouring — letting you see your new smile before treatment begins.",
@@ -257,7 +257,7 @@ export const SERVICES = [
     h1: "Guided Implants in {area}",
     title: "Guided Dental Implants in {area} | Smilz Dental",
     description:
-      "Guided implant surgery in {area} using 3D CBCT planning and 3D-printed surgical guides for flapless, painless, predictable implant placement. {doctor}, 25+ years' experience — faster healing, less pain and millimetre-accurate positioning. Book on {phone}.",
+      "Guided implant surgery in {area} using 3D CBCT planning and surgical guides for flapless, painless, predictable placement by {doctor} — faster healing, millimetre-accurate. Call {phone}.",
     schemaServiceType: "Dental Implant",
     body:
       "Guided implant placement uses CBCT scans and 3D-printed surgical guides for flapless, minimally-invasive surgery — faster healing, less pain, and millimetre-accurate positioning.",
@@ -271,7 +271,23 @@ export const SERVICES = [
  * Example:
  *   "best-dentist-in:garia": { h1: "The Most Trusted Dentist in Garia, Kolkata" }
  */
-export const OVERRIDES = {};
+export const OVERRIDES = {
+  // Restore proper-length descriptions for pages where the live DB row was
+  // truncated (admin edits / earlier short overrides). The next regen will
+  // overwrite those rows with these values.
+  "best-dentist-in:garia": {
+    description:
+      "Looking for the best dentist in Garia? Smilz Dental, led by Dr. Dibyendu Dutta, has served Garia families since 1999 — implants, painless root canal, braces, aligners and cosmetic dentistry under one roof. 4.8★ Google rated. Call +91 8961 77 5554.",
+  },
+  "braces-treatment:sonarpur": {
+    description:
+      "Braces and clear aligners in Sonarpur with EMI options. Metal, ceramic, self-ligating and invisible aligners by Dr. Dibyendu Dutta for teens and adults — free consultation, monthly follow-ups. Call +91 8961 77 5554 to book.",
+  },
+  "guided-implants:garia-park": {
+    description:
+      "Guided implant surgery in Garia Park using 3D CBCT planning and surgical guides for flapless, painless, predictable placement by Dr. Dibyendu Dutta. 25+ years' experience — millimetre-accurate. Call +91 8961 77 5554.",
+  },
+};
 
 /**
  * Hero image — shown above the H1 on each generated landing page.
