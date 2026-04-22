@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, ChevronRight, ArrowLeft, User } from "lucide-react";
+import { Calendar, ChevronRight, ArrowLeft, User, Sparkles, UserPlus } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
@@ -8,6 +8,7 @@ import BlockRenderer from "@/components/BlockRenderer";
 import VisualRenderer from "@/components/builder/VisualRenderer";
 import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
 import { sanitizeWpImages } from "@/lib/wpImageSanitizer";
+import { pickServiceForPost } from "@/lib/blogInternalLinks";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
@@ -34,6 +35,14 @@ const BlogPost = () => {
   const related = (relatedPosts ?? []).filter((p) => p.slug !== slug && p.category === post.category).slice(0, 3);
   const visualLayout = getStoredVisualLayout(post as any);
   const hasBlockContent = !!post.content_json && !isVisualLayoutFallbackContent(post.content_json);
+  // Auto-pick the most relevant service page for this post (keyword-matched)
+  // — improves internal-link graph for Googlebot and conversion for readers.
+  const recommendedService = pickServiceForPost({
+    title: post.title,
+    slug: post.slug,
+    category: post.category,
+    tags: post.tags,
+  });
 
   return (
     <>
