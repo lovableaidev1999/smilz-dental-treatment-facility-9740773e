@@ -23,7 +23,7 @@
  *   node scripts/generate-location-pages.mjs --dry-run
  *   node scripts/generate-location-pages.mjs --only=best-dentist-in:garia
  */
-import { AREAS, INTENTS, SERVICES, OVERRIDES, CLINIC } from "./location-pages.config.mjs";
+import { AREAS, INTENTS, SERVICES, OVERRIDES, CLINIC, HERO_IMAGE, DIRECTIONS } from "./location-pages.config.mjs";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -60,6 +60,10 @@ const id = () =>
  * areas (same intent) and to its service-area variants. Builds an
  * internal-link cluster Google can crawl for topical authority.
  */
+function titleCase(s) {
+  return s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function buildSiblingLinks({ currentArea, currentIntentKey }) {
   // Other areas — same intent
   const siblingAreas = AREAS.filter((a) => a.key !== currentArea.key).slice(0, 8);
@@ -67,7 +71,7 @@ function buildSiblingLinks({ currentArea, currentIntentKey }) {
   const siblingAreaLinks = siblingAreas
     .map(
       (a) =>
-        `<li><a href="/${intentSlug}-${a.key}/">${intentSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} ${a.name}</a></li>`,
+        `<li><a href="/${intentSlug}-${a.key}/">${titleCase(intentSlug)} ${a.name}</a></li>`,
     )
     .join("");
 
@@ -77,8 +81,19 @@ function buildSiblingLinks({ currentArea, currentIntentKey }) {
       `<li><a href="/${s.key}-in-${currentArea.key}/">${s.name} in ${currentArea.name}</a></li>`,
   ).join("");
 
+  // Intent variants for the SAME area (e.g. best-dentist-in-garia, top-rated-dentist-in-garia)
+  const intentVariantLinks = INTENTS.filter((i) => i.key !== currentIntentKey)
+    .map(
+      (i) => {
+        const slug = fill(i.slugTemplate, { area: currentArea.key });
+        const label = fill(i.h1, { area: currentArea.name });
+        return `<li><a href="/${slug}/">${label}</a></li>`;
+      },
+    )
+    .join("");
+
   return `
-    <div class="grid md:grid-cols-2 gap-6 mt-4">
+    <div class="grid md:grid-cols-3 gap-6 mt-4">
       <div>
         <h3>Dentists in nearby areas</h3>
         <ul>${siblingAreaLinks}</ul>
@@ -87,7 +102,28 @@ function buildSiblingLinks({ currentArea, currentIntentKey }) {
         <h3>Treatments for ${currentArea.name} patients</h3>
         <ul>${serviceVariantLinks}</ul>
       </div>
+      <div>
+        <h3>More dental options in ${currentArea.name}</h3>
+        <ul>${intentVariantLinks}</ul>
+      </div>
     </div>
+  `;
+}
+
+function buildDirectionsHtml(area) {
+  const routes = (area.directions && area.directions.length)
+    ? area.directions
+    : DIRECTIONS.default(area);
+  const items = routes
+    .map(
+      (r) =>
+        `<li><strong>${r.mode}:</strong> ${r.description}${r.duration ? ` <em>(${r.duration})</em>` : ""}</li>`,
+    )
+    .join("");
+  return `
+    <p>Reaching Smilz Dental from <strong>${area.name}</strong> is straightforward — pick the route that suits you:</p>
+    <ul>${items}</ul>
+    <p>Need help finding us? Call <a href="tel:${CLINIC.phone}">${CLINIC.phoneDisplay}</a> and our reception will guide you turn-by-turn.</p>
   `;
 }
 
@@ -106,6 +142,18 @@ function buildLayout({ intent, area, vars, h1, description }) {
         padding: "lg",
       },
       children: [
+        {
+          id: id(),
+          type: "image",
+          props: {
+            src: HERO_IMAGE.forIntent(intent.key),
+            alt: `${h1} — ${CLINIC.name}, Garia Kolkata`,
+            objectFit: "cover",
+            borderRadius: "1rem",
+            width: 1200,
+            height: 500,
+          },
+        },
         {
           id: id(),
           type: "heading",
@@ -201,7 +249,12 @@ function buildLayout({ intent, area, vars, h1, description }) {
         {
           id: id(),
           type: "heading",
-          props: { level: 2, text: `How to reach Smilz Dental from ${area.name}` },
+          props: { level: 2, text: `Directions to Smilz Dental from ${area.name}` },
+        },
+        {
+          id: id(),
+          type: "text",
+          props: { html: buildDirectionsHtml(area) },
         },
         {
           id: id(),
@@ -264,42 +317,47 @@ function buildLayout({ intent, area, vars, h1, description }) {
 function buildFaqs(intent, area, vars) {
   const base = [
     {
-      q: `Who is the best dentist in ${area.name}?`,
-      a: `${CLINIC.doctor} at ${CLINIC.name} is widely considered one of the best dentists serving ${area.name}, with 25+ years of experience and a ${CLINIC.rating}★ Google rating from ${CLINIC.reviewCount}+ patients.`,
+      question: `Who is the best dentist in ${area.name}?`,
+      answer: `${CLINIC.doctor} at ${CLINIC.name} is widely considered one of the best dentists serving ${area.name}, with 25+ years of experience and a ${CLINIC.rating}★ Google rating from ${CLINIC.reviewCount}+ patients.`,
     },
     {
-      q: `How far is Smilz Dental from ${area.name}?`,
-      a: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}. Most patients reach us within 10–15 minutes by car or auto.`,
+      question: `How far is Smilz Dental from ${area.name}?`,
+      answer: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}. Most patients reach us within 10–15 minutes by car or auto.`,
     },
     {
-      q: `Do you accept walk-in patients from ${area.name}?`,
-      a: `Yes. While appointments are recommended, we accommodate walk-ins and same-day emergency cases. Call ${CLINIC.phoneDisplay} or WhatsApp ${CLINIC.phoneDisplay} before visiting.`,
+      question: `Do you accept walk-in patients from ${area.name}?`,
+      answer: `Yes. While appointments are recommended, we accommodate walk-ins and same-day emergency cases. Call ${CLINIC.phoneDisplay} or WhatsApp ${CLINIC.phoneDisplay} before visiting.`,
     },
     {
-      q: `What treatments do you offer for patients in ${area.name}?`,
-      a: `We provide the full range of modern dentistry — implants, root canal, braces & aligners, cosmetic dentistry, paediatric care, and emergency treatments — all from our Garia clinic.`,
+      question: `What treatments do you offer for patients in ${area.name}?`,
+      answer: `We provide the full range of modern dentistry — implants, root canal, braces & aligners, cosmetic dentistry, paediatric care, and emergency treatments — all from our Garia clinic.`,
+    },
+    {
+      question: `How do I get to Smilz Dental from ${area.name} by public transport?`,
+      answer: `From ${area.name}, take any auto or bus heading toward Garia Park / Garia Buddha Mandir. Get off near Garia Park Club — the clinic is directly opposite, next to Andrews College. Garia Metro is the nearest metro station.`,
     },
   ];
   if (intent.angle === "urgency") {
     base.unshift({
-      q: `Is there an emergency dentist available in ${area.name}?`,
-      a: `Yes. Smilz Dental offers same-day emergency appointments for severe pain, swelling, broken teeth and trauma. Call ${CLINIC.phoneDisplay} immediately — we serve ${area.name} and surrounding areas.`,
+      question: `Is there an emergency dentist available in ${area.name}?`,
+      answer: `Yes. Smilz Dental offers same-day emergency appointments for severe pain, swelling, broken teeth and trauma. Call ${CLINIC.phoneDisplay} immediately — we serve ${area.name} and surrounding areas.`,
     });
   }
   return base;
 }
 
-function buildSeo({ intent, area, vars, title, description, slug }) {
+function buildSeo({ intent, area, vars, title, description, slug, faqs }) {
   const url = `${SITE}/${slug}/`;
   const localBusiness = {
     "@context": "https://schema.org",
-    "@type": "Dentist",
+    "@type": ["Dentist", "LocalBusiness"],
     name: CLINIC.name,
     image: `${SITE}/og-image.jpg`,
     "@id": `${SITE}/#dentist`,
     url,
     telephone: CLINIC.phone,
     email: CLINIC.email,
+    priceRange: "₹₹",
     address: {
       "@type": "PostalAddress",
       streetAddress: "21, Garia Park, Opposite Garia Park Club, Near Andrews College",
@@ -342,6 +400,19 @@ function buildSeo({ intent, area, vars, title, description, slug }) {
       { "@type": "ListItem", position: 2, name: area.name, item: url },
     ],
   };
+  const faqPage = (faqs && faqs.length)
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs
+          .filter((f) => f.question && f.answer)
+          .map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+      }
+    : null;
   return {
     title,
     description,
@@ -355,7 +426,7 @@ function buildSeo({ intent, area, vars, title, description, slug }) {
     canonical: url,
     ogImage: `${SITE}/og-image.jpg`,
     robots: "index, follow",
-    jsonLd: [localBusiness, breadcrumbs],
+    jsonLd: faqPage ? [localBusiness, breadcrumbs, faqPage] : [localBusiness, breadcrumbs],
   };
 }
 
@@ -372,6 +443,18 @@ function buildServiceLayout({ service, area, h1, description }) {
         padding: "lg",
       },
       children: [
+        {
+          id: id(),
+          type: "image",
+          props: {
+            src: HERO_IMAGE.forService(service.key),
+            alt: `${h1} — ${CLINIC.name}, Garia Kolkata`,
+            objectFit: "cover",
+            borderRadius: "1rem",
+            width: 1200,
+            height: 500,
+          },
+        },
         { id: id(), type: "heading", props: { level: 1, align: "center", text: h1 } },
         {
           id: id(),
@@ -439,8 +522,9 @@ function buildServiceLayout({ service, area, h1, description }) {
         {
           id: id(),
           type: "heading",
-          props: { level: 2, text: `How to reach Smilz Dental from ${area.name}` },
+          props: { level: 2, text: `Directions to Smilz Dental from ${area.name}` },
         },
+        { id: id(), type: "text", props: { html: buildDirectionsHtml(area) } },
         {
           id: id(),
           type: "text",
@@ -491,24 +575,7 @@ function buildServiceLayout({ service, area, h1, description }) {
           type: "faq",
           props: {
             title: `${service.name} in ${area.name} — FAQs`,
-            items: [
-              {
-                q: `How much does ${service.name.toLowerCase()} cost in ${area.name}?`,
-                a: `${service.name} pricing at Smilz Dental depends on case complexity and materials chosen. We offer transparent quotes after a free consultation and EMI options for ${area.name} patients.`,
-              },
-              {
-                q: `Is ${service.name.toLowerCase()} painful?`,
-                a: `No. ${CLINIC.doctor} uses modern painless protocols, profound local anaesthesia and gentle techniques. Most patients report minimal to no discomfort during and after treatment.`,
-              },
-              {
-                q: `How far is the clinic from ${area.name}?`,
-                a: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}, typically a 10–15 minute drive.`,
-              },
-              {
-                q: `Do you take walk-in ${service.name.toLowerCase()} consultations?`,
-                a: `Yes — call ${CLINIC.phoneDisplay} or WhatsApp us. We reserve daily slots for new ${service.name.toLowerCase()} consultations from ${area.name} and nearby areas.`,
-              },
-            ],
+            items: buildServiceFaqs(service, area),
           },
         },
       ],
@@ -516,16 +583,38 @@ function buildServiceLayout({ service, area, h1, description }) {
   ];
 }
 
-function buildServiceSeo({ service, area, title, description, slug }) {
+function buildServiceFaqs(service, area) {
+  return [
+    {
+      question: `How much does ${service.name.toLowerCase()} cost in ${area.name}?`,
+      answer: `${service.name} pricing at Smilz Dental depends on case complexity and materials chosen. We offer transparent quotes after a free consultation and EMI options for ${area.name} patients.`,
+    },
+    {
+      question: `Is ${service.name.toLowerCase()} painful?`,
+      answer: `No. ${CLINIC.doctor} uses modern painless protocols, profound local anaesthesia and gentle techniques. Most patients report minimal to no discomfort during and after treatment.`,
+    },
+    {
+      question: `How far is the clinic from ${area.name}?`,
+      answer: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}, typically a 10–15 minute drive.`,
+    },
+    {
+      question: `Do you take walk-in ${service.name.toLowerCase()} consultations?`,
+      answer: `Yes — call ${CLINIC.phoneDisplay} or WhatsApp us. We reserve daily slots for new ${service.name.toLowerCase()} consultations from ${area.name} and nearby areas.`,
+    },
+  ];
+}
+
+function buildServiceSeo({ service, area, title, description, slug, faqs }) {
   const url = `${SITE}/${slug}/`;
   const dentist = {
     "@context": "https://schema.org",
-    "@type": "Dentist",
+    "@type": ["Dentist", "LocalBusiness"],
     name: CLINIC.name,
     image: `${SITE}/og-image.jpg`,
     "@id": `${SITE}/#dentist`,
     url,
     telephone: CLINIC.phone,
+    priceRange: "₹₹",
     address: {
       "@type": "PostalAddress",
       streetAddress: "21, Garia Park, Opposite Garia Park Club, Near Andrews College",
@@ -567,12 +656,25 @@ function buildServiceSeo({ service, area, title, description, slug }) {
       { "@type": "ListItem", position: 3, name: `${service.name} in ${area.name}`, item: url },
     ],
   };
+  const faqPage = (faqs && faqs.length)
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs
+          .filter((f) => f.question && f.answer)
+          .map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+      }
+    : null;
   return {
     title,
     description,
     canonical: url,
     ogImage: `${SITE}/og-image.jpg`,
-    jsonLd: [dentist, serviceLd, breadcrumbs],
+    jsonLd: faqPage ? [dentist, serviceLd, breadcrumbs, faqPage] : [dentist, serviceLd, breadcrumbs],
   };
 }
 
@@ -603,7 +705,8 @@ function generatePages() {
       const description = ov.description || fill(intent.description, vars);
 
       const blocks = buildLayout({ intent, area, vars, h1, description });
-      const seo = buildSeo({ intent, area, vars, title, description, slug });
+      const faqs = buildFaqs(intent, area, vars);
+      const seo = buildSeo({ intent, area, vars, title, description, slug, faqs });
 
       const layout_json = [
         { _seo: { title, description, ogImage: seo.ogImage, jsonLd: seo.jsonLd } },
@@ -642,7 +745,8 @@ function generatePages() {
       const description = ov.description || fill(service.description, vars);
 
       const blocks = buildServiceLayout({ service, area, h1, description });
-      const seo = buildServiceSeo({ service, area, title, description, slug });
+      const faqs = buildServiceFaqs(service, area);
+      const seo = buildServiceSeo({ service, area, title, description, slug, faqs });
 
       pages.push({
         page_slug: slug,
