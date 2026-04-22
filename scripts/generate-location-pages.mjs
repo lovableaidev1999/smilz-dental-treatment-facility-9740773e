@@ -23,7 +23,7 @@
  *   node scripts/generate-location-pages.mjs --dry-run
  *   node scripts/generate-location-pages.mjs --only=best-dentist-in:garia
  */
-import { AREAS, INTENTS, SERVICES, OVERRIDES, CLINIC } from "./location-pages.config.mjs";
+import { AREAS, INTENTS, SERVICES, OVERRIDES, CLINIC, HERO_IMAGE, DIRECTIONS } from "./location-pages.config.mjs";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -60,6 +60,10 @@ const id = () =>
  * areas (same intent) and to its service-area variants. Builds an
  * internal-link cluster Google can crawl for topical authority.
  */
+function titleCase(s) {
+  return s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function buildSiblingLinks({ currentArea, currentIntentKey }) {
   // Other areas — same intent
   const siblingAreas = AREAS.filter((a) => a.key !== currentArea.key).slice(0, 8);
@@ -67,7 +71,7 @@ function buildSiblingLinks({ currentArea, currentIntentKey }) {
   const siblingAreaLinks = siblingAreas
     .map(
       (a) =>
-        `<li><a href="/${intentSlug}-${a.key}/">${intentSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} ${a.name}</a></li>`,
+        `<li><a href="/${intentSlug}-${a.key}/">${titleCase(intentSlug)} ${a.name}</a></li>`,
     )
     .join("");
 
@@ -77,8 +81,19 @@ function buildSiblingLinks({ currentArea, currentIntentKey }) {
       `<li><a href="/${s.key}-in-${currentArea.key}/">${s.name} in ${currentArea.name}</a></li>`,
   ).join("");
 
+  // Intent variants for the SAME area (e.g. best-dentist-in-garia, top-rated-dentist-in-garia)
+  const intentVariantLinks = INTENTS.filter((i) => i.key !== currentIntentKey)
+    .map(
+      (i) => {
+        const slug = fill(i.slugTemplate, { area: currentArea.key });
+        const label = fill(i.h1, { area: currentArea.name });
+        return `<li><a href="/${slug}/">${label}</a></li>`;
+      },
+    )
+    .join("");
+
   return `
-    <div class="grid md:grid-cols-2 gap-6 mt-4">
+    <div class="grid md:grid-cols-3 gap-6 mt-4">
       <div>
         <h3>Dentists in nearby areas</h3>
         <ul>${siblingAreaLinks}</ul>
@@ -87,7 +102,28 @@ function buildSiblingLinks({ currentArea, currentIntentKey }) {
         <h3>Treatments for ${currentArea.name} patients</h3>
         <ul>${serviceVariantLinks}</ul>
       </div>
+      <div>
+        <h3>More dental options in ${currentArea.name}</h3>
+        <ul>${intentVariantLinks}</ul>
+      </div>
     </div>
+  `;
+}
+
+function buildDirectionsHtml(area) {
+  const routes = (area.directions && area.directions.length)
+    ? area.directions
+    : DIRECTIONS.default(area);
+  const items = routes
+    .map(
+      (r) =>
+        `<li><strong>${r.mode}:</strong> ${r.description}${r.duration ? ` <em>(${r.duration})</em>` : ""}</li>`,
+    )
+    .join("");
+  return `
+    <p>Reaching Smilz Dental from <strong>${area.name}</strong> is straightforward — pick the route that suits you:</p>
+    <ul>${items}</ul>
+    <p>Need help finding us? Call <a href="tel:${CLINIC.phone}">${CLINIC.phoneDisplay}</a> and our reception will guide you turn-by-turn.</p>
   `;
 }
 
