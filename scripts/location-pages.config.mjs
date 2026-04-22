@@ -165,7 +165,7 @@ export const INTENTS = [
     h1: "Best Dentist in {area}",
     title: "Best Dentist in {area} | {clinic}",
     description:
-      "Looking for the best dentist in {area}? Smilz, led by {doctor}, offers 25+ years of trusted dental care — implants, root canal, braces & more. {rating}★ Google rated.",
+      "Looking for the best dentist in {area}? Smilz Dental, led by {doctor}, offers 25+ years of trusted dental care — painless root canal, implants, braces, aligners, cosmetic and family dentistry. {rating}★ Google rated by {reviews}+ patients. Book on {phone} today.",
     angle: "expertise",
   },
   {
@@ -174,7 +174,7 @@ export const INTENTS = [
     h1: "Dentist in {area}",
     title: "Dentist in {area} | {clinic}",
     description:
-      "Looking for a dentist in {area}? Smilz Dental, led by {doctor}, offers advanced dental care including implants, root canal, braces and cosmetic dentistry. Rated {rating}★.",
+      "Looking for a dentist in {area}? Smilz Dental, led by {doctor}, offers advanced dental care — implants, painless root canal, braces, clear aligners and cosmetic dentistry — under one roof in Garia. Rated {rating}★ by {reviews}+ patients. Call {phone} to book.",
     angle: "general",
   },
   {
@@ -183,7 +183,7 @@ export const INTENTS = [
     h1: "Top-Rated Dentist in {area}",
     title: "Top-Rated Dentist in {area} | Smilz Dental",
     description:
-      "Smilz Dental is a top-rated dental clinic serving {area} with {rating}★ on Google ({reviews}+ reviews). {doctor} provides expert implants, braces and cosmetic dentistry.",
+      "Smilz Dental is a top-rated dental clinic serving {area} with {rating}★ on Google ({reviews}+ verified reviews). {doctor} provides expert implants, painless root canal, braces, invisible aligners and cosmetic dentistry — established 1999. Book on {phone}.",
     angle: "social-proof",
   },
   {
@@ -192,7 +192,7 @@ export const INTENTS = [
     h1: "Emergency Dentist in {area}",
     title: "Emergency Dentist in {area} | Same-Day Care | Smilz",
     description:
-      "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal & extractions. Call {phone} or WhatsApp now — open Mon–Sat.",
+      "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal, extractions, broken tooth repair and swelling treatment by {doctor}. Open Mon–Sat, morning and evening sessions. Call {phone} or WhatsApp now for immediate help.",
     angle: "urgency",
   },
 ];
@@ -209,7 +209,7 @@ export const SERVICES = [
     h1: "Dental Implants in {area}",
     title: "Dental Implants in {area} | Smilz Dental Garia",
     description:
-      "Looking for dental implants in {area}? {doctor} at Smilz Dental offers guided, painless implant placement with lifetime-grade titanium implants. {rating}★ rated.",
+      "Looking for dental implants in {area}? {doctor} at Smilz Dental offers guided, painless implant placement with lifetime-grade titanium implants — single tooth, multiple teeth and full-mouth All-on-4. CBCT planning, EMI options, {rating}★ Google rated. Call {phone}.",
     schemaServiceType: "Dental Implant",
     body:
       "We provide single-tooth implants, multi-tooth bridges on implants and full-mouth All-on-4/All-on-6 rehabilitation using guided surgery for predictable results.",
@@ -221,7 +221,7 @@ export const SERVICES = [
     h1: "Root Canal Treatment in {area}",
     title: "Root Canal Treatment in {area} | Painless RCT | Smilz",
     description:
-      "Painless root canal treatment in {area} with single-visit options. {doctor} at Smilz Dental uses rotary endodontics and apex locators for precise, comfortable RCT.",
+      "Painless root canal treatment in {area} with single-visit options. {doctor} at Smilz Dental uses rotary endodontics, apex locators and digital radiographs for precise, comfortable RCT — most cases finished in one sitting with tooth-coloured crowns. Book on {phone}.",
     schemaServiceType: "Endodontic Therapy",
     body:
       "Our painless single-visit RCT uses modern rotary endodontics, apex locators and digital radiographs — most cases finish in one sitting with no post-op pain.",
@@ -233,7 +233,7 @@ export const SERVICES = [
     h1: "Braces Treatment in {area}",
     title: "Braces & Aligners in {area} | Smilz Dental Garia",
     description:
-      "Braces and clear aligners in {area} with EMI options. Metal, ceramic, self-ligating and Invisalign-style aligners available. Free orthodontic consultation.",
+      "Braces and clear aligners in {area} with EMI options. Metal, ceramic, self-ligating and Invisalign-style invisible aligners by {doctor} for teens and adults. Free orthodontic consultation, monthly follow-ups and digital treatment previews. Book on {phone}.",
     schemaServiceType: "Orthodontics",
     body:
       "Choose from metal, ceramic, self-ligating braces or virtually invisible clear aligners. Treatment plans typically run 12–24 months with free monthly follow-ups.",
@@ -245,7 +245,7 @@ export const SERVICES = [
     h1: "Smile Designing in {area}",
     title: "Smile Designing in {area} | Digital Smile Design | Smilz",
     description:
-      "Smile designing in {area} with digital previews, veneers, whitening and gum contouring. {doctor} crafts natural, camera-ready smiles tailored to your face.",
+      "Smile designing in {area} with digital previews, porcelain veneers, professional whitening, gum contouring and cosmetic bonding. {doctor} crafts natural, camera-ready smiles tailored to your face — see your new smile before treatment begins. Call {phone}.",
     schemaServiceType: "Cosmetic Dentistry",
     body:
       "Our smile designing combines digital smile design (DSD) previews, porcelain veneers, professional whitening and gum contouring — letting you see your new smile before treatment begins.",
@@ -257,7 +257,7 @@ export const SERVICES = [
     h1: "Guided Implants in {area}",
     title: "Guided Dental Implants in {area} | Smilz Dental",
     description:
-      "Guided implant surgery in {area} using 3D CBCT planning and surgical guides for flapless, painless, predictable implant placement. {doctor}, 25+ years' experience.",
+      "Guided implant surgery in {area} using 3D CBCT planning and 3D-printed surgical guides for flapless, painless, predictable implant placement. {doctor}, 25+ years' experience — faster healing, less pain and millimetre-accurate positioning. Book on {phone}.",
     schemaServiceType: "Dental Implant",
     body:
       "Guided implant placement uses CBCT scans and 3D-printed surgical guides for flapless, minimally-invasive surgery — faster healing, less pain, and millimetre-accurate positioning.",
