@@ -346,17 +346,18 @@ function buildFaqs(intent, area, vars) {
   return base;
 }
 
-function buildSeo({ intent, area, vars, title, description, slug }) {
+function buildSeo({ intent, area, vars, title, description, slug, faqs }) {
   const url = `${SITE}/${slug}/`;
   const localBusiness = {
     "@context": "https://schema.org",
-    "@type": "Dentist",
+    "@type": ["Dentist", "LocalBusiness"],
     name: CLINIC.name,
     image: `${SITE}/og-image.jpg`,
     "@id": `${SITE}/#dentist`,
     url,
     telephone: CLINIC.phone,
     email: CLINIC.email,
+    priceRange: "₹₹",
     address: {
       "@type": "PostalAddress",
       streetAddress: "21, Garia Park, Opposite Garia Park Club, Near Andrews College",
@@ -399,6 +400,19 @@ function buildSeo({ intent, area, vars, title, description, slug }) {
       { "@type": "ListItem", position: 2, name: area.name, item: url },
     ],
   };
+  const faqPage = (faqs && faqs.length)
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs
+          .filter((f) => f.question && f.answer)
+          .map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+      }
+    : null;
   return {
     title,
     description,
@@ -412,7 +426,7 @@ function buildSeo({ intent, area, vars, title, description, slug }) {
     canonical: url,
     ogImage: `${SITE}/og-image.jpg`,
     robots: "index, follow",
-    jsonLd: [localBusiness, breadcrumbs],
+    jsonLd: faqPage ? [localBusiness, breadcrumbs, faqPage] : [localBusiness, breadcrumbs],
   };
 }
 
@@ -429,6 +443,18 @@ function buildServiceLayout({ service, area, h1, description }) {
         padding: "lg",
       },
       children: [
+        {
+          id: id(),
+          type: "image",
+          props: {
+            src: HERO_IMAGE.forService(service.key),
+            alt: `${h1} — ${CLINIC.name}, Garia Kolkata`,
+            objectFit: "cover",
+            borderRadius: "1rem",
+            width: 1200,
+            height: 500,
+          },
+        },
         { id: id(), type: "heading", props: { level: 1, align: "center", text: h1 } },
         {
           id: id(),
@@ -496,8 +522,9 @@ function buildServiceLayout({ service, area, h1, description }) {
         {
           id: id(),
           type: "heading",
-          props: { level: 2, text: `How to reach Smilz Dental from ${area.name}` },
+          props: { level: 2, text: `Directions to Smilz Dental from ${area.name}` },
         },
+        { id: id(), type: "text", props: { html: buildDirectionsHtml(area) } },
         {
           id: id(),
           type: "text",
@@ -548,27 +575,31 @@ function buildServiceLayout({ service, area, h1, description }) {
           type: "faq",
           props: {
             title: `${service.name} in ${area.name} — FAQs`,
-            items: [
-              {
-                q: `How much does ${service.name.toLowerCase()} cost in ${area.name}?`,
-                a: `${service.name} pricing at Smilz Dental depends on case complexity and materials chosen. We offer transparent quotes after a free consultation and EMI options for ${area.name} patients.`,
-              },
-              {
-                q: `Is ${service.name.toLowerCase()} painful?`,
-                a: `No. ${CLINIC.doctor} uses modern painless protocols, profound local anaesthesia and gentle techniques. Most patients report minimal to no discomfort during and after treatment.`,
-              },
-              {
-                q: `How far is the clinic from ${area.name}?`,
-                a: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}, typically a 10–15 minute drive.`,
-              },
-              {
-                q: `Do you take walk-in ${service.name.toLowerCase()} consultations?`,
-                a: `Yes — call ${CLINIC.phoneDisplay} or WhatsApp us. We reserve daily slots for new ${service.name.toLowerCase()} consultations from ${area.name} and nearby areas.`,
-              },
-            ],
+            items: buildServiceFaqs(service, area),
           },
         },
       ],
+    },
+  ];
+}
+
+function buildServiceFaqs(service, area) {
+  return [
+    {
+      question: `How much does ${service.name.toLowerCase()} cost in ${area.name}?`,
+      answer: `${service.name} pricing at Smilz Dental depends on case complexity and materials chosen. We offer transparent quotes after a free consultation and EMI options for ${area.name} patients.`,
+    },
+    {
+      question: `Is ${service.name.toLowerCase()} painful?`,
+      answer: `No. ${CLINIC.doctor} uses modern painless protocols, profound local anaesthesia and gentle techniques. Most patients report minimal to no discomfort during and after treatment.`,
+    },
+    {
+      question: `How far is the clinic from ${area.name}?`,
+      answer: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}, typically a 10–15 minute drive.`,
+    },
+    {
+      question: `Do you take walk-in ${service.name.toLowerCase()} consultations?`,
+      answer: `Yes — call ${CLINIC.phoneDisplay} or WhatsApp us. We reserve daily slots for new ${service.name.toLowerCase()} consultations from ${area.name} and nearby areas.`,
     },
   ];
 }
