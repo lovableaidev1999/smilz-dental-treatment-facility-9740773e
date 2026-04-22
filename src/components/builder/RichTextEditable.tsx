@@ -116,10 +116,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   }, [editing]);
 
   const handleBlur = useCallback((e: React.FocusEvent) => {
-    // Don't blur if clicking toolbar
-    if (toolbarRef.current?.contains(e.relatedTarget as Node)) {
-      return;
-    }
+    // Don't blur if focus moves into toolbar or link panel
+    const next = e.relatedTarget as Node | null;
+    if (toolbarRef.current?.contains(next)) return;
+    if (next && (next as HTMLElement).closest?.('[data-rt-link-panel]')) return;
     if (ref.current) {
       const newHtml = ref.current.innerHTML;
       if (newHtml !== value) {
