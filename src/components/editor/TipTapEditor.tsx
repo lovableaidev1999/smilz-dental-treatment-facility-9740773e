@@ -3,6 +3,9 @@ import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import { MediaBlock } from "./extensions/MediaBlockExtension";
 import { CTABlock } from "./extensions/CTABlockExtension";
 import { FAQBlock } from "./extensions/FAQBlockExtension";
@@ -30,6 +33,9 @@ const TipTapEditor = ({ content, onChange, placeholder = "Start writing your con
         types: ['heading', 'paragraph'],
       }),
       Placeholder.configure({ placeholder }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
       MediaBlock,
       CTABlock,
       FAQBlock,
