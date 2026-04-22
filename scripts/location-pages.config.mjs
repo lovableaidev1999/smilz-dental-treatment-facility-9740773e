@@ -66,7 +66,7 @@ export const AREAS = [
   },
   {
     key: "near-andrews-college",
-    name: "Andrews College area",
+    name: "Andrews College",
     landmarks: ["Andrews College", "Garia Park"],
     nearby: ["Garia", "Patuli"],
     distanceFromClinicKm: 0.2,
@@ -165,7 +165,7 @@ export const INTENTS = [
     h1: "Best Dentist in {area}",
     title: "Best Dentist in {area} | {clinic}",
     description:
-      "Looking for the best dentist in {area}? Smilz Dental, led by {doctor}, offers 25+ years of trusted dental care — painless root canal, implants, braces, aligners, cosmetic and family dentistry. {rating}★ Google rated by {reviews}+ patients. Book on {phone} today.",
+      "Looking for the best dentist in {area}? Smilz Dental, led by {doctor}, offers 25+ years of trusted dental care — implants, root canal, braces, aligners and cosmetic dentistry. {rating}★ Google rated. Book on {phone}.",
     angle: "expertise",
   },
   {
@@ -174,7 +174,7 @@ export const INTENTS = [
     h1: "Dentist in {area}",
     title: "Dentist in {area} | {clinic}",
     description:
-      "Looking for a dentist in {area}? Smilz Dental, led by {doctor}, offers advanced dental care — implants, painless root canal, braces, clear aligners and cosmetic dentistry — under one roof in Garia. Rated {rating}★ by {reviews}+ patients. Call {phone} to book.",
+      "Need a dentist in {area}? Smilz Dental, led by {doctor}, delivers implants, painless root canal, braces, clear aligners and cosmetic dentistry under one roof. Rated {rating}★. Call {phone}.",
     angle: "general",
   },
   {
@@ -183,7 +183,7 @@ export const INTENTS = [
     h1: "Top-Rated Dentist in {area}",
     title: "Top-Rated Dentist in {area} | Smilz Dental",
     description:
-      "Smilz Dental is a top-rated dental clinic serving {area} with {rating}★ on Google ({reviews}+ verified reviews). {doctor} provides expert implants, painless root canal, braces, invisible aligners and cosmetic dentistry — established 1999. Book on {phone}.",
+      "Smilz Dental serves {area} with {rating}★ on Google ({reviews}+ reviews). {doctor} provides expert implants, painless root canal, braces, aligners and cosmetic dentistry. Established 1999. Book on {phone}.",
     angle: "social-proof",
   },
   {
@@ -192,7 +192,7 @@ export const INTENTS = [
     h1: "Emergency Dentist in {area}",
     title: "Emergency Dentist in {area} | Same-Day Care | Smilz",
     description:
-      "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal, extractions, broken tooth repair and swelling treatment by {doctor}. Open Mon–Sat, morning and evening sessions. Call {phone} or WhatsApp now for immediate help.",
+      "Dental emergency in {area}? Smilz Dental offers same-day pain relief, emergency root canal, extractions, broken-tooth repair and swelling treatment by {doctor}. Call {phone} or WhatsApp now.",
     angle: "urgency",
   },
 ];
