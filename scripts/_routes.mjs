@@ -13,6 +13,7 @@ const STATIC_ROUTES = [
   { path: "/contact/",                          type: "core",    priority: "0.7", changefreq: "monthly" },
   { path: "/gallery/",                          type: "core",    priority: "0.6", changefreq: "monthly" },
   { path: "/blog/",                             type: "core",    priority: "0.8", changefreq: "daily" },
+  { path: "/referral/",                         type: "core",    priority: "0.5", changefreq: "monthly" },
   // SEO landing pages
   { path: "/dentist-in-kolkata/",               type: "seo",     priority: "0.9", changefreq: "monthly" },
   { path: "/dental-clinic-in-garia-kolkata/",   type: "seo",     priority: "0.9", changefreq: "monthly" },
@@ -22,7 +23,9 @@ const STATIC_ROUTES = [
 ];
 
 // Routes never to prerender or include in sitemap
-export const SKIP_PREFIXES = ["/admin", "/login", "/referral", "/preview"];
+// NOTE: /referral IS prerendered (it's a real public page) but excluded
+// from sitemap via the noindex meta on the page itself.
+export const SKIP_PREFIXES = ["/admin", "/login", "/preview"];
 
 const withTrailingSlash = (p) => (p.endsWith("/") ? p : `${p}/`);
 
