@@ -144,6 +144,18 @@ function buildLayout({ intent, area, vars, h1, description }) {
       children: [
         {
           id: id(),
+          type: "image",
+          props: {
+            src: HERO_IMAGE.forIntent(intent.key),
+            alt: `${h1} — ${CLINIC.name}, Garia Kolkata`,
+            objectFit: "cover",
+            borderRadius: "1rem",
+            width: 1200,
+            height: 500,
+          },
+        },
+        {
+          id: id(),
           type: "heading",
           props: { level: 1, align: "center", text: h1 },
         },
@@ -237,7 +249,12 @@ function buildLayout({ intent, area, vars, h1, description }) {
         {
           id: id(),
           type: "heading",
-          props: { level: 2, text: `How to reach Smilz Dental from ${area.name}` },
+          props: { level: 2, text: `Directions to Smilz Dental from ${area.name}` },
+        },
+        {
+          id: id(),
+          type: "text",
+          props: { html: buildDirectionsHtml(area) },
         },
         {
           id: id(),
@@ -300,26 +317,30 @@ function buildLayout({ intent, area, vars, h1, description }) {
 function buildFaqs(intent, area, vars) {
   const base = [
     {
-      q: `Who is the best dentist in ${area.name}?`,
-      a: `${CLINIC.doctor} at ${CLINIC.name} is widely considered one of the best dentists serving ${area.name}, with 25+ years of experience and a ${CLINIC.rating}★ Google rating from ${CLINIC.reviewCount}+ patients.`,
+      question: `Who is the best dentist in ${area.name}?`,
+      answer: `${CLINIC.doctor} at ${CLINIC.name} is widely considered one of the best dentists serving ${area.name}, with 25+ years of experience and a ${CLINIC.rating}★ Google rating from ${CLINIC.reviewCount}+ patients.`,
     },
     {
-      q: `How far is Smilz Dental from ${area.name}?`,
-      a: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}. Most patients reach us within 10–15 minutes by car or auto.`,
+      question: `How far is Smilz Dental from ${area.name}?`,
+      answer: `Our clinic at ${CLINIC.address} is approximately ${area.distanceFromClinicKm} km from ${area.name}. Most patients reach us within 10–15 minutes by car or auto.`,
     },
     {
-      q: `Do you accept walk-in patients from ${area.name}?`,
-      a: `Yes. While appointments are recommended, we accommodate walk-ins and same-day emergency cases. Call ${CLINIC.phoneDisplay} or WhatsApp ${CLINIC.phoneDisplay} before visiting.`,
+      question: `Do you accept walk-in patients from ${area.name}?`,
+      answer: `Yes. While appointments are recommended, we accommodate walk-ins and same-day emergency cases. Call ${CLINIC.phoneDisplay} or WhatsApp ${CLINIC.phoneDisplay} before visiting.`,
     },
     {
-      q: `What treatments do you offer for patients in ${area.name}?`,
-      a: `We provide the full range of modern dentistry — implants, root canal, braces & aligners, cosmetic dentistry, paediatric care, and emergency treatments — all from our Garia clinic.`,
+      question: `What treatments do you offer for patients in ${area.name}?`,
+      answer: `We provide the full range of modern dentistry — implants, root canal, braces & aligners, cosmetic dentistry, paediatric care, and emergency treatments — all from our Garia clinic.`,
+    },
+    {
+      question: `How do I get to Smilz Dental from ${area.name} by public transport?`,
+      answer: `From ${area.name}, take any auto or bus heading toward Garia Park / Garia Buddha Mandir. Get off near Garia Park Club — the clinic is directly opposite, next to Andrews College. Garia Metro is the nearest metro station.`,
     },
   ];
   if (intent.angle === "urgency") {
     base.unshift({
-      q: `Is there an emergency dentist available in ${area.name}?`,
-      a: `Yes. Smilz Dental offers same-day emergency appointments for severe pain, swelling, broken teeth and trauma. Call ${CLINIC.phoneDisplay} immediately — we serve ${area.name} and surrounding areas.`,
+      question: `Is there an emergency dentist available in ${area.name}?`,
+      answer: `Yes. Smilz Dental offers same-day emergency appointments for severe pain, swelling, broken teeth and trauma. Call ${CLINIC.phoneDisplay} immediately — we serve ${area.name} and surrounding areas.`,
     });
   }
   return base;
