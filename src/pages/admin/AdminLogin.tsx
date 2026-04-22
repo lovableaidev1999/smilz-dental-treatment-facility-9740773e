@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, Mail, ArrowLeft } from "lucide-react";
+import { Lock, Mail, ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 const PUBLISHED_ORIGIN = "https://smilz-dental-treatment-facility.lovable.app";
 
