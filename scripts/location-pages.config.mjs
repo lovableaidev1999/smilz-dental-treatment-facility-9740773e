@@ -163,7 +163,7 @@ export const INTENTS = [
     key: "best-dentist-in",
     slugTemplate: "best-dentist-in-{area}",
     h1: "Best Dentist in {area}",
-    title: "Best Dentist in {area} | {clinic}",
+    title: "Best Dentist in {area} | Smilz Dental Garia",
     description:
       "Looking for the best dentist in {area}? Smilz Dental, led by {doctor}, offers 25+ years of trusted dental care — implants, root canal, braces, aligners and cosmetic dentistry. {rating}★ Google rated. Book on {phone}.",
     angle: "expertise",
