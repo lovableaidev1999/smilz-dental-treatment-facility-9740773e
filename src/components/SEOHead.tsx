@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { normalizeCanonicalUrl } from "@/lib/canonicalUrl";
 
 interface SEOHeadProps {
   title: string;
@@ -50,7 +51,10 @@ const SEOHead = ({
   const clinicName = general?.clinic_name ?? "Smilz Dental Treatment Facility";
   const website = links?.website ?? "https://smilz.net";
   const fullTitle = title.includes(clinicName) || title.includes("Smilz") ? title : `${title} | ${clinicName}`;
-  const url = canonicalUrl || `${website}${typeof window !== 'undefined' ? window.location.pathname : '/'}`;
+  // Always normalize: forces https://smilz.net, strips query/hash, adds trailing
+  // slash, lowercases path — so duplicate routes (/about vs /about/, www vs apex,
+  // preview domains, UTM params) all resolve to a single canonical URL.
+  const url = normalizeCanonicalUrl(canonicalUrl);
 
   // Collect social sameAs links
   const sameAs = [
