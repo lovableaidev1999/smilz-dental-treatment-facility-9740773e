@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { resolveResponsiveImage } from "@/lib/wpImageFallback";
 import type { PageSection } from "@/hooks/usePageContent";
 
 interface DynamicSectionsProps {
@@ -87,10 +88,11 @@ export const GenericSection = ({
             className={!imageFirst ? "md:order-2" : undefined}
           >
             <img
-              src={section.image_url!}
+              src={resolveResponsiveImage(section.image_url!, 800)}
               alt={section.section_title || section.heading || "Section image"}
-              className="rounded-2xl shadow-elevated w-full"
+              className="rounded-2xl shadow-elevated w-full h-auto"
               loading="lazy"
+              decoding="async"
               width={800}
               height={600}
             />
