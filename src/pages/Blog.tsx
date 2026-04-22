@@ -91,7 +91,7 @@ const Blog = () => {
       <StickyCtaBar />
       <SEOHead
         title="Dental Insights & Blog"
-        description={`Expert dental insights, oral health tips & treatment guides from ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} Kolkata. Stay informed about your dental health!`}
+        description={`Expert dental insights, oral health tips, treatment guides and patient education articles from ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} Kolkata. Learn about implants, root canal, braces, gum care and preventive dentistry from Dr. Dibyendu Dutta.`}
         keywords="dental blog Kolkata, oral health tips, dental treatment guides"
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/blog`}
         breadcrumbs={[

@@ -41,7 +41,7 @@ const Gallery = () => {
       <StickyCtaBar />
       <SEOHead
         title="Dental Treatment Gallery in Kolkata"
-        description={`See real before & after dental treatment results at ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} Kolkata. Smile makeovers, implants & more. Book your consultation!`}
+        description={`See real before & after dental treatment results at ${settings?.general?.clinic_name ?? "Smilz Dental Clinic"} Kolkata — smile makeovers, dental implants, veneers, braces, whitening and full-mouth rehabilitation cases by Dr. Dibyendu Dutta. Book your consultation today.`}
         keywords="dental before after Kolkata, smile makeover results"
         canonicalUrl={`${links?.website ?? "https://smilz.net"}/gallery`}
         breadcrumbs={[
