@@ -37,13 +37,33 @@ const ToolBtn = ({
 const EditorToolbar = ({ editor }: Props) => {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkTarget, setLinkTarget] = useState<"_self" | "_blank">("_blank");
+
+  const openLinkInput = () => {
+    const existing = editor.getAttributes("link");
+    setLinkUrl(existing.href || "");
+    setLinkTarget(existing.target === "_self" ? "_self" : "_blank");
+    setShowLinkInput(true);
+  };
 
   const setLink = () => {
     if (linkUrl) {
-      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl, target: "_blank" }).run();
+      const rel = linkTarget === "_blank" ? "noopener noreferrer" : null;
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: linkUrl, target: linkTarget, rel } as any)
+        .run();
     } else {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     }
+    setShowLinkInput(false);
+    setLinkUrl("");
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
     setShowLinkInput(false);
     setLinkUrl("");
   };
@@ -158,20 +178,42 @@ const EditorToolbar = ({ editor }: Props) => {
 
       {/* Link */}
       <div className="relative">
-        <ToolBtn active={editor.isActive("link")} onClick={() => setShowLinkInput(!showLinkInput)} title="Link">
+        <ToolBtn active={editor.isActive("link")} onClick={() => (showLinkInput ? setShowLinkInput(false) : openLinkInput())} title="Insert / edit link">
           <Link className="h-4 w-4" />
         </ToolBtn>
         {showLinkInput && (
-          <div className="absolute top-full left-0 mt-1 z-50 bg-card border border-border rounded-lg shadow-elevated p-2 flex gap-2">
-            <input
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="https://..."
-              className="text-xs px-2 py-1 border border-input rounded bg-background w-48"
-              onKeyDown={(e) => e.key === "Enter" && setLink()}
-              autoFocus
-            />
-            <Button size="sm" className="h-7 text-xs" onClick={setLink}>Set</Button>
+          <div className="absolute top-full left-0 mt-1 z-50 bg-card border border-border rounded-lg shadow-elevated p-2 flex flex-col gap-2 w-72">
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">URL</label>
+              <input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://... or /about or mailto:..."
+                className="text-xs px-2 py-1.5 border border-input rounded bg-background"
+                onKeyDown={(e) => e.key === "Enter" && setLink()}
+                autoFocus
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Tip: select text first to hyperlink a word/phrase. Use <code>/path</code> for internal pages.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Open in</label>
+              <select
+                value={linkTarget}
+                onChange={(e) => setLinkTarget(e.target.value as "_self" | "_blank")}
+                className="text-xs px-2 py-1.5 border border-input rounded bg-background"
+              >
+                <option value="_blank">New tab</option>
+                <option value="_self">Same tab</option>
+              </select>
+            </div>
+            <div className="flex gap-2 justify-end">
+              {editor.isActive("link") && (
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={removeLink}>Remove</Button>
+              )}
+              <Button size="sm" className="h-7 text-xs" onClick={setLink}>Apply</Button>
+            </div>
           </div>
         )}
       </div>

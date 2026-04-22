@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
-import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter } from 'lucide-react';
+import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter, Link as LinkIcon, Unlink } from 'lucide-react';
 
 interface Props {
   blockId: string;
@@ -24,7 +24,77 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [editing, setEditing] = useState(false);
   const ref = useRef<HTMLElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const [showLinkPanel, setShowLinkPanel] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
   const isSelected = state.selectedBlockId === blockId;
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    const range = savedRangeRef.current;
+    if (range) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+  };
+
+  const openLinkPanel = () => {
+    saveSelection();
+    // Try to read existing anchor under cursor
+    const sel = window.getSelection();
+    let anchor: HTMLAnchorElement | null = null;
+    if (sel && sel.anchorNode) {
+      let n: Node | null = sel.anchorNode;
+      while (n && n !== ref.current) {
+        if ((n as HTMLElement).tagName === 'A') {
+          anchor = n as HTMLAnchorElement;
+          break;
+        }
+        n = n.parentNode;
+      }
+    }
+    setLinkUrl(anchor?.getAttribute('href') || '');
+    setLinkTarget((anchor?.getAttribute('target') as any) === '_self' ? '_self' : '_blank');
+    setShowLinkPanel(true);
+  };
+
+  const applyLink = () => {
+    restoreSelection();
+    if (!linkUrl) {
+      document.execCommand('unlink');
+    } else {
+      // execCommand createLink doesn't set target, so set via temporary id
+      const id = `__lk_${Date.now()}`;
+      document.execCommand('createLink', false, linkUrl);
+      // Find newly created/affected anchors in the contenteditable and set target/rel
+      const anchors = ref.current?.querySelectorAll(`a[href="${CSS.escape(linkUrl)}"]`);
+      anchors?.forEach(a => {
+        a.setAttribute('target', linkTarget);
+        if (linkTarget === '_blank') {
+          a.setAttribute('rel', 'noopener noreferrer');
+        } else {
+          a.removeAttribute('rel');
+        }
+      });
+    }
+    setShowLinkPanel(false);
+    ref.current?.focus();
+  };
+
+  const removeLink = () => {
+    restoreSelection();
+    document.execCommand('unlink');
+    setShowLinkPanel(false);
+    ref.current?.focus();
+  };
 
   useEffect(() => {
     if (editing && ref.current) {
@@ -46,10 +116,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   }, [editing]);
 
   const handleBlur = useCallback((e: React.FocusEvent) => {
-    // Don't blur if clicking toolbar
-    if (toolbarRef.current?.contains(e.relatedTarget as Node)) {
-      return;
-    }
+    // Don't blur if focus moves into toolbar or link panel
+    const next = e.relatedTarget as Node | null;
+    if (toolbarRef.current?.contains(next)) return;
+    if (next && (next as HTMLElement).closest?.('[data-rt-link-panel]')) return;
     if (ref.current) {
       const newHtml = ref.current.innerHTML;
       if (newHtml !== value) {
@@ -162,6 +232,78 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
           >
             ×
           </button>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-accent text-foreground"
+            onMouseDown={e => { e.preventDefault(); saveSelection(); }}
+            onClick={openLinkPanel}
+            title="Insert / edit link"
+          >
+            <LinkIcon className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            className="p-1 rounded hover:bg-accent text-foreground"
+            onMouseDown={e => e.preventDefault()}
+            onClick={removeLink}
+            title="Remove link"
+          >
+            <Unlink className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Link panel */}
+      {editing && showLinkPanel && (
+        <div
+          data-rt-link-panel
+          tabIndex={-1}
+          className="absolute -top-9 left-0 translate-y-[-100%] z-50 bg-card border border-border rounded-md shadow-md p-2 flex flex-col gap-2 w-72"
+          onMouseDown={e => e.preventDefault()}
+        >
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">URL</label>
+            <input
+              type="text"
+              value={linkUrl}
+              onChange={e => setLinkUrl(e.target.value)}
+              placeholder="https://... or /about or mailto:..."
+              className="text-xs px-2 py-1.5 border border-input rounded bg-background"
+              onKeyDown={e => {
+                if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
+                if (e.key === 'Escape') { setShowLinkPanel(false); }
+              }}
+              autoFocus
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Open in</label>
+            <select
+              value={linkTarget}
+              onChange={e => setLinkTarget(e.target.value as '_self' | '_blank')}
+              className="text-xs px-2 py-1.5 border border-input rounded bg-background"
+            >
+              <option value="_blank">New tab</option>
+              <option value="_self">Same tab</option>
+            </select>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              className="text-xs px-2 py-1 rounded border border-input hover:bg-accent text-foreground"
+              onClick={() => setShowLinkPanel(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground hover:opacity-90"
+              onClick={applyLink}
+            >
+              Apply
+            </button>
+          </div>
         </div>
       )}
 

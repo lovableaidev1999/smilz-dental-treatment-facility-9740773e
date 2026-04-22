@@ -403,6 +403,10 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
             <Switch checked={props.align === 'stretch'} onCheckedChange={v => updateProp('align', v ? 'stretch' : 'left')} />
           </div>
           <PropField label="Font Color" value={props.fontColor} onChange={v => updateProp('fontColor', v)} placeholder="CSS color override" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Open in New Tab</Label>
+            <Switch checked={!!props.openInNewTab} onCheckedChange={v => updateProp('openInNewTab', v)} />
+          </div>
         </>
       );
 
