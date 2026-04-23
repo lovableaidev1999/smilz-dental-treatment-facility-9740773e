@@ -344,9 +344,13 @@ async function prerender() {
   const allRoutes = await getAllRoutes();
   const routesToRender = allRoutes.filter((r) => !SKIP_PREFIXES.some((p) => r.path.startsWith(p)));
 
-  // Concurrency 2 is slower than 3 on paper, but much more stable for this app's
-  // combination of React hydration, Helmet head writes, and multiple Supabase reads.
-  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 2);
+  // FIX: Default concurrency dropped 2 → 1.
+  // With concurrency 2, both workers simultaneously hit the 25s body-readiness timeout,
+  // competing for the same Chromium CPU. Each route then burns up to 57s (25+30+2s)
+  // while the other worker does the same — making parallel slower than serial.
+  // Concurrency 1 gives each route undivided CPU/network and clears 177 routes in
+  // ~40-50 min — well within a 60 min CI budget. Override via PRERENDER_CONCURRENCY.
+  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 1);
   console.log(`[prerender] Prerendering ${routesToRender.length} routes (concurrency: ${CONCURRENCY})...`);
 
   const report = {
