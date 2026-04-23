@@ -81,33 +81,33 @@ async function waitForContent(page, route) {
   try {
     await page.goto(`http://localhost:${PORT}${route}`, {
       waitUntil: "domcontentloaded",
-      timeout: 25000,
+      timeout: 30000,
     });
   } catch (err) {
     console.warn(`[prerender] navigation timeout for ${route}: ${err.message} — continuing`);
   }
 
+  // Wait for the SPA to actually hydrate AND for SEOHead/JSON-LD to mount.
+  // We require: real H1, non-default <title>, AND at least one JSON-LD script,
+  // OR the explicit data-prerender-ready signal. This prevents capturing the
+  // pre-hydration shell which has the default title and no schema.
   await page.waitForFunction(() => {
     if (document.querySelector('[data-prerender-ready="true"]')) return true;
     const root = document.querySelector('#root');
     if (!root) return false;
-    const skeletons = document.querySelectorAll('.animate-pulse');
+    if (document.querySelectorAll('.animate-pulse').length > 0) return false;
     const h1 = document.querySelector('h1');
     const hasH1 = h1 && h1.textContent.trim().length > 0;
-    if (skeletons.length === 0 && hasH1) return true;
-    if (skeletons.length === 0 && root.innerHTML.length > 2000) return true;
-    return false;
-  }, { timeout: 12000 }).catch(() => {
+    if (!hasH1) return false;
+    const title = document.querySelector('title')?.textContent?.trim() || '';
+    const titleReady = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
+    const hasSchema = document.querySelector('script[type="application/ld+json"]') !== null;
+    return titleReady && hasSchema;
+  }, { timeout: 25000 }).catch(() => {
     console.warn(`[prerender] ⚠ Content readiness timeout for ${route} — capturing anyway`);
   });
 
-  await page.waitForFunction(() => {
-    const t = document.querySelector('title');
-    return t && t.textContent && t.textContent.trim().length > 0
-      && !/^(Vite|Smilz Dental Treatment Facility)$/.test(t.textContent.trim());
-  }, { timeout: 4000 }).catch(() => {});
-
-  await new Promise((r) => setTimeout(r, 400));
+  await new Promise((r) => setTimeout(r, 600));
 }
 
 /**
@@ -278,7 +278,10 @@ async function prerender() {
   const allRoutes = await getAllRoutes();
   const routesToRender = allRoutes.filter((r) => !SKIP_PREFIXES.some((p) => r.path.startsWith(p)));
 
-  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 5);
+  // Concurrency 3 balances throughput vs. Supabase rate-limits and CPU contention.
+  // 5 was too aggressive: pages timed out waiting for hydration and captured
+  // the pre-render shell (default title, no schema, empty meta description).
+  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 3);
   console.log(`[prerender] Prerendering ${routesToRender.length} routes (concurrency: ${CONCURRENCY})...`);
 
   const report = {
