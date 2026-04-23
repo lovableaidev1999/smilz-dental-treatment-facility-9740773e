@@ -80,11 +80,11 @@ function startServer() {
 async function waitForContent(page, route) {
   try {
     await page.goto(`http://localhost:${PORT}${route}`, {
-      waitUntil: "networkidle2",
-      timeout: 60000,
+      waitUntil: "domcontentloaded",
+      timeout: 25000,
     });
   } catch (err) {
-    console.warn(`[prerender] networkidle2 timeout for ${route}: ${err.message} — continuing`);
+    console.warn(`[prerender] navigation timeout for ${route}: ${err.message} — continuing`);
   }
 
   await page.waitForFunction(() => {
@@ -97,7 +97,7 @@ async function waitForContent(page, route) {
     if (skeletons.length === 0 && hasH1) return true;
     if (skeletons.length === 0 && root.innerHTML.length > 2000) return true;
     return false;
-  }, { timeout: 30000 }).catch(() => {
+  }, { timeout: 12000 }).catch(() => {
     console.warn(`[prerender] ⚠ Content readiness timeout for ${route} — capturing anyway`);
   });
 
@@ -105,11 +105,48 @@ async function waitForContent(page, route) {
     const t = document.querySelector('title');
     return t && t.textContent && t.textContent.trim().length > 0
       && !/^(Vite|Smilz Dental Treatment Facility)$/.test(t.textContent.trim());
-  }, { timeout: 8000 }).catch(() => {
-    console.warn(`[prerender] ⚠ Helmet title not detected for ${route} — using existing title`);
+  }, { timeout: 4000 }).catch(() => {});
+
+  await new Promise((r) => setTimeout(r, 400));
+}
+
+/**
+ * Configure a Puppeteer page with request blocking and console filters.
+ * Used for the main render pool and the mobile-audit page.
+ */
+async function configurePage(page) {
+  await page.setViewport({ width: 1280, height: 800 });
+  const blockedUrls = new Set();
+  const BLOCK_RE = /google-analytics|googletagmanager|ahrefs|facebook|hotjar|clarity|youtube\.com\/embed|google\.com\/maps\/embed/i;
+  // Also block heavy asset types that don't affect rendered HTML/SEO output.
+  const BLOCK_TYPES = new Set(['image', 'media', 'font']);
+
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = req.url();
+    if (BLOCK_RE.test(url) || BLOCK_TYPES.has(req.resourceType())) {
+      blockedUrls.add(url);
+      return req.abort();
+    }
+    req.continue();
   });
 
-  await new Promise((r) => setTimeout(r, 1200));
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') return;
+    const text = msg.text();
+    if (/Failed to load resource: net::ERR_(FAILED|ABORTED|BLOCKED_BY_CLIENT)/i.test(text)) return;
+    console.log(`[prerender:page-error] ${text}`);
+  });
+  page.on('pageerror', (err) => {
+    console.log(`[prerender:page-error] ${err.message}`);
+  });
+  page.on('requestfailed', (req) => {
+    const url = req.url();
+    if (blockedUrls.has(url)) return;
+    const failure = req.failure();
+    if (failure && /net::ERR_ABORTED/i.test(failure.errorText)) return;
+    console.log(`[prerender:request-failed] ${url} — ${failure?.errorText || 'unknown'}`);
+  });
 }
 
 function makeContentVisible(html) {
