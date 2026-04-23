@@ -240,19 +240,41 @@ async function prerender() {
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
+  // Track which URLs we deliberately blocked so we can suppress their
+  // resulting "Failed to load resource: net::ERR_FAILED" console noise.
+  const blockedUrls = new Set();
+  const BLOCK_RE = /google-analytics|googletagmanager|ahrefs|facebook|hotjar|clarity|youtube\.com\/embed|google\.com\/maps\/embed/i;
+
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url();
-    if (/google-analytics|googletagmanager|ahrefs|facebook|hotjar|clarity|youtube\.com\/embed|google\.com\/maps\/embed/i.test(url)) {
+    if (BLOCK_RE.test(url)) {
+      blockedUrls.add(url);
       return req.abort();
     }
     req.continue();
   });
 
+  // Filter console noise: aborted analytics/maps requests surface as generic
+  // "Failed to load resource: net::ERR_FAILED" entries with no URL attached,
+  // so we suppress that exact message entirely. Real page errors still log.
   page.on('console', (msg) => {
-    if (msg.type() === 'error') {
-      console.log(`[prerender:page-error] ${msg.text()}`);
-    }
+    if (msg.type() !== 'error') return;
+    const text = msg.text();
+    if (/Failed to load resource: net::ERR_(FAILED|ABORTED|BLOCKED_BY_CLIENT)/i.test(text)) return;
+    console.log(`[prerender:page-error] ${text}`);
+  });
+
+  page.on('pageerror', (err) => {
+    console.log(`[prerender:page-error] ${err.message}`);
+  });
+
+  page.on('requestfailed', (req) => {
+    const url = req.url();
+    if (blockedUrls.has(url)) return; // our own abort, ignore
+    const failure = req.failure();
+    if (failure && /net::ERR_ABORTED/i.test(failure.errorText)) return;
+    console.log(`[prerender:request-failed] ${url} — ${failure?.errorText || 'unknown'}`);
   });
 
   const allRoutes = await getAllRoutes();
