@@ -80,11 +80,11 @@ function startServer() {
 async function waitForContent(page, route) {
   try {
     await page.goto(`http://localhost:${PORT}${route}`, {
-      waitUntil: "networkidle2",
-      timeout: 60000,
+      waitUntil: "domcontentloaded",
+      timeout: 25000,
     });
   } catch (err) {
-    console.warn(`[prerender] networkidle2 timeout for ${route}: ${err.message} — continuing`);
+    console.warn(`[prerender] navigation timeout for ${route}: ${err.message} — continuing`);
   }
 
   await page.waitForFunction(() => {
@@ -97,7 +97,7 @@ async function waitForContent(page, route) {
     if (skeletons.length === 0 && hasH1) return true;
     if (skeletons.length === 0 && root.innerHTML.length > 2000) return true;
     return false;
-  }, { timeout: 30000 }).catch(() => {
+  }, { timeout: 12000 }).catch(() => {
     console.warn(`[prerender] ⚠ Content readiness timeout for ${route} — capturing anyway`);
   });
 
@@ -105,11 +105,48 @@ async function waitForContent(page, route) {
     const t = document.querySelector('title');
     return t && t.textContent && t.textContent.trim().length > 0
       && !/^(Vite|Smilz Dental Treatment Facility)$/.test(t.textContent.trim());
-  }, { timeout: 8000 }).catch(() => {
-    console.warn(`[prerender] ⚠ Helmet title not detected for ${route} — using existing title`);
+  }, { timeout: 4000 }).catch(() => {});
+
+  await new Promise((r) => setTimeout(r, 400));
+}
+
+/**
+ * Configure a Puppeteer page with request blocking and console filters.
+ * Used for the main render pool and the mobile-audit page.
+ */
+async function configurePage(page) {
+  await page.setViewport({ width: 1280, height: 800 });
+  const blockedUrls = new Set();
+  const BLOCK_RE = /google-analytics|googletagmanager|ahrefs|facebook|hotjar|clarity|youtube\.com\/embed|google\.com\/maps\/embed/i;
+  // Also block heavy asset types that don't affect rendered HTML/SEO output.
+  const BLOCK_TYPES = new Set(['image', 'media', 'font']);
+
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = req.url();
+    if (BLOCK_RE.test(url) || BLOCK_TYPES.has(req.resourceType())) {
+      blockedUrls.add(url);
+      return req.abort();
+    }
+    req.continue();
   });
 
-  await new Promise((r) => setTimeout(r, 1200));
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') return;
+    const text = msg.text();
+    if (/Failed to load resource: net::ERR_(FAILED|ABORTED|BLOCKED_BY_CLIENT)/i.test(text)) return;
+    console.log(`[prerender:page-error] ${text}`);
+  });
+  page.on('pageerror', (err) => {
+    console.log(`[prerender:page-error] ${err.message}`);
+  });
+  page.on('requestfailed', (req) => {
+    const url = req.url();
+    if (blockedUrls.has(url)) return;
+    const failure = req.failure();
+    if (failure && /net::ERR_ABORTED/i.test(failure.errorText)) return;
+    console.log(`[prerender:request-failed] ${url} — ${failure?.errorText || 'unknown'}`);
+  });
 }
 
 function makeContentVisible(html) {
@@ -238,49 +275,11 @@ async function prerender() {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 800 });
-  // Track which URLs we deliberately blocked so we can suppress their
-  // resulting "Failed to load resource: net::ERR_FAILED" console noise.
-  const blockedUrls = new Set();
-  const BLOCK_RE = /google-analytics|googletagmanager|ahrefs|facebook|hotjar|clarity|youtube\.com\/embed|google\.com\/maps\/embed/i;
-
-  await page.setRequestInterception(true);
-  page.on('request', (req) => {
-    const url = req.url();
-    if (BLOCK_RE.test(url)) {
-      blockedUrls.add(url);
-      return req.abort();
-    }
-    req.continue();
-  });
-
-  // Filter console noise: aborted analytics/maps requests surface as generic
-  // "Failed to load resource: net::ERR_FAILED" entries with no URL attached,
-  // so we suppress that exact message entirely. Real page errors still log.
-  page.on('console', (msg) => {
-    if (msg.type() !== 'error') return;
-    const text = msg.text();
-    if (/Failed to load resource: net::ERR_(FAILED|ABORTED|BLOCKED_BY_CLIENT)/i.test(text)) return;
-    console.log(`[prerender:page-error] ${text}`);
-  });
-
-  page.on('pageerror', (err) => {
-    console.log(`[prerender:page-error] ${err.message}`);
-  });
-
-  page.on('requestfailed', (req) => {
-    const url = req.url();
-    if (blockedUrls.has(url)) return; // our own abort, ignore
-    const failure = req.failure();
-    if (failure && /net::ERR_ABORTED/i.test(failure.errorText)) return;
-    console.log(`[prerender:request-failed] ${url} — ${failure?.errorText || 'unknown'}`);
-  });
-
   const allRoutes = await getAllRoutes();
   const routesToRender = allRoutes.filter((r) => !SKIP_PREFIXES.some((p) => r.path.startsWith(p)));
 
-  console.log(`[prerender] Prerendering ${routesToRender.length} routes...`);
+  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 5);
+  console.log(`[prerender] Prerendering ${routesToRender.length} routes (concurrency: ${CONCURRENCY})...`);
 
   const report = {
     generatedAt: new Date().toISOString(),
@@ -291,61 +290,83 @@ async function prerender() {
     pages: [],
   };
 
-  for (const r of routesToRender) {
-    const route = r.path;
-    try {
-      console.log(`[prerender] → ${route}`);
-      await waitForContent(page, route);
+  // Pool of pages — one per worker.
+  const pool = [];
+  for (let i = 0; i < CONCURRENCY; i++) {
+    const p = await browser.newPage();
+    await configurePage(p);
+    pool.push(p);
+  }
 
-      const fullHtml = await page.evaluate(() => '<!DOCTYPE html>' + document.documentElement.outerHTML);
-      const visibleHtml = makeContentVisible(fullHtml);
-      const metrics = await captureMetrics(page);
-      const validation = validatePage(route, metrics, visibleHtml.length);
+  let cursor = 0;
+  async function worker(workerPage) {
+    while (true) {
+      const i = cursor++;
+      if (i >= routesToRender.length) return;
+      const r = routesToRender[i];
+      const route = r.path;
+      try {
+        console.log(`[prerender] → ${route}`);
+        await waitForContent(workerPage, route);
 
-      const filePath = route === "/"
-        ? join(DIST, "index.html")
-        : join(DIST, route, "index.html");
-      const dir = dirname(filePath);
-      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-      writeFileSync(filePath, visibleHtml);
+        const fullHtml = await workerPage.evaluate(() => '<!DOCTYPE html>' + document.documentElement.outerHTML);
+        const visibleHtml = makeContentVisible(fullHtml);
+        const metrics = await captureMetrics(workerPage);
+        const validation = validatePage(route, metrics, visibleHtml.length);
 
-      const status = validation.failures.length === 0 ? 'success' : 'failed';
-      if (status === 'success') report.succeeded++;
-      else report.failed++;
-      if (validation.warnings.length > 0) report.warnings++;
+        const filePath = route === "/"
+          ? join(DIST, "index.html")
+          : join(DIST, route, "index.html");
+        const dir = dirname(filePath);
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+        writeFileSync(filePath, visibleHtml);
 
-      report.pages.push({
-        url: route,
-        type: r.type,
-        status,
-        h1: metrics.h1,
-        descLen: metrics.desc.length,
-        schemaCount: metrics.schemaCount,
-        schemaTypes: metrics.schemaTypes,
-        internalLinks: metrics.internalLinks,
-        htmlBytes: visibleHtml.length,
-        failures: validation.failures,
-        warnings: validation.warnings,
-      });
+        const status = validation.failures.length === 0 ? 'success' : 'failed';
+        if (status === 'success') report.succeeded++;
+        else report.failed++;
+        if (validation.warnings.length > 0) report.warnings++;
 
-      const icon = status === 'success' ? '✅' : '❌';
-      console.log(
-        `[prerender] ${icon} ${route} — h1:"${metrics.h1.slice(0, 40)}" desc:${metrics.desc.length} schema:${metrics.schemaCount} links:${metrics.internalLinks}`
-      );
-      if (validation.failures.length) console.error(`[prerender]    FAIL: ${validation.failures.join('; ')}`);
-      if (validation.warnings.length) console.warn(`[prerender]    WARN: ${validation.warnings.join('; ')}`);
-    } catch (err) {
-      console.error(`[prerender] ❌ Failed ${route}: ${err.message}`);
-      report.failed++;
-      report.pages.push({ url: route, type: r.type, status: 'failed', error: err.message });
+        report.pages.push({
+          url: route,
+          type: r.type,
+          status,
+          h1: metrics.h1,
+          descLen: metrics.desc.length,
+          schemaCount: metrics.schemaCount,
+          schemaTypes: metrics.schemaTypes,
+          internalLinks: metrics.internalLinks,
+          htmlBytes: visibleHtml.length,
+          failures: validation.failures,
+          warnings: validation.warnings,
+        });
+
+        const icon = status === 'success' ? '✅' : '❌';
+        console.log(
+          `[prerender] ${icon} ${route} — h1:"${metrics.h1.slice(0, 40)}" desc:${metrics.desc.length} schema:${metrics.schemaCount} links:${metrics.internalLinks}`
+        );
+        if (validation.failures.length) console.error(`[prerender]    FAIL: ${validation.failures.join('; ')}`);
+        if (validation.warnings.length) console.warn(`[prerender]    WARN: ${validation.warnings.join('; ')}`);
+      } catch (err) {
+        console.error(`[prerender] ❌ Failed ${route}: ${err.message}`);
+        report.failed++;
+        report.pages.push({ url: route, type: r.type, status: 'failed', error: err.message });
+      }
     }
   }
+
+  await Promise.all(pool.map((p) => worker(p)));
+
+  // Close extra pool pages, keep one for the mobile audit.
+  for (let i = 1; i < pool.length; i++) {
+    try { await pool[i].close(); } catch {}
+  }
+  const auditPage = pool[0];
 
   // Mobile-first sample audit
   console.log(`[prerender] ── Mobile 375px sample audit ──`);
   for (const route of MOBILE_SAMPLE) {
     if (!routesToRender.find((r) => r.path === route)) continue;
-    const issues = await mobileAudit(page, route);
+    const issues = await mobileAudit(auditPage, route);
     const entry = report.pages.find((p) => p.url === route);
     if (entry) entry.mobileIssues = issues;
     if (issues.length === 0) console.log(`[prerender] 📱 ${route} — OK`);
