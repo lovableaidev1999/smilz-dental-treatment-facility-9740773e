@@ -74,8 +74,12 @@ function startServer() {
   });
 }
 
+function isMeaningfulTitle(title) {
+  return title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
+}
+
 /**
- * Wait for the page to be fully rendered with actual content.
+ * Wait for the page body to render and then for Helmet to finish writing head tags.
  */
 async function waitForContent(page, route) {
   try {
@@ -87,27 +91,40 @@ async function waitForContent(page, route) {
     console.warn(`[prerender] navigation timeout for ${route}: ${err.message} — continuing`);
   }
 
-  // Wait for the SPA to actually hydrate AND for SEOHead/JSON-LD to mount.
-  // We require: real H1, non-default <title>, AND at least one JSON-LD script,
-  // OR the explicit data-prerender-ready signal. This prevents capturing the
-  // pre-hydration shell which has the default title and no schema.
+  // Phase 1: wait for visible route content. The explicit marker is only a body
+  // readiness signal — it must NOT short-circuit the head readiness checks.
   await page.waitForFunction(() => {
-    if (document.querySelector('[data-prerender-ready="true"]')) return true;
     const root = document.querySelector('#root');
     if (!root) return false;
     if (document.querySelectorAll('.animate-pulse').length > 0) return false;
+    if (document.querySelector('[data-prerender-ready="true"]')) return true;
     const h1 = document.querySelector('h1');
-    const hasH1 = h1 && h1.textContent.trim().length > 0;
-    if (!hasH1) return false;
-    const title = document.querySelector('title')?.textContent?.trim() || '';
-    const titleReady = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
-    const hasSchema = document.querySelector('script[type="application/ld+json"]') !== null;
-    return titleReady && hasSchema;
+    return !!(h1 && h1.textContent.trim().length > 0);
   }, { timeout: 25000 }).catch(() => {
-    console.warn(`[prerender] ⚠ Content readiness timeout for ${route} — capturing anyway`);
+    console.warn(`[prerender] ⚠ Body readiness timeout for ${route} — continuing to head checks`);
   });
 
-  await new Promise((r) => setTimeout(r, 600));
+  // Phase 2: wait for Helmet/react-helmet-async to flush SEO tags into <head>.
+  // This is the real failure mode from the uploaded logs: body content exists,
+  // but title/meta/schema sometimes lag behind and were being captured as empty.
+  await page.waitForFunction(() => {
+    const title = document.querySelector('title')?.textContent?.trim() || '';
+    const desc = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
+    const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim() || '';
+    const schemaCount = document.querySelectorAll('script[type="application/ld+json"]').length;
+    const meaningfulTitle = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
+    return meaningfulTitle && desc.length >= 30 && canonical.length > 0 && schemaCount > 0;
+  }, { timeout: 20000 }).catch(async () => {
+    const debug = await page.evaluate(() => ({
+      title: document.querySelector('title')?.textContent?.trim() || '',
+      descLen: document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim().length || 0,
+      canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
+      schemaCount: document.querySelectorAll('script[type="application/ld+json"]').length,
+    }));
+    console.warn(`[prerender] ⚠ Head readiness timeout for ${route} — title:"${debug.title}" desc:${debug.descLen} canonical:${debug.canonical ? 'yes' : 'no'} schema:${debug.schemaCount}`);
+  });
+
+  await new Promise((r) => setTimeout(r, 1200));
 }
 
 /**
@@ -278,10 +295,9 @@ async function prerender() {
   const allRoutes = await getAllRoutes();
   const routesToRender = allRoutes.filter((r) => !SKIP_PREFIXES.some((p) => r.path.startsWith(p)));
 
-  // Concurrency 3 balances throughput vs. Supabase rate-limits and CPU contention.
-  // 5 was too aggressive: pages timed out waiting for hydration and captured
-  // the pre-render shell (default title, no schema, empty meta description).
-  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 3);
+  // Concurrency 2 is slower than 3 on paper, but much more stable for this app's
+  // combination of React hydration, Helmet head writes, and multiple Supabase reads.
+  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 2);
   console.log(`[prerender] Prerendering ${routesToRender.length} routes (concurrency: ${CONCURRENCY})...`);
 
   const report = {
