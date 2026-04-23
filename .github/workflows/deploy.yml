@@ -4,15 +4,29 @@ on:
   push:
     branches: [main]
 
+# Cancel any in-flight run for the same branch when a new commit lands.
+# Prevents two slow FTP deploys racing each other and hanging.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 25  # hard cap so a hung FTP can't burn 6 hours of runner time
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'  # cache node_modules between runs
+
+      - name: Cache Puppeteer Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
       - run: npm install --legacy-peer-deps
 
@@ -28,12 +42,14 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Prerender public pages
+        timeout-minutes: 10
         run: node scripts/prerender.mjs
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Deploy via FTP
+      - name: Deploy via FTP (incremental)
+        timeout-minutes: 12
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -42,3 +58,14 @@ jobs:
           port: ${{ secrets.FTP_PORT }}
           local-dir: ./dist/
           server-dir: ${{ secrets.FTP_PATH }}
+          # Incremental sync: only files whose hash changed are uploaded.
+          # The state file lives on the server and is read on the next run.
+          state-name: .ftp-deploy-sync-state.json
+          dangerous-clean-slate: false
+          log-level: minimal
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/prerender-report.json
