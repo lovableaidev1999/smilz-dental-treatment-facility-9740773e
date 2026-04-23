@@ -79,7 +79,34 @@ function isMeaningfulTitle(title) {
 }
 
 /**
+ * Poll the page until all four head-tag signals are present, or the deadline passes.
+ * Returns true if head is ready, false if it timed out.
+ * Called as Phase 3 — a tight loop after the broader waitForFunction so we don't
+ * add 10 s on every route but only burn the budget when Phase 2 timed out.
+ */
+async function pollForHead(page, route, { intervalMs = 250, maxMs = 10000 } = {}) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    const ready = await page.evaluate(() => {
+      const title = document.querySelector('title')?.textContent?.trim() || '';
+      const desc = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
+      const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim() || '';
+      const schemaCount = document.querySelectorAll('script[type="application/ld+json"]').length;
+      const meaningfulTitle = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
+      return meaningfulTitle && desc.length >= 30 && canonical.length > 0 && schemaCount > 0;
+    });
+    if (ready) return true;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return false;
+}
+
+/**
  * Wait for the page body to render and then for Helmet to finish writing head tags.
+ *
+ * Returns:
+ *   'ok'  — page is fully hydrated and head tags are present
+ *   '404' — the SPA rendered a not-found page; caller should skip this route
  */
 async function waitForContent(page, route) {
   try {
@@ -104,9 +131,19 @@ async function waitForContent(page, route) {
     console.warn(`[prerender] ⚠ Body readiness timeout for ${route} — continuing to head checks`);
   });
 
+  // FIX: Detect SPA 404 pages after body renders (emoji slugs, deleted posts, etc.).
+  // Check for <h1> starting with "404" or the data-not-found sentinel attribute.
+  // Return a sentinel string so the worker can skip without counting as a failure.
+  const is404 = await page.evaluate(() => {
+    const h1 = document.querySelector('h1');
+    if (h1 && /^404\b/.test(h1.textContent.trim())) return true;
+    if (document.querySelector('[data-not-found="true"]')) return true;
+    return false;
+  });
+  if (is404) return '404';
+
   // Phase 2: wait for Helmet/react-helmet-async to flush SEO tags into <head>.
-  // This is the real failure mode from the uploaded logs: body content exists,
-  // but title/meta/schema sometimes lag behind and were being captured as empty.
+  // FIX: Increased timeout 20s → 30s to accommodate slow Supabase-backed routes.
   await page.waitForFunction(() => {
     const title = document.querySelector('title')?.textContent?.trim() || '';
     const desc = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
@@ -114,7 +151,7 @@ async function waitForContent(page, route) {
     const schemaCount = document.querySelectorAll('script[type="application/ld+json"]').length;
     const meaningfulTitle = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
     return meaningfulTitle && desc.length >= 30 && canonical.length > 0 && schemaCount > 0;
-  }, { timeout: 20000 }).catch(async () => {
+  }, { timeout: 30000 }).catch(async () => {
     const debug = await page.evaluate(() => ({
       title: document.querySelector('title')?.textContent?.trim() || '',
       descLen: document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim().length || 0,
@@ -124,7 +161,14 @@ async function waitForContent(page, route) {
     console.warn(`[prerender] ⚠ Head readiness timeout for ${route} — title:"${debug.title}" desc:${debug.descLen} canonical:${debug.canonical ? 'yes' : 'no'} schema:${debug.schemaCount}`);
   });
 
-  await new Promise((r) => setTimeout(r, 1200));
+  // FIX: Double requestAnimationFrame flush — forces any pending React/Helmet
+  // microtasks and paint-scheduled DOM mutations to complete before we read the DOM.
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+  // FIX: Increased post-render buffer 1200ms → 2000ms for slower CI runners.
+  await new Promise((r) => setTimeout(r, 2000));
+
+  return 'ok';
 }
 
 /**
@@ -267,16 +311,17 @@ function validatePage(route, metrics, htmlBytes) {
     warnings.push('default/missing <title>');
   }
 
-  // Per-page schema expectations (warn only)
-  const expect = (types) => {
-    const missing = types.filter((t) => !metrics.schemaTypes.includes(t));
-    if (missing.length) warnings.push(`expected schema: ${missing.join(', ')}`);
+  // FIX: Use expectAny() so that Dentist (a valid LocalBusiness subtype) satisfies
+  // the LocalBusiness expectation. The old expect() required an exact type match.
+  const expectAny = (types) => {
+    const satisfied = types.some((t) => metrics.schemaTypes.includes(t));
+    if (!satisfied) warnings.push(`expected one of schema types: ${types.join(', ')}`);
   };
-  if (route === '/') expect(['LocalBusiness']);
-  else if (route === '/about/') expect(['LocalBusiness']);
-  else if (route === '/contact/') expect(['LocalBusiness']);
-  else if (route.startsWith('/services/') && route !== '/services/') expect(['MedicalProcedure']);
-  else if (route.startsWith('/blog/') && route !== '/blog/') expect(['Article']);
+  if (route === '/') expectAny(['LocalBusiness', 'Dentist']);
+  else if (route === '/about/') expectAny(['LocalBusiness', 'Dentist']);
+  else if (route === '/contact/') expectAny(['LocalBusiness', 'Dentist']);
+  else if (route.startsWith('/services/') && route !== '/services/') expectAny(['MedicalProcedure']);
+  else if (route.startsWith('/blog/') && route !== '/blog/') expectAny(['Article']);
 
   return { failures, warnings, htmlBytes };
 }
@@ -305,6 +350,7 @@ async function prerender() {
     totalRoutes: routesToRender.length,
     succeeded: 0,
     failed: 0,
+    skipped: 0,
     warnings: 0,
     pages: [],
   };
@@ -326,7 +372,39 @@ async function prerender() {
       const route = r.path;
       try {
         console.log(`[prerender] → ${route}`);
-        await waitForContent(workerPage, route);
+
+        // FIX: waitForContent now returns 'ok' or '404'.
+        const contentStatus = await waitForContent(workerPage, route);
+
+        // FIX: Soft-skip SPA 404 pages (e.g. emoji slugs from the DB).
+        // Don't write a file, don't count as failure, don't exit non-zero for these.
+        if (contentStatus === '404') {
+          console.warn(`[prerender] ⚠ Skipping ${route} — SPA returned a 404 page`);
+          report.skipped++;
+          report.pages.push({ url: route, type: r.type, status: 'skipped', reason: '404' });
+          continue;
+        }
+
+        // FIX: Phase 3 — tight poll loop (250ms × 40 = up to 10s) directly before
+        // reading outerHTML. This catches routes where Phase 2 timed out but Helmet
+        // finishes just after the waitForFunction deadline (race condition under CI).
+        const headReady = await pollForHead(workerPage, route);
+
+        // FIX: If still not ready after the poll, do one full-reload retry on the
+        // same worker before giving up. This resolves transient concurrency races
+        // where the first render was corrupted by a competing tab's network activity.
+        if (!headReady) {
+          console.warn(`[prerender] ↺ Retrying ${route} — head tags missing after poll`);
+          const retryStatus = await waitForContent(workerPage, route);
+          if (retryStatus === '404') {
+            console.warn(`[prerender] ⚠ Skipping ${route} — SPA returned 404 on retry`);
+            report.skipped++;
+            report.pages.push({ url: route, type: r.type, status: 'skipped', reason: '404' });
+            continue;
+          }
+          // Give the retry one more poll pass
+          await pollForHead(workerPage, route, { maxMs: 5000 });
+        }
 
         const fullHtml = await workerPage.evaluate(() => '<!DOCTYPE html>' + document.documentElement.outerHTML);
         const visibleHtml = makeContentVisible(fullHtml);
@@ -404,11 +482,11 @@ async function prerender() {
   console.log(`[prerender] ──────────────────────────────────────────────────────────────`);
   for (const p of report.pages) {
     const h1 = p.h1 ? '✓' : '✗';
-    const icon = p.status === 'success' ? '✅' : '❌';
+    const icon = p.status === 'success' ? '✅' : p.status === 'skipped' ? '⚠️' : '❌';
     console.log(`[prerender] ${pad(p.url, 48)} ${pad(h1, 3)} ${pad(p.descLen ?? 0, 5)} ${pad(p.schemaCount ?? 0, 7)} ${pad(p.internalLinks ?? 0, 6)} ${icon}`);
   }
   console.log(`[prerender] ──────────────────────────────────────────────────────────────`);
-  console.log(`[prerender] ${report.succeeded} succeeded · ${report.failed} failed · ${report.warnings} with warnings`);
+  console.log(`[prerender] ${report.succeeded} succeeded · ${report.failed} failed · ${report.skipped} skipped · ${report.warnings} with warnings`);
   console.log(`[prerender] Report: dist/prerender-report.json\n`);
 
   if (report.failed > 0) {
