@@ -81,24 +81,24 @@ function isMeaningfulTitle(title) {
 /**
  * Poll the page until all four head-tag signals are present, or the deadline passes.
  * Returns true if head is ready, false if it timed out.
- * Called as Phase 3 — a tight loop after the broader waitForFunction so we don't
- * add 10 s on every route but only burn the budget when Phase 2 timed out.
+ *
+ * FIX: Uses a single page.waitForFunction() call instead of a Node-side while-loop
+ * of page.evaluate() calls. Each evaluate() is a separate CDP round-trip; under
+ * concurrency + a busy browser tab, dozens of them pile up and exhaust Puppeteer's
+ * protocolTimeout. waitForFunction() runs entirely inside the browser (one CDP call)
+ * and polls via its own built-in interval, so the protocol is only touched once.
  */
-async function pollForHead(page, route, { intervalMs = 250, maxMs = 10000 } = {}) {
-  const deadline = Date.now() + maxMs;
-  while (Date.now() < deadline) {
-    const ready = await page.evaluate(() => {
-      const title = document.querySelector('title')?.textContent?.trim() || '';
-      const desc = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
-      const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim() || '';
-      const schemaCount = document.querySelectorAll('script[type="application/ld+json"]').length;
-      const meaningfulTitle = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
-      return meaningfulTitle && desc.length >= 30 && canonical.length > 0 && schemaCount > 0;
-    });
-    if (ready) return true;
-    await new Promise((r) => setTimeout(r, intervalMs));
-  }
-  return false;
+async function pollForHead(page, route, { maxMs = 10000 } = {}) {
+  return page.waitForFunction(() => {
+    const title = document.querySelector('title')?.textContent?.trim() || '';
+    const desc = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '';
+    const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim() || '';
+    const schemaCount = document.querySelectorAll('script[type="application/ld+json"]').length;
+    const meaningfulTitle = title.length > 0 && !/^(Vite|Smilz Dental Treatment Facility)$/.test(title);
+    return meaningfulTitle && desc.length >= 30 && canonical.length > 0 && schemaCount > 0;
+  }, { timeout: maxMs, polling: 250 })
+    .then(() => true)
+    .catch(() => false);
 }
 
 /**
@@ -335,6 +335,10 @@ async function prerender() {
   const browser = await puppeteer.default.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    // FIX: Raise the CDP protocol timeout (default ~180s) so that waitForFunction
+    // calls on slow/busy pages don't trigger "Runtime.callFunctionOn timed out".
+    // 5 minutes is generous but harmless — per-route page timeouts are far shorter.
+    protocolTimeout: 300_000,
   });
 
   const allRoutes = await getAllRoutes();
