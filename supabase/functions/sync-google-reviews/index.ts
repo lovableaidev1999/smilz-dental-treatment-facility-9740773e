@@ -36,7 +36,8 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const url = `https://places.googleapis.com/v1/places/${placeId}?languageCode=en`;
+    // rankPreference=NEWEST returns the 5 most recent reviews (instead of "most relevant")
+    const url = `https://places.googleapis.com/v1/places/${placeId}?languageCode=en&reviews_sort=newest&rankPreference=NEWEST`;
     const res = await fetch(url, {
       headers: {
         "X-Goog-Api-Key": apiKey,
