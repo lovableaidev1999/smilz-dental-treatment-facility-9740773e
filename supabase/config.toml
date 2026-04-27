@@ -1,0 +1,4 @@
+project_id = "eukymrxxmvkchxfpjjuz"
+
+[functions.sync-google-reviews]
+verify_jwt = false
