@@ -36,8 +36,9 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // rankPreference=NEWEST returns the 5 most recent reviews (instead of "most relevant")
-    const url = `https://places.googleapis.com/v1/places/${placeId}?languageCode=en&reviews_sort=newest&rankPreference=NEWEST`;
+    // Note: Places API (GET) does not support rankPreference/reviews_sort query params.
+    // We fetch the default 5 reviews and sort by publishTime client-side below.
+    const url = `https://places.googleapis.com/v1/places/${placeId}?languageCode=en`;
     const res = await fetch(url, {
       headers: {
         "X-Goog-Api-Key": apiKey,
@@ -54,7 +55,11 @@ Deno.serve(async (req) => {
     }
 
     const data = await res.json();
-    const reviews: any[] = data?.reviews ?? [];
+    const reviews: any[] = (data?.reviews ?? []).slice().sort((a: any, b: any) => {
+      const ta = a?.publishTime ? new Date(a.publishTime).getTime() : 0;
+      const tb = b?.publishTime ? new Date(b.publishTime).getTime() : 0;
+      return tb - ta; // newest first
+    });
 
     let upserts = 0;
     for (const r of reviews) {
