@@ -1,134 +1,46 @@
-
-
-# Prerender Hardening Plan
-
-This plan strengthens the existing Puppeteer prerender (no SSR, no hosting change, no UI change). It guarantees every public page ships full HTML with complete SEO, fails the build loudly if anything regresses, and stays auto-synced with Supabase content.
-
-## What you'll get
-
-- Every published page (core, services, blogs, custom `/p/:slug`) prerendered automatically — no hardcoded route lists.
-- Build fails (or prints loud red errors) if any page is missing H1, meta description, or JSON-LD.
-- A machine-readable `dist/prerender-report.json` plus a console summary table after every build.
-- Mobile-first checks at 375px on a sample.
-- Sitemap and prerender driven by the same route source — they cannot drift.
-
-## Files
-
-**New**
-- `scripts/_routes.mjs` — single source of truth. Exports `getAllRoutes()` that fetches services, blog posts, and custom builder pages from Supabase and returns them with the static core routes.
-- `docs/SEO-RENDERING.md` — how prerendering works, how to test locally, how to debug Google Search Console issues.
-
-**Modified**
-- `scripts/prerender.mjs` — import routes from `_routes.mjs`; harden wait logic (skeletons gone + Helmet title + DOM stable); add per-page validation (H1, meta description ≥ 50 chars, ≥ 1 JSON-LD, body content > 2KB, internal links present); emit `dist/prerender-report.json`; mobile 375px sample pass; non-zero exit on critical failures.
-- `scripts/generate-sitemap.mjs` — import the same `getAllRoutes()`; remove its independent Supabase fetch so sitemap and prerender are guaranteed in sync.
-- `src/components/SEOHead.tsx` — hydration audit pass (remove any `Date.now()` / locale-dependent values from rendered output).
-- `src/pages/Home.tsx`, `src/pages/About.tsx`, `src/components/SmartPage.tsx` — hydration audit only (read-only check; edit only if a non-deterministic value is found).
-
-**Untouched**
-- `App.tsx` routing, all UI components, styles, forms, admin, auth, Supabase client, Vite config, `index.html`, `.github/workflows/deploy.yml`.
-
-## How the hardened prerender will work
+I checked the live network request from the Reviews admin page. The current error is not a Google API key problem anymore. The request is reaching Supabase, but Supabase is returning:
 
 ```text
-build (vite)
-   │
-   ▼
-scripts/_routes.mjs ──── fetch services + blogs + builder pages from Supabase
-   │                       └─► returns: [{ path, type, lastmod }, ...]
-   ├──────────────► scripts/generate-sitemap.mjs  → dist/sitemap.xml
-   │
-   └──────────────► scripts/prerender.mjs
-                       │
-                       ├─ for each route:
-                       │    1. goto → networkidle2
-                       │    2. wait: no .animate-pulse  AND  <h1> has text  AND  Helmet title set
-                       │    3. capture <!doctype html> + outerHTML
-                       │    4. validate: H1 ✓, meta desc ≥ 50 ✓, JSON-LD ≥ 1 ✓, body > 2KB ✓, internal links ✓
-                       │    5. write dist/<route>/index.html
-                       │    6. record { url, status, h1, descLen, schemaCount, linkCount }
-                       │
-                       ├─ mobile 375px pass on sample (/, /about, /services, one blog, one service)
-                       │    └─ check: viewport meta, lazy below-fold images, no horizontal overflow
-                       │
-                       └─ write dist/prerender-report.json + print summary table
-                          exit 1 if any page fails critical checks
+404 NOT_FOUND
+Requested function was not found
+POST https://eukymrxxmvkchxfpjjuz.supabase.co/functions/v1/sync-google-reviews
 ```
 
-## Per-page validation rules
+So the actual issue is: the `sync-google-reviews` edge function exists in the codebase, but it is not deployed/available in the connected Supabase project yet.
 
-| Check | Rule | On fail |
-|---|---|---|
-| `<h1>` | exists, non-empty text | ❌ FAIL |
-| `<meta name="description">` | exists, ≥ 50 chars | ❌ FAIL |
-| `<script type="application/ld+json">` | ≥ 1 block | ❌ FAIL |
-| `#root` body content | > 2000 chars | ❌ FAIL |
-| Internal links | ≥ 3 `<a href>` to same domain | ⚠ WARN |
-| `<link rel="canonical">` | exists | ⚠ WARN |
-| `<title>` | exists, not the default Vite/fallback | ⚠ WARN |
-| Mobile sample | viewport meta + lazy images | ⚠ WARN |
+## Plan
 
-Schema-by-page (warned, not failed, so missing schema is visible but doesn't block deploy):
-- `/` → `WebSite` + `LocalBusiness`
-- `/about` → `Organization` + `LocalBusiness`
-- `/contact` → `LocalBusiness`
-- `/services/:slug` → `Service`
-- `/blog/:slug` → `Article`
+1. Fix the edge function deployment command
+   - Update the GitHub Action so it deploys the specific function explicitly:
+     ```text
+     supabase functions deploy sync-google-reviews --project-ref eukymrxxmvkchxfpjjuz --no-verify-jwt
+     ```
+   - This avoids relying on implicit deploy-all behavior and ensures this exact function is published.
 
-## Sample report output
+2. Keep the function callable from the admin page
+   - Confirm `verify_jwt = false` remains configured for `sync-google-reviews`, because the admin page is already sending the Supabase auth headers and the function itself uses the service role key for controlled database writes.
 
-`dist/prerender-report.json`
-```json
-{
-  "generatedAt": "2026-04-21T10:12:33Z",
-  "totalRoutes": 78,
-  "succeeded": 78,
-  "failed": 0,
-  "warnings": 2,
-  "pages": [
-    {
-      "url": "/",
-      "status": "success",
-      "h1": "Best Dentists in Garia, Kolkata",
-      "descLen": 158,
-      "schemaCount": 3,
-      "schemaTypes": ["WebSite", "LocalBusiness", "FAQPage"],
-      "internalLinks": 24,
-      "htmlBytes": 142390
-    },
-    {
-      "url": "/services/dental-implants",
-      "status": "success",
-      "h1": "Dental Implants in Kolkata",
-      "descLen": 162,
-      "schemaCount": 2,
-      "schemaTypes": ["Service", "LocalBusiness"],
-      "internalLinks": 18,
-      "htmlBytes": 118022
-    }
-  ]
-}
-```
+3. Improve the admin error message
+   - Update `/admin/reviews` so if the edge function is missing or unreachable, the toast says something actionable like:
+     ```text
+     Sync failed: Edge function is not deployed yet. Please redeploy Supabase functions.
+     ```
+   - This will make future errors easier to identify than the generic “Failed to send a request to the Edge Function”.
 
-Console summary:
+4. Add a direct verification step after deployment
+   - After the deployment workflow runs, test the live endpoint again with an `OPTIONS`/function request.
+   - Expected result should no longer be `404 NOT_FOUND`; it should return either a normal success JSON or a clear function-level JSON error.
+
+## Technical details
+
+Current confirmed live response:
+
 ```text
-[prerender] ──────────────────────────────────────────────
-[prerender]  ROUTE                              H1  DESC  SCHEMA  LINKS   STATUS
-[prerender] /                                   ✓   158   3       24      ✅
-[prerender] /about                              ✓   142   2       19      ✅
-[prerender] /services/dental-implants           ✓   162   2       18      ✅
-[prerender] /blog/dental-implants-in-kolkata    ✓   174   2       12      ✅
-[prerender] ──────────────────────────────────────────────
-[prerender] 78 succeeded · 0 failed · 2 warnings
+HTTP/2 404
+sb-error-code: NOT_FOUND
+{"code":"NOT_FOUND","message":"Requested function was not found"}
 ```
 
-## What this fixes vs what's already working
+This means the browser/CORS and Google Places API are not the primary blocker right now. Supabase simply cannot find the deployed edge function at that project URL.
 
-Already in place (kept): Puppeteer prerender, JSON-LD on most pages, sitemap generator, `.htaccess` legacy redirects, react-helmet-async metadata.
-
-Newly guaranteed by this plan: automatic discovery of every published Supabase row, build-fails-on-regression, machine report, sitemap/prerender drift impossible, mobile-first sample audit, hydration determinism check.
-
-## Risks & rollback
-
-- Risk: Strict validation could fail the build on a real content gap (e.g., a blog post with no description). Mitigated by classifying schema/canonical/title issues as **warnings**, only H1/desc/JSON-LD/body as **failures**.
-- Rollback: revert the four files; the runtime app is untouched.
-
+Once approved, I will update the deployment workflow and the admin error handling so the next deployment publishes the function correctly and reports clearer errors.

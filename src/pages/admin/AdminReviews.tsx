@@ -26,7 +26,11 @@ const AdminReviews = () => {
       });
       qc.invalidateQueries({ queryKey: ["admin_reviews"] });
     } catch (e: any) {
-      toast({ title: "Sync failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+      const msg = e?.message ?? "Unknown error";
+      const friendly = /Failed to (send|fetch)|NOT_FOUND|not found/i.test(msg)
+        ? "Edge function is not deployed yet. Push to main to trigger the GitHub Action that deploys Supabase functions, then try again."
+        : msg;
+      toast({ title: "Sync failed", description: friendly, variant: "destructive" });
     } finally {
       setSyncing(false);
     }
