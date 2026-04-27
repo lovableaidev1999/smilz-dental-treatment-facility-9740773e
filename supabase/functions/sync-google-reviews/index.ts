@@ -55,7 +55,11 @@ Deno.serve(async (req) => {
     }
 
     const data = await res.json();
-    const reviews: any[] = data?.reviews ?? [];
+    const reviews: any[] = (data?.reviews ?? []).slice().sort((a: any, b: any) => {
+      const ta = a?.publishTime ? new Date(a.publishTime).getTime() : 0;
+      const tb = b?.publishTime ? new Date(b.publishTime).getTime() : 0;
+      return tb - ta; // newest first
+    });
 
     let upserts = 0;
     for (const r of reviews) {
