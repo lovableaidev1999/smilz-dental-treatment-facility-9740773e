@@ -6,13 +6,31 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Eye, EyeOff, Save, Star } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Save, Star, RefreshCw } from "lucide-react";
 
 const AdminReviews = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [showAdd, setShowAdd] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [newReview, setNewReview] = useState({ name: "", date: "", text: "", rating: 5, sort_order: 0 });
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-google-reviews");
+      if (error) throw error;
+      toast({
+        title: "Google reviews synced",
+        description: `Fetched ${data?.fetched ?? 0}, upserted ${data?.upserted ?? 0}.`,
+      });
+      qc.invalidateQueries({ queryKey: ["admin_reviews"] });
+    } catch (e: any) {
+      toast({ title: "Sync failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const { data: reviews, isLoading } = useQuery({
     queryKey: ["admin_reviews"],
@@ -56,7 +74,13 @@ const AdminReviews = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-heading font-bold text-foreground">Reviews</h1>
-        <Button onClick={() => setShowAdd(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Review</Button>
+        <div className="flex gap-2">
+          <Button onClick={handleSync} disabled={syncing} variant="outline" className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing..." : "Sync Google Reviews"}
+          </Button>
+          <Button onClick={() => setShowAdd(true)} className="gap-2"><Plus className="h-4 w-4" /> Add Review</Button>
+        </div>
       </div>
 
       {showAdd && (
