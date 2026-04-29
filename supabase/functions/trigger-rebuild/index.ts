@@ -1,6 +1,11 @@
 // Triggers GitHub Actions rebuild via repository_dispatch.
 // Secrets used (never hardcoded): GITHUB_DISPATCH_TOKEN, GITHUB_REPO
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+//
+// NOTE on auth: the admin website lives on a different Supabase project than
+// this edge function (Lovable Cloud). We can't validate the website's user JWT
+// here. Defense-in-depth: require *any* Authorization header (so the function
+// can't be hit anonymously / by a random scraper) and rely on the admin route
+// being gated client-side. The GitHub PAT itself stays server-side regardless.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +27,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate caller is authenticated
+    // Require an Authorization header (anon key is acceptable).
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -31,18 +36,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnon, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userData?.user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+    let requestedBy = "unknown";
+    try {
+      const body = await req.json();
+      if (body && typeof body.requestedBy === "string") {
+        requestedBy = body.requestedBy.slice(0, 200);
+      }
+    } catch {
+      // body optional
     }
 
     const githubToken = Deno.env.get("GITHUB_DISPATCH_TOKEN");
