@@ -226,6 +226,7 @@ const App = () => (
                   <Route path="migrate" element={<AdminMigrateImages />} />
                   <Route path="header-footer" element={<AdminHeaderFooter />} />
                   <Route path="page-layouts" element={<AdminPageLayouts />} />
+                  <Route path="chat-insights" element={<AdminChatInsights />} />
                 </Route>
                 {/* Full-screen page builder & preview (outside admin sidebar layout) */}
                 <Route path="/admin/page-builder/new" element={<AdminPageBuilder />} />
