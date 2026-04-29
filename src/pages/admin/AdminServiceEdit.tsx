@@ -191,7 +191,7 @@ const AdminServiceEdit = () => {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>SEO</CardTitle></CardHeader>
+            <CardHeader><CardTitle>SEO Settings <span className="text-xs font-normal text-muted-foreground">(meta title, description, keywords)</span></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">SEO Title</label>
