@@ -82,12 +82,16 @@ const AdminServices = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-heading font-bold text-foreground">Services</h1>
         <Button asChild className="gap-2">
           <Link to="/admin/services/new"><Plus className="h-4 w-4" /> Add Service</Link>
         </Button>
       </div>
+      <p className="text-sm text-muted-foreground mb-6">
+        Use <span className="font-medium text-foreground">Edit Design</span> to change layout, sections & image placement (Visual Builder).
+        Use <span className="font-medium text-foreground">Edit Content & SEO</span> to update text, featured image, FAQs and meta tags.
+      </p>
 
       {isLoading ? (
         <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-secondary rounded-lg animate-pulse" />)}</div>
