@@ -55,6 +55,7 @@ const AdminResetPassword = lazy(() => import("@/pages/admin/AdminResetPassword")
 const AdminPageBuilder = lazy(() => import("@/pages/admin/AdminPageBuilder"));
 const AdminPageLayouts = lazy(() => import("@/pages/admin/AdminPageLayouts"));
 const PagePreview = lazy(() => import("@/pages/admin/PagePreview"));
+const AdminChatInsights = lazy(() => import("@/pages/admin/AdminChatInsights"));
 
 // WordPress date-URL redirect helper
 const WpDateRedirect = () => {
@@ -225,6 +226,7 @@ const App = () => (
                   <Route path="migrate" element={<AdminMigrateImages />} />
                   <Route path="header-footer" element={<AdminHeaderFooter />} />
                   <Route path="page-layouts" element={<AdminPageLayouts />} />
+                  <Route path="chat-insights" element={<AdminChatInsights />} />
                 </Route>
                 {/* Full-screen page builder & preview (outside admin sidebar layout) */}
                 <Route path="/admin/page-builder/new" element={<AdminPageBuilder />} />

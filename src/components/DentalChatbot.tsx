@@ -9,7 +9,21 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 const WELCOME: ChatMessage = {
   role: "assistant",
   content:
-    "Hi! I'm the Smilz Dental assistant 🦷. Ask me anything about dental treatments, oral hygiene or our clinic. For personal advice, I'll connect you with Dr. Dibyendu Dutta on WhatsApp.",
+    "Hi! I'm the Smilz Dental assistant 🦷. Ask me anything about dental treatments, oral hygiene or our clinic. For personal advice, I'll connect you with Dr. Dibyendu Dutta on WhatsApp.\n\n_Conversations may be reviewed to improve our service._",
+};
+
+const getSessionId = (): string => {
+  if (typeof window === "undefined") return "";
+  try {
+    let sid = localStorage.getItem("smilz_chat_session");
+    if (!sid) {
+      sid = (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      localStorage.setItem("smilz_chat_session", sid);
+    }
+    return sid;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
 };
 
 const DentalChatbot = () => {
@@ -34,7 +48,10 @@ const DentalChatbot = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("dental-chat", {
-        body: { messages: next.filter((m) => m.role !== "assistant" || m !== WELCOME) },
+        body: {
+          messages: next.filter((m) => m.role !== "assistant" || m !== WELCOME),
+          session_id: getSessionId(),
+        },
       });
       if (error) throw error;
       const reply = (data as any)?.reply ?? "Sorry, I couldn't reach the assistant. Please WhatsApp us at +91 8961775554.";
