@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import SEOHead from '@/components/SEOHead';
 import type { LayoutNode } from '@/types/visual-builder';
+import { serviceSlugCandidates } from '@/lib/slugs';
 
 const VisualRenderer = lazy(() => import('@/components/builder/VisualRenderer'));
 
@@ -47,17 +48,21 @@ class RendererErrorBoundary extends Component<
 }
 
 const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProps) => {
+  const pageSlugCandidates = slug.startsWith('service-')
+    ? serviceSlugCandidates(slug.replace(/^service-/, '')).map((candidate) => `service-${candidate}`)
+    : [slug];
+
   const { data: layout, isLoading } = useQuery({
     queryKey: ['page_layouts', slug, 'published'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('page_layouts')
         .select('*')
-        .eq('page_slug', slug)
+        .in('page_slug', pageSlugCandidates)
         .eq('is_published', true)
-        .maybeSingle();
+        .limit(1);
       if (error) throw error;
-      return data as PageLayoutRow | null;
+      return (data?.[0] ?? null) as PageLayoutRow | null;
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!slug,
