@@ -32,6 +32,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
 
+const readSeededTemplate = (): LayoutNode[] | null => {
+  try {
+    const tmpl = sessionStorage.getItem('builder_template');
+    if (!tmpl) return null;
+    const parsed = JSON.parse(tmpl);
+    sessionStorage.removeItem('builder_template');
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    sessionStorage.removeItem('builder_template');
+    return null;
+  }
+};
+
+const hasRenderableLayout = (layout: LayoutNode[]) => layout.some((node: any) => !node?._seo);
+
 // ─── Inner builder with DnD ─────────────────────────────
 const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished, initialSeo }: {
   layoutId?: string;
@@ -445,14 +460,11 @@ const AdminPageBuilder = () => {
     }
   }
 
-  if (!id && hasTemplate) {
-    try {
-      const tmpl = sessionStorage.getItem('builder_template');
-      if (tmpl) {
-        initialLayout = JSON.parse(tmpl);
-        sessionStorage.removeItem('builder_template');
-      }
-    } catch {}
+  if (hasTemplate) {
+    const seededTemplate = readSeededTemplate();
+    if (seededTemplate && (!id || !hasRenderableLayout(initialLayout))) {
+      initialLayout = seededTemplate;
+    }
   }
 
   const pageTitle = existingLayout?.page_title || pageTitleParam;
