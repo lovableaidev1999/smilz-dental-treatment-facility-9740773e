@@ -1,24 +1,26 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, ChevronRight, ArrowLeft, User, Sparkles, UserPlus } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
+import { useBlogPost, useBlogPosts, useService } from "@/integrations/supabase/hooks";
 import BlockRenderer from "@/components/BlockRenderer";
 import VisualRenderer from "@/components/builder/VisualRenderer";
 import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
 import { sanitizeWpImages } from "@/lib/wpImageSanitizer";
 import { pickServiceForPost } from "@/lib/blogInternalLinks";
+import { servicePath } from "@/lib/slugs";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPost(slug ?? "");
+  const { data: matchingService, isLoading: isServiceLoading } = useService(slug ?? "");
   const { data: relatedPosts } = useBlogPosts();
   const { data: settings } = useSiteSettings();
   const links = settings?.links;
 
-  if (isLoading) {
+  if (isLoading || isServiceLoading) {
     return (
       <div className="section-padding">
         <div className="container-narrow mx-auto max-w-3xl animate-pulse space-y-6">
@@ -30,6 +32,7 @@ const BlogPost = () => {
     );
   }
 
+  if (!post && matchingService?.slug) return <Navigate to={servicePath(matchingService.slug)} replace />;
   if (error || !post) return <NotFound />;
 
   const related = (relatedPosts ?? []).filter((p) => p.slug !== slug && p.category === post.category).slice(0, 3);
@@ -114,13 +117,13 @@ const BlogPost = () => {
                 <div className="flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Recommended for you</p>
                   <h3 className="text-lg md:text-xl font-heading font-bold text-foreground mb-2">
-                    <Link to={`/services/${recommendedService.slug}`} className="hover:text-primary transition-colors">
+                    <Link to={servicePath(recommendedService.slug)} className="hover:text-primary transition-colors">
                       {recommendedService.title}
                     </Link>
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">{recommendedService.blurb}</p>
                   <Link
-                    to={`/services/${recommendedService.slug}`}
+                    to={servicePath(recommendedService.slug)}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                   >
                     {recommendedService.ctaLabel}

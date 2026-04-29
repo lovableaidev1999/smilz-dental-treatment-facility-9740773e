@@ -8,6 +8,7 @@ import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
 import type { PageSection } from "@/hooks/usePageContent";
+import { servicePath } from "@/lib/slugs";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -137,7 +138,7 @@ const ServicesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {(services ?? []).map((service, i) => (
                 <motion.div key={service.slug} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeUp}>
-                  <Link to={`/services/${service.slug}`} className="group block bg-card rounded-2xl shadow-card hover:shadow-hover hover:-translate-y-1.5 hover:border-primary/30 transition-all duration-300 h-full border border-border overflow-hidden">
+                  <Link to={servicePath(service.slug)} className="group block bg-card rounded-2xl shadow-card hover:shadow-hover hover:-translate-y-1.5 hover:border-primary/30 transition-all duration-300 h-full border border-border overflow-hidden">
                     {service.featured_image && (
                       <div className="aspect-[4/3] overflow-hidden">
                         <img src={resolveImageUrl(service.featured_image)} alt={`${service.title} at ${general?.clinic_name ?? "Smilz"} - dental treatment services in Garia, Kolkata`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width={400} height={300} />

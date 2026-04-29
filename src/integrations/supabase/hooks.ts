@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "./client";
+import { serviceSlugCandidates } from "@/lib/slugs";
 
 const useLiveTableInvalidation = (table: string, queryKey: readonly unknown[]) => {
   const queryClient = useQueryClient();
@@ -73,13 +74,13 @@ export const useService = (slug: string) => {
   return useQuery({
     queryKey: ["services", slug],
     queryFn: async () => {
+      const candidates = serviceSlugCandidates(slug);
       const { data, error } = await supabase
         .from("services")
         .select("*")
-        .eq("slug", slug)
-        .single();
+        .in("slug", candidates);
       if (error) throw error;
-      return data;
+      return data?.find((service) => service.slug === slug) ?? data?.[0] ?? null;
     },
     enabled: !!slug,
     staleTime: 0,

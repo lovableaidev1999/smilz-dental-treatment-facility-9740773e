@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { resolveImageUrl, resolveResponsiveImage } from "@/lib/wpImageFallback";
+import { servicePath } from "@/lib/slugs";
 
 interface ServiceItem {
   title: string;
@@ -220,7 +221,7 @@ function ServiceCard({ item }: { item: ServiceItem }) {
 
   if (item.slug) {
     return (
-      <Link to={`/services/${item.slug}`} className="block h-full">
+      <Link to={servicePath(item.slug)} className="block h-full">
         {content}
       </Link>
     );

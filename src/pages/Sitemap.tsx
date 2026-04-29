@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { servicePath } from "@/lib/slugs";
 
 const SITE = "https://smilz.net";
 
@@ -51,7 +52,7 @@ const Sitemap = () => {
       // Dynamic service pages
       for (const s of services ?? []) {
         const lastmod = (s.updated_at || new Date().toISOString()).split("T")[0];
-        addUrl(`${SITE}/services/${s.slug}`, lastmod, "monthly", "0.8");
+        addUrl(`${SITE}${servicePath(s.slug)}`, lastmod, "monthly", "0.8");
       }
 
       // Dynamic blog posts

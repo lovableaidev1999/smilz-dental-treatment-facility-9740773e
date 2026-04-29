@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import ImageUrlInput from "@/components/admin/ImageUrlInput";
+import { normalizeServiceSlug } from "@/lib/slugs";
 
 const AdminServiceEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,7 +61,7 @@ const AdminServiceEdit = () => {
     mutationFn: async () => {
       const payload = {
         ...form,
-        slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+        slug: normalizeServiceSlug(form.slug || form.title),
         updated_at: new Date().toISOString(),
       };
       if (isNew) {
@@ -81,7 +82,7 @@ const AdminServiceEdit = () => {
   });
 
   const autoSlug = () => {
-    if (!form.slug) setForm((p) => ({ ...p, slug: form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") }));
+    if (!form.slug) setForm((p) => ({ ...p, slug: normalizeServiceSlug(form.title) }));
   };
 
   const addFaq = () => setForm((p) => ({ ...p, faqs: [...p.faqs, { q: "", a: "" }] }));
@@ -123,7 +124,7 @@ const AdminServiceEdit = () => {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Slug</label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: normalizeServiceSlug(e.target.value) })} />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Short Description</label>

@@ -30,7 +30,7 @@ const RULES: LinkRule[] = [
   {
     keywords: ["guided implant", "guided-implant"],
     service: {
-      slug: "dental-implants",
+      slug: "dental-implants-garia-kolkata",
       title: "Guided Dental Implants in Kolkata",
       ctaLabel: "Book a guided-implant consultation",
       blurb: "3D CBCT planning and surgical guides for flapless, painless, predictable implant placement.",
@@ -39,7 +39,7 @@ const RULES: LinkRule[] = [
   {
     keywords: ["implant", "tooth replacement", "missing teeth", "all-on-4", "all on 4"],
     service: {
-      slug: "dental-implants",
+      slug: "dental-implants-garia-kolkata",
       title: "Dental Implants",
       ctaLabel: "Explore our dental-implant treatment",
       blurb: "Permanent tooth replacement with premium titanium implants — single tooth to full-mouth All-on-4.",
