@@ -145,12 +145,16 @@ const PageFallback = () => (
   </div>
 );
 
-// All service detail pages use the hardcoded ServiceDetail template
-const ServiceDetailSmart = () => (
-  <Suspense fallback={<PageFallback />}>
-    <ServiceDetail />
-  </Suspense>
-);
+// Service detail pages: prefer a published Visual Builder layout (service-<slug>),
+// otherwise fall back to the hardcoded ServiceDetail template.
+const ServiceDetailSmart = () => {
+  const { serviceId } = useParams<{ serviceId: string }>();
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <SmartPage slug={`service-${serviceId ?? ''}`} fallback={ServiceDetail} />
+    </Suspense>
+  );
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {

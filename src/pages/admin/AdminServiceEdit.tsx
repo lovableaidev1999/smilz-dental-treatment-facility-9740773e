@@ -94,14 +94,23 @@ const AdminServiceEdit = () => {
 
   return (
     <div>
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/services")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-heading font-bold text-foreground">
-          {isNew ? "New Service" : "Edit Service"}
+          {isNew ? "New Service" : "Edit Service Content & SEO"}
         </h1>
       </div>
+
+      {!isNew && (
+        <div className="mb-6 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+          This editor manages the <span className="font-medium text-foreground">content and SEO</span> for this service
+          (title, description, featured image, FAQs, meta tags).
+          To change the <span className="font-medium text-foreground">page layout, sections or image placement</span>,
+          go back to Services and click <span className="font-medium text-foreground">Edit Design</span>.
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -182,7 +191,7 @@ const AdminServiceEdit = () => {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>SEO</CardTitle></CardHeader>
+            <CardHeader><CardTitle>SEO Settings <span className="text-xs font-normal text-muted-foreground">(meta title, description, keywords)</span></CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">SEO Title</label>

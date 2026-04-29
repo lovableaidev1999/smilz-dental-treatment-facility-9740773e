@@ -56,35 +56,42 @@ const AdminServices = () => {
     },
   });
 
-  const handleOpenBuilder = (service: any) => {
+  const handleOpenBuilder = async (service: any) => {
     const layoutSlug = `service-${service.slug}`;
     const existing = layouts?.find(l => l.page_slug === layoutSlug);
+
+    // Always seed the template (with resolved data) so empty saved layouts
+    // also open with the existing design instead of a blank canvas.
+    const template = getExistingDesign(layoutSlug);
+    if (template) {
+      const resolved = resolveTemplateVars(template, {
+        Service_Title: service.title,
+        Service_Short_Desc: service.short_desc || '',
+        Service_Image: service.featured_image || '',
+        Service_Content: service.description || '',
+      });
+      sessionStorage.setItem('builder_template', JSON.stringify(resolved));
+    }
+
     if (existing) {
       navigate(`/admin/page-builder/${existing.id}`);
     } else {
-      // Auto-load service detail template with resolved content
-      const template = getExistingDesign(layoutSlug);
-      if (template) {
-        const resolved = resolveTemplateVars(template, {
-          Service_Title: service.title,
-          Service_Short_Desc: service.short_desc || '',
-          Service_Image: service.featured_image || '',
-          Service_Content: service.description || '',
-        });
-        sessionStorage.setItem('builder_template', JSON.stringify(resolved));
-      }
       navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(service.title)}${template ? '&template=true' : ''}`);
     }
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-heading font-bold text-foreground">Services</h1>
         <Button asChild className="gap-2">
           <Link to="/admin/services/new"><Plus className="h-4 w-4" /> Add Service</Link>
         </Button>
       </div>
+      <p className="text-sm text-muted-foreground mb-6">
+        Use <span className="font-medium text-foreground">Edit Design</span> to change layout, sections & image placement (Visual Builder).
+        Use <span className="font-medium text-foreground">Edit Content & SEO</span> to update text, featured image, FAQs and meta tags.
+      </p>
 
       {isLoading ? (
         <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-secondary rounded-lg animate-pulse" />)}</div>
@@ -109,7 +116,7 @@ const AdminServices = () => {
                   <p className="font-medium text-foreground truncate">{s.title}</p>
                   <p className="text-sm text-muted-foreground truncate">{s.short_desc}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                   <Button
                     variant="ghost" size="icon"
                     onClick={() => toggleMutation.mutate({ id: s.id, is_active: !s.is_active })}
@@ -118,18 +125,20 @@ const AdminServices = () => {
                     {s.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
                   <Button
-                    variant="ghost" size="icon"
+                    variant="default" size="sm"
                     onClick={() => handleOpenBuilder(s)}
-                    title="Edit in Visual Page Builder"
+                    className="gap-1.5"
+                    title="Edit page layout, sections & images in the Visual Builder"
                   >
-                    <Paintbrush className="h-4 w-4" />
+                    <Paintbrush className="h-3.5 w-3.5" /> Edit Design
                   </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/admin/services/${s.id}`}><Edit className="h-4 w-4" /></Link>
+                  <Button variant="outline" size="sm" asChild className="gap-1.5" title="Edit text content, featured image, FAQs and SEO meta tags">
+                    <Link to={`/admin/services/${s.id}`}><Edit className="h-3.5 w-3.5" /> Edit Content & SEO</Link>
                   </Button>
                   <Button
                     variant="ghost" size="icon"
                     onClick={() => { if (confirm("Delete this service?")) deleteMutation.mutate(s.id); }}
+                    title="Delete service"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
