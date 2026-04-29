@@ -312,7 +312,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
             padding: baseStyles.padding || undefined,
           }}
         >
-          <div className="w-full mx-auto" style={{ maxWidth: node.props.fullWidth ? '100%' : (node.props.maxWidth || '80rem') }}>
+          <div className="w-full mx-auto" style={{ maxWidth: node.props.maxWidth || '80rem' }}>
             <div className={colCount > 1 ? 'vb-responsive-grid' : ''} style={gridStyle}>
               {node.children?.map((child, i) => (
                 <div key={child.id} className="w-full min-w-0">
