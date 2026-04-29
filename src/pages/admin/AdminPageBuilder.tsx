@@ -460,8 +460,22 @@ const AdminPageBuilder = () => {
   const hasTemplate = searchParams.get('template') === 'true';
 
   const { data: existingLayout, isLoading } = usePageLayoutById(id || '');
+  const effectiveSlug = existingLayout?.page_slug || pageSlug;
+  const serviceSlug = effectiveSlug.startsWith('service-') ? effectiveSlug.replace(/^service-/, '') : '';
+  const shouldLoadServiceTemplate = hasTemplate && effectiveSlug.startsWith('service-') && (!id || !!existingLayout);
+  const { data: serviceTemplateData, isLoading: isServiceTemplateLoading } = useQuery({
+    queryKey: ['builder_service_template', serviceSlug],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('services').select('*').eq('slug', serviceSlug).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: shouldLoadServiceTemplate,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
 
-  if (id && isLoading) {
+  if ((id && isLoading) || isServiceTemplateLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading builder...</div>
@@ -482,8 +496,10 @@ const AdminPageBuilder = () => {
 
   if (hasTemplate) {
     const seededTemplate = readSeededTemplate();
-    if (seededTemplate && (!id || !hasRenderableLayout(initialLayout))) {
-      initialLayout = seededTemplate;
+    const serviceTemplate = buildServiceTemplate(existingLayout?.page_slug || pageSlug, serviceTemplateData);
+    const templateLayout = seededTemplate || serviceTemplate;
+    if (templateLayout && (!id || !hasRenderableLayout(initialLayout))) {
+      initialLayout = templateLayout;
     }
   }
 
