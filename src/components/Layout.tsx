@@ -3,6 +3,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import WhatsAppFAB from "./WhatsAppFAB";
 import ScrollToTopButton from "./ScrollToTopButton";
+import DentalChatbot from "./DentalChatbot";
 
 const Layout = () => {
   return (
@@ -13,6 +14,7 @@ const Layout = () => {
       </main>
       <Footer />
       <WhatsAppFAB />
+      <DentalChatbot />
       <ScrollToTopButton />
     </div>
   );
