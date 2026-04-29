@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[trigger-rebuild] User ${userData.user.email} triggering rebuild for ${githubRepo}`);
+    console.log(`[trigger-rebuild] requestedBy="${requestedBy}" → ${githubRepo}`);
 
     const ghRes = await fetch(
       `https://api.github.com/repos/${githubRepo}/dispatches`,
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           event_type: "content-updated",
           client_payload: {
-            triggered_by: userData.user.email,
+            triggered_by: requestedBy,
             triggered_at: new Date().toISOString(),
           },
         }),
