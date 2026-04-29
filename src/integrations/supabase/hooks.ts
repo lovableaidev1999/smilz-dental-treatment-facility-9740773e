@@ -77,7 +77,7 @@ export const useService = (slug: string) => {
         .from("services")
         .select("*")
         .eq("slug", slug)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },

@@ -1,9 +1,9 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, ChevronRight, ArrowLeft, User, Sparkles, UserPlus } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useBlogPost, useBlogPosts } from "@/integrations/supabase/hooks";
+import { useBlogPost, useBlogPosts, useService } from "@/integrations/supabase/hooks";
 import BlockRenderer from "@/components/BlockRenderer";
 import VisualRenderer from "@/components/builder/VisualRenderer";
 import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
@@ -14,11 +14,12 @@ import NotFound from "./NotFound";
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPost(slug ?? "");
+  const { data: matchingService, isLoading: isServiceLoading } = useService(slug ?? "");
   const { data: relatedPosts } = useBlogPosts();
   const { data: settings } = useSiteSettings();
   const links = settings?.links;
 
-  if (isLoading) {
+  if (isLoading || isServiceLoading) {
     return (
       <div className="section-padding">
         <div className="container-narrow mx-auto max-w-3xl animate-pulse space-y-6">
@@ -30,6 +31,7 @@ const BlogPost = () => {
     );
   }
 
+  if (!post && matchingService?.slug) return <Navigate to={`/services/${matchingService.slug}`} replace />;
   if (error || !post) return <NotFound />;
 
   const related = (relatedPosts ?? []).filter((p) => p.slug !== slug && p.category === post.category).slice(0, 3);
