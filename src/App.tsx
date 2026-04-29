@@ -55,6 +55,7 @@ const AdminResetPassword = lazy(() => import("@/pages/admin/AdminResetPassword")
 const AdminPageBuilder = lazy(() => import("@/pages/admin/AdminPageBuilder"));
 const AdminPageLayouts = lazy(() => import("@/pages/admin/AdminPageLayouts"));
 const PagePreview = lazy(() => import("@/pages/admin/PagePreview"));
+const AdminChatInsights = lazy(() => import("@/pages/admin/AdminChatInsights"));
 
 // WordPress date-URL redirect helper
 const WpDateRedirect = () => {
