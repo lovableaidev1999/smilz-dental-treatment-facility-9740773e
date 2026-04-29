@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Phone, MessageCircle, Mail, MapPin, Clock, Facebook, Instagram, Youtube } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useServices } from "@/integrations/supabase/hooks";
+import { servicePath } from "@/lib/slugs";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -170,7 +171,7 @@ const Footer = () => {
               <ul className="space-y-2 text-sm">
                 {(services ?? []).map((service) => (
                   <li key={service.slug}>
-                    <Link to={`/services/${service.slug}`} className="opacity-80 hover:opacity-100 transition-opacity">
+                    <Link to={servicePath(service.slug)} className="opacity-80 hover:opacity-100 transition-opacity">
                       {service.title}
                     </Link>
                   </li>

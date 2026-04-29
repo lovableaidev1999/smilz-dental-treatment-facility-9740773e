@@ -5,10 +5,12 @@ export const normalizeServiceSlug = (value?: string | null) => {
     ? withoutProtocol.split("/services/").pop() ?? withoutProtocol
     : withoutProtocol;
 
-  return servicePath
+  const clean = servicePath
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+
+  return clean === "dental-implants" ? "dental-implants-garia-kolkata" : clean;
 };
 
 export const serviceSlugCandidates = (slug?: string | null) => {
