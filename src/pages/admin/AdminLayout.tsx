@@ -2,7 +2,7 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Settings, FileText, Stethoscope, Image,
-  Layers, LogOut, Menu, X, Star, ChevronLeft, PanelTop, Layout
+  Layers, LogOut, Menu, X, Star, ChevronLeft, PanelTop, Layout, MessageSquare
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ const navItems = [
   { label: "Blog Posts", path: "/admin/blog", icon: FileText },
   { label: "Gallery", path: "/admin/gallery", icon: Image },
   { label: "Reviews", path: "/admin/reviews", icon: Star },
+  { label: "Chat Insights", path: "/admin/chat-insights", icon: MessageSquare },
   { label: "Media Library", path: "/admin/media", icon: Image },
 ];
 
