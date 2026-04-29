@@ -616,13 +616,17 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
     // ─── ICON LIST ──────────────────────────────────────
     case 'icon-list': {
       const listColor = node.props.color || undefined;
-      const iconMap: Record<string, string> = { MapPin: '📍', Clock: '🕐', Phone: '📞', Check: '✓' };
+      const iconColor = node.props.iconColor || listColor;
+      const fontWeight = node.props.fontWeight || undefined;
+      const fontSize = node.props.fontSize || undefined;
+      const TextEl = (node.props.element || 'span') as any;
+      const iconMap: Record<string, string> = { MapPin: '📍', Clock: '🕐', Phone: '📞', Check: '✓', Mail: '✉️', Star: '⭐' };
       return (
-        <ul key={key} className={`space-y-2 ${rClasses}`} style={{ ...baseStyles, color: listColor }}>
+        <ul key={key} className={`space-y-2 ${rClasses}`} style={{ ...baseStyles, color: listColor, fontWeight, fontSize }}>
           {(node.props.items || []).map((item: any, i: number) => (
-            <li key={i} className="flex items-center gap-2" style={{ color: listColor }}>
-              <span>{iconMap[item.icon] || '✓'}</span>
-              <span>{item.text}</span>
+            <li key={i} className="flex items-center gap-2" style={{ color: listColor, fontWeight, fontSize }}>
+              <span style={{ color: iconColor }}>{iconMap[item.icon] || '✓'}</span>
+              <TextEl style={{ color: listColor, fontWeight, fontSize, margin: 0 }}>{item.text}</TextEl>
             </li>
           ))}
         </ul>
