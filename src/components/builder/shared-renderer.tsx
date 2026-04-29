@@ -24,6 +24,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import InlineEditable from './InlineEditable';
 import RichTextEditable from './RichTextEditable';
+import { servicePath } from '@/lib/slugs';
 
 // ─── Responsive styles (desktop baseline for live) ──────
 export const getStyles = (node: LayoutNode): React.CSSProperties => {
@@ -135,7 +136,7 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
     },
   });
   const renderCard = (svc: any) => (
-    <Link to={`/services/${svc.slug}`} className="group block h-full">
+    <Link to={servicePath(svc.slug)} className="group block h-full">
       <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-elevated transition-shadow h-full">
         {props.showImage && svc.image_url && <img src={svc.image_url} alt={svc.title} className="w-full h-40 object-cover" loading="lazy" width={600} height={160} />}
         <div className="p-4">
@@ -152,7 +153,7 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
         {(services || []).map((svc: any) => (
           <li key={svc.id}>
             <Link
-              to={`/services/${svc.slug}`}
+              to={servicePath(svc.slug)}
               className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
             >
               {svc.title} <span className="text-muted-foreground">›</span>
