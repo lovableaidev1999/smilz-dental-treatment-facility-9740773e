@@ -48,7 +48,10 @@ const DentalChatbot = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("dental-chat", {
-        body: { messages: next.filter((m) => m.role !== "assistant" || m !== WELCOME) },
+        body: {
+          messages: next.filter((m) => m.role !== "assistant" || m !== WELCOME),
+          session_id: getSessionId(),
+        },
       });
       if (error) throw error;
       const reply = (data as any)?.reply ?? "Sorry, I couldn't reach the assistant. Please WhatsApp us at +91 8961775554.";
