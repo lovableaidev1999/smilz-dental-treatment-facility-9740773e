@@ -38,7 +38,16 @@ const Gallery = () => {
         ]}
       />
 
-      {sections.map(renderSection)}
+      <PageHero
+        title={heroSection?.heading ?? "Treatment Gallery"}
+        subtitle={heroSection?.subheading ?? "Real results from real patients. See the transformations we deliver every day."}
+        imageUrl={heroSection?.image_url}
+        imageAlt={heroSection?.heading ?? "Smilz Treatment Gallery"}
+        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Gallery" }]}
+        contact={settings?.contact}
+      />
+
+      {nonHeroSections.map(renderSection)}
 
       <section className="section-padding">
         <div className="container-narrow mx-auto">
