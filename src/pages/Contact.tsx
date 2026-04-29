@@ -6,6 +6,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { GenericSection } from "@/components/DynamicSections";
 import StickyCtaBar from "@/components/StickyCtaBar";
+import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,12 +40,15 @@ const Contact = () => {
     switch (section.section_id) {
       case "hero":
         return (
-          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
-            <div className="container-narrow mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{section.heading ?? "Contact Us"}</h1>
-              <p className="text-primary-foreground/85 max-w-xl mx-auto">{section.subheading ?? "We'd love to hear from you. Book an appointment or reach out with any questions."}</p>
-            </div>
-          </section>
+          <PageHero
+            key={section.id}
+            title={section.heading ?? "Contact Us"}
+            subtitle={section.subheading ?? "We'd love to hear from you. Book an appointment or reach out with any questions."}
+            imageUrl={section.image_url}
+            imageAlt={section.heading ?? "Contact Smilz Dental Clinic"}
+            breadcrumbs={[{ label: "Home", to: "/" }, { label: "Contact" }]}
+            contact={contact}
+          />
         );
 
       default: {

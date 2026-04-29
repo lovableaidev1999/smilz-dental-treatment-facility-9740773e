@@ -48,27 +48,17 @@ const ServicesPage = () => {
     switch (section.section_id) {
       case "hero":
         return (
-          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
-            <div className="container-narrow mx-auto text-center">
-              <p className="text-dental-gold font-semibold text-sm uppercase tracking-wider mb-3">
-                {general?.clinic_name ?? "Smilz Dental Treatment Facility"}
-              </p>
-              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-                {section.heading ?? "Smilz Dental Treatment Services"}
-              </h1>
-              <p className="text-primary-foreground/85 max-w-2xl mx-auto text-lg">
-                {section.subheading ?? `Comprehensive dental care services designed to address all your oral health needs, from routine check-ups to complex procedures. Call us at ${contact?.phone_formatted ?? "8961 77 5554"} or book an appointment.`}
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 mt-8">
-                <a href={`https://wa.me/${contact?.whatsapp ?? "918961775554"}?text=Hi, I would like to know about your dental services.`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity">
-                  <MessageCircle className="h-4 w-4" /> Book Appointment
-                </a>
-                <a href={`tel:${contact?.phone ?? "8961775554"}`} className="inline-flex items-center gap-2 border-2 border-primary-foreground/40 text-primary-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:bg-primary-foreground/10 transition-colors">
-                  <Phone className="h-4 w-4" /> Call {contact?.phone_formatted ?? "8961 77 5554"}
-                </a>
-              </div>
-            </div>
-          </section>
+          <PageHero
+            key={section.id}
+            title={section.heading ?? "Smilz Dental Treatment Services"}
+            eyebrow={general?.clinic_name ?? "Smilz Dental Treatment Facility"}
+            subtitle={section.subheading ?? `Comprehensive dental care services designed to address all your oral health needs, from routine check-ups to complex procedures. Call us at ${contact?.phone_formatted ?? "8961 77 5554"} or book an appointment.`}
+            imageUrl={section.image_url}
+            imageAlt={section.heading ?? "Smilz Dental Treatment Services"}
+            breadcrumbs={[{ label: "Home", to: "/" }, { label: "Services" }]}
+            contact={contact}
+            whatsappMessage="Hi, I would like to know about your dental services."
+          />
         );
 
       case "cta":

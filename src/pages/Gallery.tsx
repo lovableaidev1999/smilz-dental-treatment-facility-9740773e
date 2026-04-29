@@ -5,6 +5,7 @@ import { usePageContent } from "@/hooks/usePageContent";
 import { useGallery } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
 import StickyCtaBar from "@/components/StickyCtaBar";
+import PageHero from "@/components/PageHero";
 import type { PageSection } from "@/hooks/usePageContent";
 
 const Gallery = () => {
@@ -20,12 +21,15 @@ const Gallery = () => {
     switch (section.section_id) {
       case "hero":
         return (
-          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
-            <div className="container-narrow mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{section.heading ?? "Treatment Gallery"}</h1>
-              <p className="text-primary-foreground/85 max-w-xl mx-auto">{section.subheading ?? "Real results from real patients. See the transformations we deliver every day."}</p>
-            </div>
-          </section>
+          <PageHero
+            key={section.id}
+            title={section.heading ?? "Treatment Gallery"}
+            subtitle={section.subheading ?? "Real results from real patients. See the transformations we deliver every day."}
+            imageUrl={section.image_url}
+            imageAlt={section.heading ?? "Smilz Treatment Gallery"}
+            breadcrumbs={[{ label: "Home", to: "/" }, { label: "Gallery" }]}
+            contact={settings?.contact}
+          />
         );
 
       default: {
