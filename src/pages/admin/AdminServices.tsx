@@ -56,23 +56,26 @@ const AdminServices = () => {
     },
   });
 
-  const handleOpenBuilder = (service: any) => {
+  const handleOpenBuilder = async (service: any) => {
     const layoutSlug = `service-${service.slug}`;
     const existing = layouts?.find(l => l.page_slug === layoutSlug);
+
+    // Always seed the template (with resolved data) so empty saved layouts
+    // also open with the existing design instead of a blank canvas.
+    const template = getExistingDesign(layoutSlug);
+    if (template) {
+      const resolved = resolveTemplateVars(template, {
+        Service_Title: service.title,
+        Service_Short_Desc: service.short_desc || '',
+        Service_Image: service.featured_image || '',
+        Service_Content: service.description || '',
+      });
+      sessionStorage.setItem('builder_template', JSON.stringify(resolved));
+    }
+
     if (existing) {
       navigate(`/admin/page-builder/${existing.id}`);
     } else {
-      // Auto-load service detail template with resolved content
-      const template = getExistingDesign(layoutSlug);
-      if (template) {
-        const resolved = resolveTemplateVars(template, {
-          Service_Title: service.title,
-          Service_Short_Desc: service.short_desc || '',
-          Service_Image: service.featured_image || '',
-          Service_Content: service.description || '',
-        });
-        sessionStorage.setItem('builder_template', JSON.stringify(resolved));
-      }
       navigate(`/admin/page-builder/new?slug=${encodeURIComponent(layoutSlug)}&title=${encodeURIComponent(service.title)}${template ? '&template=true' : ''}`);
     }
   };
