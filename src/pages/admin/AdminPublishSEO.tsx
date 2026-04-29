@@ -11,22 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-
-// The trigger-rebuild edge function lives in the Lovable Cloud project
-// (separate from the website's primary Supabase project). We call it via
-// its absolute URL using the cloud project's anon key.
-const CLOUD_FN_URL =
-  "https://wleqgpofmfefvvksxkea.supabase.co/functions/v1/trigger-rebuild";
-const CLOUD_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsZXFncG9mbWZlZnZ2a3N4a2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczODc1ODAsImV4cCI6MjA5Mjk2MzU4MH0.GGDh4SEJK-otsxpkB12SFEGW4vQ8NPCgzp1q_vcuGtw";
+import { supabase } from "@/integrations/supabase/client";
 
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 min
 const STORAGE_KEY = "smilz_last_publish_at";
 
 const AdminPublishSEO = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isTriggering, setIsTriggering] = useState(false);
   const [lastTriggeredAt, setLastTriggeredAt] = useState<number | null>(null);
@@ -56,29 +47,24 @@ const AdminPublishSEO = () => {
     setConfirmOpen(false);
     setIsTriggering(true);
     try {
-      const res = await fetch(CLOUD_FN_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // The cloud function only checks that an Authorization header
-          // is present and decodable; using the anon key is sufficient
-          // because this admin route is already gated by AdminLayout auth.
-          Authorization: `Bearer ${CLOUD_ANON_KEY}`,
-          apikey: CLOUD_ANON_KEY,
-        },
-        body: JSON.stringify({ requestedBy: user?.email ?? "unknown" }),
+      // supabase.functions.invoke automatically sends the logged-in admin's
+      // session token in the Authorization header. The edge function uses
+      // that to verify the caller is a real authenticated user.
+      const { data, error } = await supabase.functions.invoke("trigger-rebuild", {
+        body: {},
       });
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data?.error || `Request failed (${res.status})`);
+      if (error) {
+        throw new Error(error.message || "Request failed");
+      }
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       const ts = Date.now();
       localStorage.setItem(STORAGE_KEY, String(ts));
       setLastTriggeredAt(ts);
-      setActionsUrl(data.actionsUrl ?? null);
+      setActionsUrl(data?.actionsUrl ?? null);
 
       toast({
         title: "Rebuild triggered ✓",
