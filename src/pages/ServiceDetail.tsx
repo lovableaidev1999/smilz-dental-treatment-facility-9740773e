@@ -68,6 +68,7 @@ const ServiceDetail = () => {
       <ServiceHero
         title={service.title}
         shortDesc={service.short_desc}
+        imageUrl={service.featured_image}
         contact={contact}
       />
 
