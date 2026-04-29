@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   DndContext,
   DragOverlay,
@@ -31,6 +32,10 @@ import { Blocks, Layers, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight,
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { BlockType, LayoutNode } from '@/types/visual-builder';
+import { supabase } from '@/integrations/supabase/client';
+import { getExistingDesign } from '@/lib/existingDesignTemplates';
+import { resolveTemplateVars } from '@/lib/resolveTemplateVars';
+import { resolveImageUrl } from '@/lib/wpImageFallback';
 
 const readSeededTemplate = (): LayoutNode[] | null => {
   try {
@@ -46,6 +51,21 @@ const readSeededTemplate = (): LayoutNode[] | null => {
 };
 
 const hasRenderableLayout = (layout: LayoutNode[]) => layout.some((node: any) => !node?._seo);
+
+const buildServiceTemplate = (layoutSlug: string, service: any): LayoutNode[] | null => {
+  const template = getExistingDesign(layoutSlug);
+  if (!template || !service) return null;
+  const serviceFaqs = Array.isArray(service.faqs)
+    ? service.faqs.map((faq: any) => ({ question: faq.q || faq.question || '', answer: faq.a || faq.answer || '' })).filter((faq: any) => faq.question || faq.answer)
+    : [];
+  return resolveTemplateVars(template, {
+    Service_Title: service.title,
+    Service_Short_Desc: service.short_desc || '',
+    Service_Image: service.featured_image ? resolveImageUrl(service.featured_image) : '',
+    Service_Content: service.description || '',
+    Service_FAQs: serviceFaqs,
+  });
+};
 
 // ─── Inner builder with DnD ─────────────────────────────
 const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished: initialPublished, initialSeo }: {
