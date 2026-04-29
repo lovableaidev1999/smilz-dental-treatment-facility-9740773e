@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Paintbrush } from "lucide-react";
 import { getExistingDesign } from "@/lib/existingDesignTemplates";
 import { resolveTemplateVars } from "@/lib/resolveTemplateVars";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 
 const AdminServices = () => {
   const qc = useQueryClient();
@@ -94,7 +95,15 @@ const AdminServices = () => {
               <CardContent className="p-4 flex items-center gap-4">
                 <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
                 {s.featured_image && (
-                  <img src={s.featured_image} alt={s.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                  <img
+                    src={resolveImageUrl(s.featured_image)}
+                    alt={s.title}
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-secondary"
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-foreground truncate">{s.title}</p>
