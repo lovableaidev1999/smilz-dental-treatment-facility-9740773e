@@ -26,7 +26,7 @@ const Sitemap = () => {
       const [{ data: posts }, { data: services }, { data: builtPages }] = await Promise.all([
         supabase.from("blog_posts").select("slug, updated_at, published_at").eq("is_published", true),
         supabase.from("services").select("slug, updated_at").eq("is_active", true),
-        supabase.from("page_layouts").select("slug, updated_at, is_published").eq("is_published", true),
+        supabase.from("page_layouts").select("page_slug, updated_at, is_published").eq("is_published", true),
       ]);
 
       const seen = new Set<string>();
@@ -63,7 +63,7 @@ const Sitemap = () => {
       // CMS-built pages (/p/slug)
       for (const pg of builtPages ?? []) {
         const lastmod = (pg.updated_at || new Date().toISOString()).split("T")[0];
-        addUrl(`${SITE}/p/${pg.slug}`, lastmod, "monthly", "0.6");
+        addUrl(`${SITE}/p/${(pg as any).page_slug}`, lastmod, "monthly", "0.6");
       }
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`;
