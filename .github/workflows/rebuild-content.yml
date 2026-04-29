@@ -13,7 +13,7 @@ concurrency:
 jobs:
   rebuild:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
 
@@ -42,14 +42,14 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Prerender public pages
-        timeout-minutes: 20
+        timeout-minutes: 300
         run: node scripts/prerender.mjs
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Deploy via FTP (incremental)
-        timeout-minutes: 12
+        timeout-minutes: 30
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
