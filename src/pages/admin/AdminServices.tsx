@@ -116,7 +116,7 @@ const AdminServices = () => {
                   <p className="font-medium text-foreground truncate">{s.title}</p>
                   <p className="text-sm text-muted-foreground truncate">{s.short_desc}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                   <Button
                     variant="ghost" size="icon"
                     onClick={() => toggleMutation.mutate({ id: s.id, is_active: !s.is_active })}
@@ -125,18 +125,20 @@ const AdminServices = () => {
                     {s.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
                   <Button
-                    variant="ghost" size="icon"
+                    variant="default" size="sm"
                     onClick={() => handleOpenBuilder(s)}
-                    title="Edit in Visual Page Builder"
+                    className="gap-1.5"
+                    title="Edit page layout, sections & images in the Visual Builder"
                   >
-                    <Paintbrush className="h-4 w-4" />
+                    <Paintbrush className="h-3.5 w-3.5" /> Edit Design
                   </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/admin/services/${s.id}`}><Edit className="h-4 w-4" /></Link>
+                  <Button variant="outline" size="sm" asChild className="gap-1.5" title="Edit text content, featured image, FAQs and SEO meta tags">
+                    <Link to={`/admin/services/${s.id}`}><Edit className="h-3.5 w-3.5" /> Edit Content & SEO</Link>
                   </Button>
                   <Button
                     variant="ghost" size="icon"
                     onClick={() => { if (confirm("Delete this service?")) deleteMutation.mutate(s.id); }}
+                    title="Delete service"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
