@@ -87,7 +87,8 @@ const DentalChatbot = () => {
         <button
           onClick={() => setOpen(true)}
           aria-label="Open dental assistant chat"
-          className="fixed bottom-24 right-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-3 rounded-full shadow-elevated hover:shadow-hover transition-all duration-300 group"
+          style={{ backgroundColor: "#FFC000", color: "#DC2626" }}
+          className="fixed bottom-24 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-elevated hover:shadow-hover transition-all duration-300 group"
         >
           <MessageSquare className="h-6 w-6" />
           <span className="hidden sm:inline text-sm font-semibold">Ask Smilz AI</span>
