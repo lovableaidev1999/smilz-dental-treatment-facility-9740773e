@@ -6,6 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import { resolveImageUrl } from "@/lib/wpImageFallback";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useService, useServices } from "@/integrations/supabase/hooks";
+import { servicePath } from "@/lib/slugs";
 import NotFound from "./NotFound";
 import ServiceHero from "@/components/service/ServiceHero";
 import ServiceContent from "@/components/service/ServiceContent";
@@ -48,19 +49,19 @@ const ServiceDetail = () => {
         title={seoTitle}
         description={seoDesc}
         keywords={service.keywords || `${service.title.toLowerCase()} Kolkata, ${service.title.toLowerCase()} Garia, ${service.title.toLowerCase()} cost, best ${service.title.toLowerCase()} South Kolkata`}
-        canonicalUrl={`${links?.website ?? "https://smilz.net"}/services/${service.slug}`}
+        canonicalUrl={`${links?.website ?? "https://smilz.net"}${servicePath(service.slug)}`}
         ogImage={service.featured_image}
         breadcrumbs={[
           { name: "Home", url: links?.website ?? "https://smilz.net" },
           { name: "Services", url: `${links?.website ?? "https://smilz.net"}/services` },
-          { name: service.title, url: `${links?.website ?? "https://smilz.net"}/services/${service.slug}` },
+          { name: service.title, url: `${links?.website ?? "https://smilz.net"}${servicePath(service.slug)}` },
         ]}
         faqs={faqs}
         service={{
           name: service.title,
           description: service.short_desc || service.description?.substring(0, 200) || "",
           image: service.featured_image,
-          url: `${links?.website ?? "https://smilz.net"}/services/${service.slug}`,
+          url: `${links?.website ?? "https://smilz.net"}${servicePath(service.slug)}`,
         }}
       />
 

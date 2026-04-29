@@ -9,6 +9,7 @@ import VisualRenderer from "@/components/builder/VisualRenderer";
 import { getStoredVisualLayout, isVisualLayoutFallbackContent } from "@/lib/visualLayoutStorage";
 import { sanitizeWpImages } from "@/lib/wpImageSanitizer";
 import { pickServiceForPost } from "@/lib/blogInternalLinks";
+import { servicePath } from "@/lib/slugs";
 import NotFound from "./NotFound";
 
 const BlogPost = () => {
@@ -31,7 +32,7 @@ const BlogPost = () => {
     );
   }
 
-  if (!post && matchingService?.slug) return <Navigate to={`/services/${matchingService.slug}`} replace />;
+  if (!post && matchingService?.slug) return <Navigate to={servicePath(matchingService.slug)} replace />;
   if (error || !post) return <NotFound />;
 
   const related = (relatedPosts ?? []).filter((p) => p.slug !== slug && p.category === post.category).slice(0, 3);
@@ -116,13 +117,13 @@ const BlogPost = () => {
                 <div className="flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Recommended for you</p>
                   <h3 className="text-lg md:text-xl font-heading font-bold text-foreground mb-2">
-                    <Link to={`/services/${recommendedService.slug}`} className="hover:text-primary transition-colors">
+                    <Link to={servicePath(recommendedService.slug)} className="hover:text-primary transition-colors">
                       {recommendedService.title}
                     </Link>
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">{recommendedService.blurb}</p>
                   <Link
-                    to={`/services/${recommendedService.slug}`}
+                    to={servicePath(recommendedService.slug)}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                   >
                     {recommendedService.ctaLabel}
