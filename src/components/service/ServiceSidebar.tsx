@@ -1,6 +1,7 @@
 import { RefObject } from "react";
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, MapPin, Clock, ChevronRight } from "lucide-react";
+import { servicePath } from "@/lib/slugs";
 
 interface ServiceSidebarProps {
   serviceTitle: string;
@@ -60,7 +61,7 @@ const ServiceSidebar = ({ serviceTitle, clinicName, contact, otherServices }: Se
           {otherServices.map((s) => (
             <li key={s.slug}>
               <Link
-                to={`/services/${s.slug}`}
+                to={servicePath(s.slug)}
                 className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
               >
                 {s.title} <ChevronRight className="h-4 w-4 text-muted-foreground" />

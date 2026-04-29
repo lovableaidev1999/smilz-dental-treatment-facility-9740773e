@@ -9,12 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import ImageUrlInput from "@/components/admin/ImageUrlInput";
-
-const normalizeServiceSlug = (value: string) => {
-  const withoutDomain = value.replace(/^https?:\/\//i, "").replace(/^www\./i, "");
-  const servicePath = withoutDomain.includes("/services/") ? withoutDomain.split("/services/").pop() ?? withoutDomain : withoutDomain;
-  return servicePath.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-};
+import { normalizeServiceSlug } from "@/lib/slugs";
 
 const AdminServiceEdit = () => {
   const { id } = useParams<{ id: string }>();
