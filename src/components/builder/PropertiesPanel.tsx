@@ -933,12 +933,28 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
 
     case 'icon-list':
       return (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {(props.items || []).map((item: any, i: number) => (
             <div key={i} className="border border-border rounded p-2 space-y-1">
               <PropField label={`Item ${i + 1}`} value={item.text} onChange={v => {
                 const items = [...props.items]; items[i] = { ...items[i], text: v }; updateProp('items', items);
               }} />
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Icon</Label>
+                <Select value={item.icon || 'Check'} onValueChange={v => {
+                  const items = [...props.items]; items[i] = { ...items[i], icon: v }; updateProp('items', items);
+                }}>
+                  <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Check">✓ Check</SelectItem>
+                    <SelectItem value="MapPin">📍 Pin</SelectItem>
+                    <SelectItem value="Clock">🕐 Clock</SelectItem>
+                    <SelectItem value="Phone">📞 Phone</SelectItem>
+                    <SelectItem value="Mail">✉️ Mail</SelectItem>
+                    <SelectItem value="Star">⭐ Star</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => {
                 updateProp('items', props.items.filter((_: any, idx: number) => idx !== i));
               }}>Remove</Button>
@@ -947,6 +963,57 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
           <Button variant="outline" size="sm" className="text-xs w-full" onClick={() => {
             updateProp('items', [...(props.items || []), { icon: 'Check', text: 'New item' }]);
           }}>+ Add Item</Button>
+
+          <Separator className="my-2" />
+          <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Text Style</p>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Element</Label>
+            <Select value={props.element || 'p'} onValueChange={v => updateProp('element', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="p">Paragraph</SelectItem>
+                <SelectItem value="h2">H2</SelectItem>
+                <SelectItem value="h3">H3</SelectItem>
+                <SelectItem value="h4">H4</SelectItem>
+                <SelectItem value="h5">H5</SelectItem>
+                <SelectItem value="h6">H6</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Font Weight</Label>
+            <Select value={props.fontWeight || '400'} onValueChange={v => updateProp('fontWeight', v)}>
+              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="300">Light</SelectItem>
+                <SelectItem value="400">Normal</SelectItem>
+                <SelectItem value="500">Medium</SelectItem>
+                <SelectItem value="600">Semibold</SelectItem>
+                <SelectItem value="700">Bold</SelectItem>
+                <SelectItem value="800">Extrabold</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <PropField label="Font Size" value={props.fontSize} onChange={v => updateProp('fontSize', v)} placeholder="e.g. 1rem, 16px" />
+
+          <div className="space-y-2">
+            <Label className="text-xs">Text Color</Label>
+            <div className="flex gap-2">
+              <Input value={props.color || ''} onChange={e => updateProp('color', e.target.value)} placeholder="CSS color" className="h-7 text-xs flex-1" />
+              <input type="color" value={props.color || '#000000'} onChange={e => updateProp('color', e.target.value)} className="h-7 w-7 rounded border border-border cursor-pointer p-0" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Icon Color</Label>
+            <div className="flex gap-2">
+              <Input value={props.iconColor || ''} onChange={e => updateProp('iconColor', e.target.value)} placeholder="CSS color" className="h-7 text-xs flex-1" />
+              <input type="color" value={props.iconColor || '#000000'} onChange={e => updateProp('iconColor', e.target.value)} className="h-7 w-7 rounded border border-border cursor-pointer p-0" />
+            </div>
+          </div>
         </div>
       );
 
