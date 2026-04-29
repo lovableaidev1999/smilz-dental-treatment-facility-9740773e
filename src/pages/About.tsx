@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
 import { GenericSection } from "@/components/DynamicSections";
 import StickyCtaBar from "@/components/StickyCtaBar";
+import PageHero from "@/components/PageHero";
 
 const About = () => {
   const { data: settings } = useSiteSettings();
@@ -27,16 +28,15 @@ const About = () => {
     switch (section.section_id) {
       case "hero":
         return (
-          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
-            <div className="container-narrow mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-                {section.heading ?? "About Us"}
-              </h1>
-              <p className="text-primary-foreground/85 max-w-xl mx-auto">
-                {section.subheading ?? "Over 25 years of dedicated dental care in the heart of Garia, South Kolkata."}
-              </p>
-            </div>
-          </section>
+          <PageHero
+            key={section.id}
+            title={section.heading ?? "About Us"}
+            subtitle={section.subheading ?? "Over 25 years of dedicated dental care in the heart of Garia, South Kolkata."}
+            imageUrl={section.image_url}
+            imageAlt={section.heading ?? "About Smilz Dental Clinic"}
+            breadcrumbs={[{ label: "Home", to: "/" }, { label: "About" }]}
+            contact={contact}
+          />
         );
 
       case "doctor":

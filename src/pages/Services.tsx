@@ -7,6 +7,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { usePageContent } from "@/hooks/usePageContent";
 import { useServices } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
+import PageHero from "@/components/PageHero";
 import type { PageSection } from "@/hooks/usePageContent";
 import { servicePath } from "@/lib/slugs";
 
