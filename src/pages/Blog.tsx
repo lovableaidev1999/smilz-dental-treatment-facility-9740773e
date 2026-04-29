@@ -8,6 +8,7 @@ import { usePageContent } from "@/hooks/usePageContent";
 import { useBlogPosts } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
 import StickyCtaBar from "@/components/StickyCtaBar";
+import PageHero from "@/components/PageHero";
 import type { PageSection } from "@/hooks/usePageContent";
 
 const categoryToTab: Record<string, string> = {
@@ -70,12 +71,15 @@ const Blog = () => {
     switch (section.section_id) {
       case "hero":
         return (
-          <section key={section.id} className="bg-gradient-primary text-primary-foreground section-padding">
-            <div className="container-narrow mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">{section.heading ?? "Dental Insights"}</h1>
-              <p className="text-primary-foreground/85 max-w-xl mx-auto">{section.subheading ?? "Expert articles on oral health, dental procedures, and wellness tips from our team."}</p>
-            </div>
-          </section>
+          <PageHero
+            key={section.id}
+            title={section.heading ?? "Dental Insights"}
+            subtitle={section.subheading ?? "Expert articles on oral health, dental procedures, and wellness tips from our team."}
+            imageUrl={section.image_url}
+            imageAlt={section.heading ?? "Dental Insights Blog"}
+            breadcrumbs={[{ label: "Home", to: "/" }, { label: "Insights" }]}
+            contact={settings?.contact}
+          />
         );
 
       default: {
