@@ -2,13 +2,14 @@ import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, Settings, FileText, Stethoscope, Image,
-  Layers, LogOut, Menu, X, Star, ChevronLeft, PanelTop, Layout, MessageSquare
+  Layers, LogOut, Menu, X, Star, ChevronLeft, PanelTop, Layout, MessageSquare, Rocket
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { label: "Publish to SEO", path: "/admin/publish-seo", icon: Rocket },
   { label: "Settings", path: "/admin/settings", icon: Settings },
   { label: "Header & Footer", path: "/admin/header-footer", icon: PanelTop },
   { label: "Pages", path: "/admin/pages", icon: Layers },
