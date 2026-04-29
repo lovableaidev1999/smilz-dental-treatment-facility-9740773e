@@ -11,33 +11,17 @@ import type { PageSection } from "@/hooks/usePageContent";
 const Gallery = () => {
   const { data: galleryItems, isLoading } = useGallery();
   const { data: settings } = useSiteSettings();
-  const { sections } = usePageContent("gallery");
+  const { sections, getSection } = usePageContent("gallery");
   const links = settings?.links;
-  const KNOWN_IDS = ["hero"];
+  const heroSection = getSection("hero");
+  const nonHeroSections = sections.filter((s) => s.section_id !== "hero");
 
   let dynamicIndex = 0;
 
   const renderSection = (section: PageSection) => {
-    switch (section.section_id) {
-      case "hero":
-        return (
-          <PageHero
-            key={section.id}
-            title={section.heading ?? "Treatment Gallery"}
-            subtitle={section.subheading ?? "Real results from real patients. See the transformations we deliver every day."}
-            imageUrl={section.image_url}
-            imageAlt={section.heading ?? "Smilz Treatment Gallery"}
-            breadcrumbs={[{ label: "Home", to: "/" }, { label: "Gallery" }]}
-            contact={settings?.contact}
-          />
-        );
-
-      default: {
-        const imageFirst = dynamicIndex % 2 === 0;
-        dynamicIndex++;
-        return <GenericSection key={section.id} section={section} imageFirst={imageFirst} />;
-      }
-    }
+    const imageFirst = dynamicIndex % 2 === 0;
+    dynamicIndex++;
+    return <GenericSection key={section.id} section={section} imageFirst={imageFirst} />;
   };
 
   return (
@@ -54,7 +38,16 @@ const Gallery = () => {
         ]}
       />
 
-      {sections.map(renderSection)}
+      <PageHero
+        title={heroSection?.heading ?? "Treatment Gallery"}
+        subtitle={heroSection?.subheading ?? "Real results from real patients. See the transformations we deliver every day."}
+        imageUrl={heroSection?.image_url}
+        imageAlt={heroSection?.heading ?? "Smilz Treatment Gallery"}
+        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Gallery" }]}
+        contact={settings?.contact}
+      />
+
+      {nonHeroSections.map(renderSection)}
 
       <section className="section-padding">
         <div className="container-narrow mx-auto">
