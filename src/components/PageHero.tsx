@@ -71,15 +71,17 @@ const PageHero = ({
             <img
               src={imageUrl as string}
               alt={imageAlt ?? title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
               width={1600}
               height={600}
               loading="eager"
               fetchPriority="high"
               decoding="async"
             />
-            <div className="absolute inset-0 bg-gradient-primary/90 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/50" />
+            {/* Solid primary tint to match other pages' hero look */}
+            <div className="absolute inset-0 bg-primary/75" />
+            {/* Subtle left-to-right depth gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/60 via-primary/40 to-primary/60" />
           </>
         ) : (
           <div className="absolute inset-0 bg-gradient-primary" />
