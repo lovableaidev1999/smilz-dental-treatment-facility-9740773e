@@ -79,7 +79,8 @@ const PageHero = ({
             <img
               src={imageUrl as string}
               alt={imageAlt ?? title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover"
+              style={{ objectPosition: "center 30%" }}
               width={1600}
               height={600}
               loading="eager"
