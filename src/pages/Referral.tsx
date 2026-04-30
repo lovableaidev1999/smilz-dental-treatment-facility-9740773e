@@ -50,6 +50,11 @@ const Referral = () => {
         breadcrumbs={[{ label: "Home", to: "/" }, { label: "Smilz Referral" }]}
         contact={contact}
         whatsappMessage="Hi, I'd like to refer someone to Smilz Dental."
+        primaryCta={{
+          label: "Start Referring",
+          href: "https://referral.smilz.net/login",
+          external: true,
+        }}
       />
 
       <section className="section-padding">
