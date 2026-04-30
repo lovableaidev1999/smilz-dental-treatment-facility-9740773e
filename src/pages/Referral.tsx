@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 const Referral = () => {
   const { toast } = useToast();
   const { data: settings } = useSiteSettings();
+  const { getSection } = usePageContent("referral");
+  const heroSection = getSection("hero");
   const contact = settings?.contact;
   const links = settings?.links;
 
