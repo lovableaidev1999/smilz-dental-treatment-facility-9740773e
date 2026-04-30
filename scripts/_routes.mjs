@@ -29,11 +29,17 @@ export const SKIP_PREFIXES = ["/admin", "/login", "/preview"];
 
 const withTrailingSlash = (p) => (p.endsWith("/") ? p : `${p}/`);
 
+// Hardcoded to the real external Supabase project (eukymrxxmvkchxfpjjuz).
+// Env vars are only used as overrides; we never fall through to Lovable Cloud.
+const REAL_SUPABASE_URL = "https://eukymrxxmvkchxfpjjuz.supabase.co";
+const REAL_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1a3ltcnh4bXZrY2h4ZnBqanV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzg1NTksImV4cCI6MjA5MDYxNDU1OX0.rtXAdsH4BDwRd4zBScoB-sleoQAPTeWPZsExBcM79Fc";
+
 async function fetchTable(path) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
+  const url = process.env.VITE_SUPABASE_URL || REAL_SUPABASE_URL;
+  const key = process.env.VITE_SUPABASE_ANON_KEY || REAL_SUPABASE_ANON_KEY;
   if (!url || !key) {
-    console.warn("[routes] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — dynamic routes will be skipped");
+    console.warn("[routes] Missing Supabase URL/key — dynamic routes will be skipped");
     return [];
   }
   try {

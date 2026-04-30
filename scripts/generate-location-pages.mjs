@@ -25,12 +25,20 @@
  */
 import { AREAS, INTENTS, SERVICES, OVERRIDES, CLINIC, HERO_IMAGE, DIRECTIONS } from "./location-pages.config.mjs";
 
+// Hardcoded to the real external Supabase project (eukymrxxmvkchxfpjjuz).
+// Env vars are only used as overrides (e.g. SERVICE_ROLE_KEY for RLS bypass in CI);
+// we never fall through to the empty Lovable Cloud project.
+const REAL_SUPABASE_URL = "https://eukymrxxmvkchxfpjjuz.supabase.co";
+const REAL_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1a3ltcnh4bXZrY2h4ZnBqanV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMzg1NTksImV4cCI6MjA5MDYxNDU1OX0.rtXAdsH4BDwRd4zBScoB-sleoQAPTeWPZsExBcM79Fc";
+
 const SUPABASE_URL =
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || REAL_SUPABASE_URL;
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY;
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  REAL_SUPABASE_ANON_KEY;
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");

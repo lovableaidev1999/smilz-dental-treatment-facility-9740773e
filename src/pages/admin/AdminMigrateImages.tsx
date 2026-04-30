@@ -105,35 +105,27 @@ const AdminMigrateImages = () => {
     }
   };
 
-  const SUPABASE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/migrate-image`;
-  const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  // Migrate a single image via the server-side edge function
+  // Migrate a single image via the server-side edge function.
+  // Uses supabase.functions.invoke so the call is routed through the hardcoded
+  // external Supabase client (eukymrxxmvkchxfpjjuz), NOT Lovable Cloud.
   const migrateImage = async (item: MigrationItem, index: number): Promise<boolean> => {
     try {
       updateItem(index, { status: "downloading" });
 
-      const response = await fetch(SUPABASE_FUNCTION_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+      const { data: result, error } = await supabase.functions.invoke("migrate-image", {
+        body: {
           imageUrl: item.oldUrl,
           table: item.table,
           id: item.id,
           field: item.field,
-        }),
+        },
       });
 
-      const result = await response.json();
-      if (!response.ok || result.error) {
-        throw new Error(result.error || `HTTP ${response.status}`);
+      if (error || (result && (result as any).error)) {
+        throw new Error(error?.message || (result as any)?.error || "Migration failed");
       }
 
-      updateItem(index, { newUrl: result.newUrl, status: "done" });
+      updateItem(index, { newUrl: (result as any).newUrl, status: "done" });
       return true;
     } catch (err: any) {
       updateItem(index, { status: "error", error: err.message });
