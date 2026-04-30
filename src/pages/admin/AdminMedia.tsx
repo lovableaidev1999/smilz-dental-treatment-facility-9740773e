@@ -222,8 +222,8 @@ const AdminMedia = () => {
                 onClick={() => openDetail(item)}
               >
                 <div className="aspect-square bg-secondary relative">
-                  {item.file_type === "image" ? (
-                    <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" />
+                  {item.file_type?.startsWith("image") ? (
+                    <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-muted-foreground" />
@@ -259,8 +259,8 @@ const AdminMedia = () => {
                   >
                     <td className="px-4 py-2">
                       <div className="w-12 h-12 rounded bg-secondary overflow-hidden flex-shrink-0">
-                        {item.file_type === "image" ? (
-                          <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" />
+                        {item.file_type?.startsWith("image") ? (
+                          <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -310,7 +310,7 @@ const AdminMedia = () => {
 
           <div className="p-4 space-y-5">
             {/* Image Preview */}
-            {selectedItem.file_type === "image" ? (
+            {selectedItem.file_type?.startsWith("image") ? (
               <div className="rounded-lg overflow-hidden border border-border bg-secondary">
                 <img
                   src={selectedItem.file_url}
