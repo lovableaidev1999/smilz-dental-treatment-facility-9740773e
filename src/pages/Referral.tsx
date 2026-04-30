@@ -42,7 +42,6 @@ const Referral = () => {
 
       <PageHero
         title={heroSection?.heading ?? "Smilz Referral"}
-        eyebrow={heroSection?.section_title}
         subtitle={
           heroSection?.subheading ??
           `Refer a friend or family member to ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"}.`
