@@ -2,11 +2,25 @@ import { lazy, Suspense, ComponentType, Component, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import SEOHead from '@/components/SEOHead';
+import PageHero from '@/components/PageHero';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { LayoutNode } from '@/types/visual-builder';
 import { serviceSlugCandidates } from '@/lib/slugs';
 import { usePageContent } from '@/hooks/usePageContent';
 
 const VisualRenderer = lazy(() => import('@/components/builder/VisualRenderer'));
+
+// Slugs where the hardcoded <PageHero> ALWAYS replaces the published layout's
+// first hero section. The body (everything after) remains fully editable in
+// the Visual Builder. Use for pages that need the universal navy-blue hero
+// with breadcrumbs + CTAs (matching About / Services / Contact) but still
+// want editable body content.
+const FORCE_PAGE_HERO_SLUGS: Record<string, { breadcrumbLabel: string; whatsappMessage?: string }> = {
+  referral: {
+    breadcrumbLabel: 'Smilz Referral',
+    whatsappMessage: "Hi, I'd like to refer someone to Smilz Dental.",
+  },
+};
 
 interface PageLayoutRow {
   id: string;
