@@ -311,7 +311,7 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
 
       <Tag
         ref={ref as any}
-        className={`${className || ''} ${editing ? 'outline-none ring-2 ring-primary/30 rounded px-1' : ''} ${
+        className={`rt-editable ${className || ''} ${editing ? 'outline-none ring-2 ring-primary/30 rounded px-1' : ''} ${
           isSelected && !editing ? 'cursor-text' : ''
         }`}
         style={style}
@@ -325,6 +325,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
         onKeyDown={handleKeyDown}
         dangerouslySetInnerHTML={!editing ? { __html: value } : undefined}
       />
+      <style>{`
+        .rt-editable a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 2px; }
+        .rt-editable a:hover { opacity: 0.85; }
+      `}</style>
     </div>
   );
 };
