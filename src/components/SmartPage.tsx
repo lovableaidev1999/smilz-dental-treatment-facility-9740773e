@@ -75,7 +75,9 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
     ? serviceSlugCandidates(slug.replace(/^service-/, '')).map((candidate) => `service-${candidate}`)
     : [slug];
   const forceFallback = FORCE_FALLBACK_SLUGS.has(slug);
+  const forcePageHero = FORCE_PAGE_HERO_SLUGS[slug];
   const { getSection } = usePageContent(slug);
+  const { data: siteSettings } = useSiteSettings();
   const cmsHero = getSection('hero');
 
   const { data: layout, isLoading } = useQuery({
@@ -109,8 +111,16 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
 
   // If a published layout exists, render it via VisualRenderer
   if (layout?.is_published && layout.layout_json?.length > 0) {
-    const renderedLayout = cmsHero?.image_url
-      ? layout.layout_json.map((node, index) =>
+    // For FORCE_PAGE_HERO slugs, drop the layout's first section (it's the
+    // builder hero) and render the universal <PageHero> above the body so
+    // the page matches About / Services / Contact visually. The remaining
+    // layout (body) stays fully editable in the Visual Builder.
+    const bodyLayout = forcePageHero
+      ? layout.layout_json.slice(1)
+      : layout.layout_json;
+
+    const renderedLayout = !forcePageHero && cmsHero?.image_url
+      ? bodyLayout.map((node, index) =>
           index === 0 && node.type === 'section'
             ? {
                 ...node,
@@ -122,7 +132,8 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
               }
             : node,
         )
-      : layout.layout_json;
+      : bodyLayout;
+
     const seoMeta = (layout.layout_json as any)._seo || {};
     const seoTitle = seoMeta.title || fallbackSeoProps?.title || layout.page_title;
     const seoDescription =
@@ -134,6 +145,16 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
     return (
       <>
         <SEOHead title={seoTitle} description={seoDescription} ogImage={ogImage} />
+        {forcePageHero && (
+          <PageHero
+            title={cmsHero?.heading ?? layout.page_title}
+            subtitle={cmsHero?.subheading ?? null}
+            imageUrl={cmsHero?.image_url ?? null}
+            breadcrumbs={[{ label: 'Home', to: '/' }, { label: forcePageHero.breadcrumbLabel }]}
+            contact={siteSettings?.contact}
+            whatsappMessage={forcePageHero.whatsappMessage}
+          />
+        )}
         <RendererErrorBoundary fallback={<Fallback />}>
           <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="animate-pulse text-muted-foreground text-sm">Loading page...</div></div>}>
             <VisualRenderer layout={renderedLayout} />
