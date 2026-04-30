@@ -13,7 +13,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-const PAGES = ["home", "about", "contact", "services", "gallery", "blog"];
+const PAGES = ["home", "about", "contact", "services", "gallery", "blog", "referral"];
 
 const PAGE_ROUTES: Record<string, string> = {
   home: "/",
@@ -22,6 +22,7 @@ const PAGE_ROUTES: Record<string, string> = {
   services: "/services",
   gallery: "/gallery",
   blog: "/blog",
+  referral: "/referral",
 };
 
 const openPagePreview = (page: string) => {
