@@ -15,10 +15,22 @@ const VisualRenderer = lazy(() => import('@/components/builder/VisualRenderer'))
 // the Visual Builder. Use for pages that need the universal navy-blue hero
 // with breadcrumbs + CTAs (matching About / Services / Contact) but still
 // want editable body content.
-const FORCE_PAGE_HERO_SLUGS: Record<string, { breadcrumbLabel: string; whatsappMessage?: string }> = {
+const FORCE_PAGE_HERO_SLUGS: Record<
+  string,
+  {
+    breadcrumbLabel: string;
+    whatsappMessage?: string;
+    primaryCta?: { label: string; href: string; external?: boolean };
+  }
+> = {
   referral: {
     breadcrumbLabel: 'Smilz Referral',
     whatsappMessage: "Hi, I'd like to refer someone to Smilz Dental.",
+    primaryCta: {
+      label: 'Start Referring',
+      href: 'https://referral.smilz.net/login',
+      external: true,
+    },
   },
 };
 
@@ -153,6 +165,7 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
             breadcrumbs={[{ label: 'Home', to: '/' }, { label: forcePageHero.breadcrumbLabel }]}
             contact={siteSettings?.contact}
             whatsappMessage={forcePageHero.whatsappMessage}
+            primaryCta={forcePageHero.primaryCta}
           />
         )}
         <RendererErrorBoundary fallback={<Fallback />}>
