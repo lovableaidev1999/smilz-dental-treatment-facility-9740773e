@@ -32,6 +32,12 @@ jobs:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
+      - name: Update footer "Areas We Serve" with 6 hub links
+        run: node scripts/update-footer-areas.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Trigger rebuild + deploy
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
