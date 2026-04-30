@@ -228,6 +228,44 @@ const AdminPages = () => {
             <Input type="number" value={local.sort_order ?? 0} onChange={(e) => setLocal({ ...local, sort_order: Number(e.target.value) })} />
           </div>
         </div>
+
+        {/* Live hero preview — shown for hero sections so admins can confirm the image before saving */}
+        {local.section_id === "hero" && (
+          <div>
+            <label className="text-sm font-medium mb-1.5 block flex items-center gap-2">
+              Live Hero Preview
+              <span className="text-xs text-muted-foreground font-normal">(updates as you type)</span>
+            </label>
+            <div className="relative overflow-hidden rounded-lg border border-border aspect-[16/6] bg-gradient-to-br from-primary to-primary/70">
+              {local.image_url ? (
+                <>
+                  <img
+                    src={local.image_url}
+                    alt={local.heading || "Hero preview"}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/50" />
+                </>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-primary-foreground/60 text-xs">
+                  No image set — gradient fallback will be used
+                </div>
+              )}
+              <div className="relative h-full flex flex-col items-center justify-center text-center px-6 text-primary-foreground">
+                <h3 className="text-2xl md:text-3xl font-heading font-bold mb-2 line-clamp-2">
+                  {local.heading || "Hero heading"}
+                </h3>
+                {local.subheading && (
+                  <p className="text-primary-foreground/85 text-sm md:text-base max-w-xl line-clamp-2">
+                    {local.subheading}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium mb-1.5 block">Button Text</label>
