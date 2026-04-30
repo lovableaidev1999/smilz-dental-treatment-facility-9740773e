@@ -46,9 +46,10 @@ async function main() {
     "Content-Type": "application/json",
   };
 
-  // 1. Read the current site_settings row.
+  // site_settings is a key/value table: { key: 'footer', value: jsonb }.
+  // 1. Read the current footer row.
   const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/site_settings?select=id,footer&limit=1`,
+    `${SUPABASE_URL}/rest/v1/site_settings?select=key,value&key=eq.footer`,
     { headers },
   );
   if (!r.ok) {
@@ -56,29 +57,35 @@ async function main() {
     process.exit(1);
   }
   const rows = await r.json();
-  if (!rows.length) {
-    console.error("[footer] No site_settings row exists — aborting (CMS row required).");
-    process.exit(1);
-  }
-  const row = rows[0];
+  const existingValue = rows.length ? (rows[0].value || {}) : {};
 
-  const nextFooter = {
-    ...(row.footer || {}),
+  const nextValue = {
+    ...existingValue,
     show_areas_we_serve: true,
     areas_we_serve: newAreas,
   };
 
-  // 2. Write back.
-  const u = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.${row.id}`, {
-    method: "PATCH",
-    headers: { ...headers, Prefer: "return=minimal" },
-    body: JSON.stringify({ footer: nextFooter, updated_at: new Date().toISOString() }),
-  });
+  // 2. Upsert (insert if missing, update if present) on the `key` column.
+  const u = await fetch(
+    `${SUPABASE_URL}/rest/v1/site_settings?on_conflict=key`,
+    {
+      method: "POST",
+      headers: {
+        ...headers,
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify({
+        key: "footer",
+        value: nextValue,
+        updated_at: new Date().toISOString(),
+      }),
+    },
+  );
   if (!u.ok) {
     console.error(`[footer] Write failed: ${u.status} ${await u.text()}`);
     process.exit(1);
   }
-  console.log(`[footer] Updated site_settings.footer.areas_we_serve with the 6 hub links.`);
+  console.log(`[footer] Updated site_settings[key=footer].value.areas_we_serve with the 6 hub links.`);
 }
 
 main().catch((e) => {
