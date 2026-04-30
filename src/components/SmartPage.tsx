@@ -32,6 +32,10 @@ const FORCE_PAGE_HERO_SLUGS: Record<
       external: true,
     },
   },
+  gallery: {
+    breadcrumbLabel: 'Gallery',
+    whatsappMessage: "Hi, I'd like to know more about your dental treatment results.",
+  },
 };
 
 interface PageLayoutRow {
