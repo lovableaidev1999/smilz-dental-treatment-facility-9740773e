@@ -71,7 +71,7 @@ const PageHero = ({
   );
 
   return (
-    <section className="relative overflow-hidden text-primary-foreground section-padding">
+    <section className="relative overflow-hidden text-primary-foreground section-padding min-h-[420px] md:min-h-[480px] flex items-center">
       {/* Background: image + gradient overlay, or pure gradient fallback */}
       <div className="absolute inset-0 -z-10">
         {hasImage ? (
@@ -96,7 +96,7 @@ const PageHero = ({
         )}
       </div>
 
-      <div className={`container-narrow mx-auto ${centered ? "text-center" : ""}`}>
+      <div className={`container-narrow mx-auto w-full ${centered ? "text-center" : ""}`}>
         {breadcrumbs && breadcrumbs.length > 0 && (
           <nav
             className={`flex items-center gap-2 text-sm text-primary-foreground/70 mb-6 ${
