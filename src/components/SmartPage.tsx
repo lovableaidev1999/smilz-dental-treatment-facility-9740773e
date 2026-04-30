@@ -50,9 +50,11 @@ class RendererErrorBoundary extends Component<
 
 // Slugs that always render their hardcoded React component (skip the Visual
 // Builder layout entirely). Use for pages with interactive logic / a fixed
-// design language (PageHero with breadcrumbs, gradient overlay, CTAs) that
-// the generic builder layout cannot reproduce.
-const FORCE_FALLBACK_SLUGS = new Set(['referral']);
+// design language that the generic builder layout cannot reproduce.
+// NOTE: 'referral' was removed so the page becomes fully editable in the
+// Visual Builder (matches Home/Services/About behavior). The hardcoded
+// Referral.tsx still serves as the fallback when no layout is published.
+const FORCE_FALLBACK_SLUGS = new Set<string>([]);
 
 const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProps) => {
   const pageSlugCandidates = slug.startsWith('service-')
