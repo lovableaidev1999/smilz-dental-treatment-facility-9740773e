@@ -2,7 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, UserPlus } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import PageHero from "@/components/PageHero";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { usePageContent } from "@/hooks/usePageContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 const Referral = () => {
   const { toast } = useToast();
   const { data: settings } = useSiteSettings();
+  const { getSection } = usePageContent("referral");
+  const heroSection = getSection("hero");
   const contact = settings?.contact;
   const links = settings?.links;
 
@@ -36,12 +40,18 @@ const Referral = () => {
         robots="noindex, nofollow"
       />
 
-      <section className="bg-gradient-primary text-primary-foreground section-padding">
-        <div className="container-narrow mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Referral Registration</h1>
-          <p className="text-primary-foreground/85 max-w-xl mx-auto">Refer a friend or family member to {settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"}.</p>
-        </div>
-      </section>
+      <PageHero
+        title={heroSection?.heading ?? "Smilz Referral"}
+        eyebrow={heroSection?.section_title}
+        subtitle={
+          heroSection?.subheading ??
+          `Refer a friend or family member to ${settings?.general?.clinic_name ?? "Smilz Dental Treatment Facility"}.`
+        }
+        imageUrl={heroSection?.image_url}
+        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Smilz Referral" }]}
+        contact={contact}
+        whatsappMessage="Hi, I'd like to refer someone to Smilz Dental."
+      />
 
       <section className="section-padding">
         <div className="max-w-lg mx-auto px-4">
