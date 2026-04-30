@@ -222,8 +222,8 @@ const AdminMedia = () => {
                 onClick={() => openDetail(item)}
               >
                 <div className="aspect-square bg-secondary relative">
-                  {item.file_type === "image" ? (
-                    <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" />
+                  {item.file_type?.startsWith("image") ? (
+                    <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-muted-foreground" />
