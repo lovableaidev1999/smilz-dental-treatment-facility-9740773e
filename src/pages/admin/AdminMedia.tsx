@@ -259,8 +259,8 @@ const AdminMedia = () => {
                   >
                     <td className="px-4 py-2">
                       <div className="w-12 h-12 rounded bg-secondary overflow-hidden flex-shrink-0">
-                        {item.file_type === "image" ? (
-                          <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" />
+                        {item.file_type?.startsWith("image") ? (
+                          <img src={item.file_url} alt={item.alt_text || ""} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <ImageIcon className="h-4 w-4 text-muted-foreground" />
