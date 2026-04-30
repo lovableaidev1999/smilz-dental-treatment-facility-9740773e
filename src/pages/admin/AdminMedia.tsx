@@ -310,7 +310,7 @@ const AdminMedia = () => {
 
           <div className="p-4 space-y-5">
             {/* Image Preview */}
-            {selectedItem.file_type === "image" ? (
+            {selectedItem.file_type?.startsWith("image") ? (
               <div className="rounded-lg overflow-hidden border border-border bg-secondary">
                 <img
                   src={selectedItem.file_url}
