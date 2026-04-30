@@ -31,6 +31,13 @@ interface PageHeroProps {
   whatsappMessage?: string;
   /** Center the content (default: true) */
   centered?: boolean;
+  /** Optional override for the primary CTA (replaces the default WhatsApp "Book Appointment" button) */
+  primaryCta?: {
+    label: string;
+    href: string;
+    /** Open in a new tab */
+    external?: boolean;
+  };
 }
 
 /**
@@ -53,6 +60,7 @@ const PageHero = ({
   contact,
   whatsappMessage,
   centered = true,
+  primaryCta,
 }: PageHeroProps) => {
   const hasImage = !!imageUrl;
   const wa = contact?.whatsapp ?? "918961775554";
@@ -136,14 +144,26 @@ const PageHero = ({
           <div
             className={`flex flex-wrap gap-4 mt-8 ${centered ? "justify-center" : ""}`}
           >
-            <a
-              href={`https://wa.me/${wa}?text=${waText}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
-            >
-              <MessageCircle className="h-4 w-4" /> Book Appointment
-            </a>
+            {primaryCta ? (
+              <a
+                href={primaryCta.href}
+                {...(primaryCta.external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+                className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+              >
+                <MessageCircle className="h-4 w-4" /> {primaryCta.label}
+              </a>
+            ) : (
+              <a
+                href={`https://wa.me/${wa}?text=${waText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+              >
+                <MessageCircle className="h-4 w-4" /> Book Appointment
+              </a>
+            )}
             <a
               href={`tel:${phone}`}
               className="inline-flex items-center gap-2 border-2 border-primary-foreground/40 text-primary-foreground px-6 py-3 rounded-lg font-semibold text-sm hover:bg-primary-foreground/10 transition-colors"
