@@ -248,3 +248,13 @@ ON CONFLICT DO NOTHING;
 -- Go to Authentication > Users > Add User
 -- Email: your-admin@email.com / Password: your-secure-password
 -- ============================================================
+
+-- Seed referral page hero content
+INSERT INTO public.page_content
+  (page_name, section_id, section_title, heading, subheading, sort_order, is_active)
+VALUES
+  ('referral', 'hero', 'Hero',
+   'Smilz Referral',
+   'Refer a friend or family member to Smilz Dental Treatment Facility.',
+   1, true)
+ON CONFLICT (page_name, section_id) DO NOTHING;
