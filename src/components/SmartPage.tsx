@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import SEOHead from '@/components/SEOHead';
 import type { LayoutNode } from '@/types/visual-builder';
 import { serviceSlugCandidates } from '@/lib/slugs';
+import { usePageContent } from '@/hooks/usePageContent';
 
 const VisualRenderer = lazy(() => import('@/components/builder/VisualRenderer'));
 
@@ -51,6 +52,8 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
   const pageSlugCandidates = slug.startsWith('service-')
     ? serviceSlugCandidates(slug.replace(/^service-/, '')).map((candidate) => `service-${candidate}`)
     : [slug];
+  const { getSection } = usePageContent(slug);
+  const cmsHero = getSection('hero');
 
   const { data: layout, isLoading } = useQuery({
     queryKey: ['page_layouts', slug, 'published'],
@@ -78,6 +81,20 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
 
   // If a published layout exists, render it via VisualRenderer
   if (layout?.is_published && layout.layout_json?.length > 0) {
+    const renderedLayout = cmsHero?.image_url
+      ? layout.layout_json.map((node, index) =>
+          index === 0 && node.type === 'section'
+            ? {
+                ...node,
+                props: {
+                  ...node.props,
+                  backgroundImage: cmsHero.image_url,
+                  background: node.props?.background || 'hsl(var(--primary))',
+                },
+              }
+            : node,
+        )
+      : layout.layout_json;
     const seoMeta = (layout.layout_json as any)._seo || {};
     const seoTitle = seoMeta.title || fallbackSeoProps?.title || layout.page_title;
     const seoDescription =
@@ -91,7 +108,7 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
         <SEOHead title={seoTitle} description={seoDescription} ogImage={ogImage} />
         <RendererErrorBoundary fallback={<Fallback />}>
           <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><div className="animate-pulse text-muted-foreground text-sm">Loading page...</div></div>}>
-            <VisualRenderer layout={layout.layout_json} />
+            <VisualRenderer layout={renderedLayout} />
           </Suspense>
         </RendererErrorBoundary>
       </>
