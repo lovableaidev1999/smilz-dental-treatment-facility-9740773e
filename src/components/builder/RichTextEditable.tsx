@@ -282,6 +282,8 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
             <select
               value={linkTarget}
               onChange={e => setLinkTarget(e.target.value as '_self' | '_blank')}
+              onMouseDown={e => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
               className="text-xs px-2 py-1.5 border border-input rounded bg-background"
             >
               <option value="_blank">New tab</option>
