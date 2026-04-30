@@ -36,6 +36,7 @@ const FORCE_PAGE_HERO_SLUGS: Record<
     breadcrumbLabel: 'Gallery',
     whatsappMessage: "Hi, I'd like to know more about your dental treatment results.",
   },
+};
 
 interface PageLayoutRow {
   id: string;
