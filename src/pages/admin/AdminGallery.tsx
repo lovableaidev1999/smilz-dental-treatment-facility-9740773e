@@ -141,6 +141,9 @@ const AdminGallery = () => {
               <div className="aspect-video bg-secondary relative">
                 <img src={resolveImageUrl(item.src) ?? item.src} alt={item.alt} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.2'; }} />
                 <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <Button size="icon" variant="secondary" onClick={() => { setEditingItemId(item.id); setPickerOpen(true); }} title="Change image">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button size="icon" variant="secondary" onClick={() => toggleMutation.mutate({ id: item.id, is_active: !item.is_active })}>
                     {item.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -157,6 +160,20 @@ const AdminGallery = () => {
           ))}
         </div>
       )}
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onClose={() => { setPickerOpen(false); setEditingItemId(null); }}
+        onSelect={(url) => {
+          if (editingItemId) {
+            updateImageMutation.mutate({ id: editingItemId, src: url });
+          } else {
+            setNewItem((p) => ({ ...p, src: url }));
+          }
+          setPickerOpen(false);
+          setEditingItemId(null);
+        }}
+      />
     </div>
   );
 };
