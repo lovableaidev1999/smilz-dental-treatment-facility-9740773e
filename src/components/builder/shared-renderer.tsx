@@ -667,30 +667,38 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
 
     // ─── GOOGLE MAP ─────────────────────────────────────
     case 'google-map': {
+      const embedUrl = node.props.embedUrl?.trim();
       const address = node.props.address || '';
-      if (!address.trim()) {
+      const hasContent = embedUrl || address.trim();
+      if (!hasContent) {
         return (
           <div key={key} className={`border border-dashed border-primary/30 rounded-lg p-4 text-center ${rClasses}`}>
             <p className="text-sm text-primary font-medium">📍 Google Map</p>
-            <p className="text-xs text-muted-foreground">Please enter a location</p>
+            <p className="text-xs text-muted-foreground">Please enter a location or embed URL</p>
           </div>
         );
       }
       const q = encodeURIComponent(address);
+      const src = embedUrl
+        ? embedUrl
+        : `https://www.google.com/maps?q=${q}&z=${node.props.zoom || 15}&output=embed`;
+      const directionsHref = embedUrl
+        ? 'https://www.google.com/maps/search/?api=1&query=SMiLZ+Dental+Treatment+Facility'
+        : `https://www.google.com/maps/search/?api=1&query=${q}`;
       return (
         <div key={key} className={rClasses} style={baseStyles}>
           <div className="w-full rounded-xl overflow-hidden border border-border">
             <iframe
-              src={`https://www.google.com/maps?q=${q}&z=${node.props.zoom || 15}&output=embed`}
+              src={src}
               className={`w-full h-[300px] md:h-[450px] border-0 ${editorMode ? 'pointer-events-none' : ''}`}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen
-              title="Google Maps"
+              title={node.props.title || 'Google Maps'}
             />
           </div>
           {!editorMode && (
-            <a href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-2 inline-block">
+            <a href={directionsHref} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-2 inline-block">
               Open in Google Maps ↗
             </a>
           )}
