@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
-import { Plus, Trash2, Eye, EyeOff, Save, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Save, Upload, Loader2, Image as ImageIcon, Pencil } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { resolveImageUrl } from "@/lib/wpImageFallback";
+import MediaPickerDialog from "@/components/builder/MediaPickerDialog";
 
 const AdminGallery = () => {
   const qc = useQueryClient();
@@ -16,6 +17,8 @@ const AdminGallery = () => {
   const [newItem, setNewItem] = useState({ src: "", alt: "", caption: "", category: "", sort_order: 0 });
   const fileRef = useRef<HTMLInputElement>(null);
   const { compress, isCompressing } = useImageUpload();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -26,8 +29,16 @@ const AdminGallery = () => {
       const { error } = await supabase.storage.from("media").upload(path, compressed, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("media").getPublicUrl(path);
-      setNewItem((p) => ({ ...p, src: data.publicUrl, alt: compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ") }));
-      toast({ title: "Image uploaded & compressed!" });
+      // Also register in media_library so it shows up in the picker
+      await supabase.from("media_library").insert({
+        file_name: compressed.name,
+        file_url: data.publicUrl,
+        file_type: compressed.type,
+        file_size: compressed.size,
+        alt_text: compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+      });
+      setNewItem((p) => ({ ...p, src: data.publicUrl, alt: p.alt || compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ") }));
+      toast({ title: "Image uploaded & added to Media Library!" });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     }
@@ -72,6 +83,14 @@ const AdminGallery = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin_gallery"] }),
   });
 
+  const updateImageMutation = useMutation({
+    mutationFn: async ({ id, src }: { id: string; src: string }) => {
+      const { error } = await supabase.from("gallery").update({ src }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin_gallery"] }); toast({ title: "Image updated!" }); },
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -86,19 +105,27 @@ const AdminGallery = () => {
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Image</label>
                 <div className="flex gap-2">
-                  <Input value={newItem.src} onChange={(e) => setNewItem({ ...newItem, src: e.target.value })} placeholder="URL or upload →" className="flex-1" />
-                  <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={isCompressing}>
+                  <Input value={newItem.src} onChange={(e) => setNewItem({ ...newItem, src: e.target.value })} placeholder="URL, upload, or pick →" className="flex-1" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => { setEditingItemId(null); setPickerOpen(true); }} title="Pick from Media Library">
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={isCompressing} title="Upload new image">
                     {isCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   </Button>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                 </div>
+                {newItem.src && (
+                  <div className="mt-2 aspect-video bg-secondary rounded overflow-hidden border">
+                    <img src={newItem.src} alt="preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
               <div><label className="text-sm font-medium mb-1.5 block">Alt Text</label><Input value={newItem.alt} onChange={(e) => setNewItem({ ...newItem, alt: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1.5 block">Caption</label><Input value={newItem.caption} onChange={(e) => setNewItem({ ...newItem, caption: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1.5 block">Sort Order</label><Input type="number" value={newItem.sort_order} onChange={(e) => setNewItem({ ...newItem, sort_order: Number(e.target.value) })} /></div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => addMutation.mutate()} className="gap-2"><Save className="h-4 w-4" /> Save</Button>
+              <Button onClick={() => addMutation.mutate()} disabled={!newItem.src} className="gap-2"><Save className="h-4 w-4" /> Save</Button>
               <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
             </div>
           </CardContent>
@@ -114,6 +141,9 @@ const AdminGallery = () => {
               <div className="aspect-video bg-secondary relative">
                 <img src={resolveImageUrl(item.src) ?? item.src} alt={item.alt} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.2'; }} />
                 <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <Button size="icon" variant="secondary" onClick={() => { setEditingItemId(item.id); setPickerOpen(true); }} title="Change image">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button size="icon" variant="secondary" onClick={() => toggleMutation.mutate({ id: item.id, is_active: !item.is_active })}>
                     {item.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -130,6 +160,20 @@ const AdminGallery = () => {
           ))}
         </div>
       )}
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onClose={() => { setPickerOpen(false); setEditingItemId(null); }}
+        onSelect={(url) => {
+          if (editingItemId) {
+            updateImageMutation.mutate({ id: editingItemId, src: url });
+          } else {
+            setNewItem((p) => ({ ...p, src: url }));
+          }
+          setPickerOpen(false);
+          setEditingItemId(null);
+        }}
+      />
     </div>
   );
 };
