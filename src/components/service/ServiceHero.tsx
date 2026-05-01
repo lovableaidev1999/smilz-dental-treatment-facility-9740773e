@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Phone, MessageCircle } from "lucide-react";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 
 interface ServiceHeroProps {
   title: string;
@@ -14,23 +15,26 @@ interface ServiceHeroProps {
 }
 
 const ServiceHero = ({ title, shortDesc, imageUrl, contact }: ServiceHeroProps) => {
-  const hasImage = !!imageUrl;
+  const resolvedImage = imageUrl ? resolveImageUrl(imageUrl) : null;
+  const hasImage = !!resolvedImage;
   return (
-    <section className="relative overflow-hidden text-primary-foreground section-padding">
+    <section className="relative overflow-hidden text-primary-foreground section-padding min-h-[420px] md:min-h-[480px] flex items-center">
       <div className="absolute inset-0 -z-10">
         {hasImage ? (
           <>
             <img
-              src={imageUrl as string}
+              src={resolvedImage as string}
               alt={title}
               className="w-full h-full object-cover"
+              style={{ objectPosition: "center 30%" }}
               width={1600}
               height={600}
               loading="eager"
               fetchPriority="high"
               decoding="async"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/50" />
+            <div className="absolute inset-0 bg-primary/75" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/60 via-primary/40 to-primary/60" />
           </>
         ) : (
           <div className="absolute inset-0 bg-gradient-primary" />
