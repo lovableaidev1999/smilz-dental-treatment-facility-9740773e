@@ -389,7 +389,7 @@ function buildLayout({ intent, area, h1, description }) {
           id: id(),
           type: "google-map",
           props: {
-            embedUrl: `https://www.google.com/maps?q=${CLINIC.geo.lat},${CLINIC.geo.lng}&z=15&output=embed`,
+            embedUrl: `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3686.9240603585276!2d88.37672667475415!3d22.46948783674274!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a02710a96aaaaab%3A0x462d364d4464412d!2sSMiLZ%20Dental%20Treatment%20Facility!5e0!3m2!1sen!2sin!4v1777622494336!5m2!1sen!2sin`,
             height: 400,
             title: `${CLINIC.name} location near ${area.name}`,
           },
@@ -648,7 +648,7 @@ function buildServiceLayout({ service, area, h1, description }) {
           id: id(),
           type: "google-map",
           props: {
-            embedUrl: `https://www.google.com/maps?q=${CLINIC.geo.lat},${CLINIC.geo.lng}&z=15&output=embed`,
+            embedUrl: `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3686.9240603585276!2d88.37672667475415!3d22.46948783674274!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a02710a96aaaaab%3A0x462d364d4464412d!2sSMiLZ%20Dental%20Treatment%20Facility!5e0!3m2!1sen!2sin!4v1777622494336!5m2!1sen!2sin`,
             height: 400,
             title: `${CLINIC.name} location near ${area.name}`,
           },
@@ -910,7 +910,7 @@ function buildHubLayout(hub) {
           id: id(),
           type: "google-map",
           props: {
-            embedUrl: `https://www.google.com/maps?q=${CLINIC.geo.lat},${CLINIC.geo.lng}&z=15&output=embed`,
+            embedUrl: `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3686.9240603585276!2d88.37672667475415!3d22.46948783674274!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a02710a96aaaaab%3A0x462d364d4464412d!2sSMiLZ%20Dental%20Treatment%20Facility!5e0!3m2!1sen!2sin!4v1777622494336!5m2!1sen!2sin`,
             height: 400,
             title: `${CLINIC.name} location`,
           },
