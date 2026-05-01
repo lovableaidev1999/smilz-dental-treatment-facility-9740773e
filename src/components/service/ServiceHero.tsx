@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Phone, MessageCircle } from "lucide-react";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 
 interface ServiceHeroProps {
   title: string;
