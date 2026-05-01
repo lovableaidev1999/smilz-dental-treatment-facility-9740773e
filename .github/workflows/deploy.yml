@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 90  # hard cap: 60min prerender + 12min FTP + ~10min build/install headroom
+    timeout-minutes: 120  # hard cap: 90min prerender + 15min FTP + ~15min build/install headroom
     steps:
       - uses: actions/checkout@v4
 
@@ -51,7 +51,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Prerender public pages
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: node scripts/prerender.mjs
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
