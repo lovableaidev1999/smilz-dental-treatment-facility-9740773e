@@ -127,7 +127,10 @@ async function waitForContent(page, route) {
     if (document.querySelector('[data-prerender-ready="true"]')) return true;
     const h1 = document.querySelector('h1');
     return !!(h1 && h1.textContent.trim().length > 0);
-  }, { timeout: 25000 }).catch(() => {
+  }, { timeout: 8000 }).catch(() => {
+    // Soft signal only — head-readiness check below is the real gate.
+    // Kept short (8s vs old 25s) because hundreds of builder pages always
+    // fall through this check but still pass head readiness, wasting ~17s each.
     console.warn(`[prerender] ⚠ Body readiness timeout for ${route} — continuing to head checks`);
   });
 
@@ -344,13 +347,11 @@ async function prerender() {
   const allRoutes = await getAllRoutes();
   const routesToRender = allRoutes.filter((r) => !SKIP_PREFIXES.some((p) => r.path.startsWith(p)));
 
-  // FIX: Default concurrency dropped 2 → 1.
-  // With concurrency 2, both workers simultaneously hit the 25s body-readiness timeout,
-  // competing for the same Chromium CPU. Each route then burns up to 57s (25+30+2s)
-  // while the other worker does the same — making parallel slower than serial.
-  // Concurrency 1 gives each route undivided CPU/network and clears 177 routes in
-  // ~40-50 min — well within a 60 min CI budget. Override via PRERENDER_CONCURRENCY.
-  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 1);
+  // FIX: Concurrency 3 — now safe because the body-readiness timeout was dropped
+  // from 25s → 8s. With 200+ location pages, serial (concurrency 1) takes ~100min
+  // and exceeds the 60min CI budget. Concurrency 3 on a 4-core CI runner clears
+  // the queue in ~25-35 min. Override via PRERENDER_CONCURRENCY.
+  const CONCURRENCY = Number(process.env.PRERENDER_CONCURRENCY || 3);
   console.log(`[prerender] Prerendering ${routesToRender.length} routes (concurrency: ${CONCURRENCY})...`);
 
   const report = {

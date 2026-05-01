@@ -42,7 +42,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Prerender public pages
-        timeout-minutes: 300
+        timeout-minutes: 90
         run: node scripts/prerender.mjs
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
