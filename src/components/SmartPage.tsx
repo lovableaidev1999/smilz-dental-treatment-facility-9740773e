@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import SEOHead from '@/components/SEOHead';
 import PageHero from '@/components/PageHero';
+import ServiceHero from '@/components/service/ServiceHero';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { LayoutNode } from '@/types/visual-builder';
 import { serviceSlugCandidates } from '@/lib/slugs';
@@ -48,6 +49,15 @@ interface PageLayoutRow {
   updated_at: string;
 }
 
+interface ServiceHeroRow {
+  slug: string;
+  title: string;
+  short_desc: string | null;
+  featured_image: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+}
+
 interface SmartPageProps {
   slug: string;
   fallback: ComponentType;
@@ -87,8 +97,10 @@ class RendererErrorBoundary extends Component<
 const FORCE_FALLBACK_SLUGS = new Set<string>([]);
 
 const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProps) => {
+  const isServicePage = slug.startsWith('service-');
+  const serviceLookupSlug = isServicePage ? slug.replace(/^service-/, '') : '';
   const pageSlugCandidates = slug.startsWith('service-')
-    ? serviceSlugCandidates(slug.replace(/^service-/, '')).map((candidate) => `service-${candidate}`)
+    ? serviceSlugCandidates(serviceLookupSlug).map((candidate) => `service-${candidate}`)
     : [slug];
   const forceFallback = FORCE_FALLBACK_SLUGS.has(slug);
   const forcePageHero = FORCE_PAGE_HERO_SLUGS[slug];
@@ -112,12 +124,28 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
     enabled: !!slug && !forceFallback,
   });
 
+  const { data: service, isLoading: isServiceLoading } = useQuery({
+    queryKey: ['services', serviceLookupSlug, 'smart-page-hero'],
+    queryFn: async () => {
+      const candidates = serviceSlugCandidates(serviceLookupSlug);
+      const { data, error } = await supabase
+        .from('services')
+        .select('slug,title,short_desc,featured_image,seo_title,seo_description')
+        .in('slug', candidates)
+        .eq('is_active', true);
+      if (error) throw error;
+      return (data?.find((row) => row.slug === serviceLookupSlug) ?? data?.[0] ?? null) as ServiceHeroRow | null;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: isServicePage && !!serviceLookupSlug && !forceFallback,
+  });
+
   // Force the hardcoded component for special slugs (e.g. Referral form page)
   if (forceFallback) {
     return <Fallback />;
   }
 
-  if (isLoading) {
+  if (isLoading || (isServicePage && isServiceLoading)) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground text-sm">Loading...</div>
@@ -131,11 +159,12 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
     // builder hero) and render the universal <PageHero> above the body so
     // the page matches About / Services / Contact visually. The remaining
     // layout (body) stays fully editable in the Visual Builder.
-    const bodyLayout = forcePageHero
+    const useServiceHero = isServicePage && !!service;
+    const bodyLayout = forcePageHero || useServiceHero
       ? layout.layout_json.slice(1)
       : layout.layout_json;
 
-    const renderedLayout = !forcePageHero && cmsHero?.image_url
+    const renderedLayout = !forcePageHero && !useServiceHero && cmsHero?.image_url
       ? bodyLayout.map((node, index) =>
           index === 0 && node.type === 'section'
             ? {
@@ -151,12 +180,13 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
       : bodyLayout;
 
     const seoMeta = (layout.layout_json as any)._seo || {};
-    const seoTitle = seoMeta.title || fallbackSeoProps?.title || layout.page_title;
+    const seoTitle = service?.seo_title?.trim() || seoMeta.title || fallbackSeoProps?.title || layout.page_title;
     const seoDescription =
+      service?.seo_description?.trim() ||
       seoMeta.description?.trim() ||
       fallbackSeoProps?.description?.trim() ||
       `${layout.page_title} at Smilz Dental Clinic in Kolkata. Trusted dental care, modern treatments, and friendly experts. Book your appointment today.`;
-    const ogImage = seoMeta.ogImage || undefined;
+    const ogImage = service?.featured_image || seoMeta.ogImage || undefined;
 
     return (
       <>
@@ -170,6 +200,14 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
             contact={siteSettings?.contact}
             whatsappMessage={forcePageHero.whatsappMessage}
             primaryCta={forcePageHero.primaryCta}
+          />
+        )}
+        {useServiceHero && (
+          <ServiceHero
+            title={service.title}
+            shortDesc={service.short_desc}
+            imageUrl={service.featured_image}
+            contact={siteSettings?.contact}
           />
         )}
         <RendererErrorBoundary fallback={<Fallback />}>
