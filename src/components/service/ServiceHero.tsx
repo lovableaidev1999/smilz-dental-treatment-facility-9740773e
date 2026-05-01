@@ -15,9 +15,10 @@ interface ServiceHeroProps {
 }
 
 const ServiceHero = ({ title, shortDesc, imageUrl, contact }: ServiceHeroProps) => {
-  const hasImage = !!imageUrl;
+  const resolvedImage = imageUrl ? resolveImageUrl(imageUrl) : null;
+  const hasImage = !!resolvedImage;
   return (
-    <section className="relative overflow-hidden text-primary-foreground section-padding">
+    <section className="relative overflow-hidden text-primary-foreground section-padding min-h-[420px] md:min-h-[480px] flex items-center">
       <div className="absolute inset-0 -z-10">
         {hasImage ? (
           <>
