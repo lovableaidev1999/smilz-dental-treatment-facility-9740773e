@@ -723,11 +723,22 @@ function renderContentProps(node: any, updateProp: (k: string, v: any) => void, 
     case 'google-map':
       return (
         <>
-          <PropField label="Location / Clinic Name" value={props.address} onChange={v => updateProp('address', v)} placeholder="e.g. Smilz Dental Treatment Facility, Howrah" />
-          <PropField label="Zoom Level" value={String(props.zoom || 15)} onChange={v => updateProp('zoom', parseInt(v) || 15)} />
-          {props.address && (
+          <PropField
+            label="Embed URL (rich place card — preferred)"
+            value={props.embedUrl}
+            onChange={v => updateProp('embedUrl', v)}
+            placeholder="https://www.google.com/maps/embed?pb=..."
+            multiline
+          />
+          <p className="text-xs text-muted-foreground -mt-1">
+            Get from Google Maps → Share → Embed a map → copy the <code>src</code> URL. Shows the rich place card with name, rating, and directions button.
+          </p>
+          <PropField label="Fallback: Location / Clinic Name" value={props.address} onChange={v => updateProp('address', v)} placeholder="e.g. Smilz Dental Treatment Facility, Howrah" />
+          <PropField label="Zoom Level (used only with fallback)" value={String(props.zoom || 15)} onChange={v => updateProp('zoom', parseInt(v) || 15)} />
+          <PropField label="Iframe Title (a11y)" value={props.title} onChange={v => updateProp('title', v)} placeholder="SMiLZ Dental Treatment Facility location" />
+          {(props.embedUrl || props.address) && (
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(props.address)}`}
+              href={props.embedUrl ? 'https://www.google.com/maps/search/?api=1&query=SMiLZ+Dental+Treatment+Facility' : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(props.address)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
