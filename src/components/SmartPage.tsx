@@ -164,7 +164,7 @@ const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProp
       ? layout.layout_json.slice(1)
       : layout.layout_json;
 
-    const renderedLayout = !forcePageHero && cmsHero?.image_url
+    const renderedLayout = !forcePageHero && !useServiceHero && cmsHero?.image_url
       ? bodyLayout.map((node, index) =>
           index === 0 && node.type === 'section'
             ? {
