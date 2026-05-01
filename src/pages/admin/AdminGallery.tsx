@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
-import { Plus, Trash2, Eye, EyeOff, Save, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Save, Upload, Loader2, Image as ImageIcon, Pencil } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { resolveImageUrl } from "@/lib/wpImageFallback";
+import MediaPickerDialog from "@/components/builder/MediaPickerDialog";
 
 const AdminGallery = () => {
   const qc = useQueryClient();
