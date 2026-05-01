@@ -17,6 +17,8 @@ const AdminGallery = () => {
   const [newItem, setNewItem] = useState({ src: "", alt: "", caption: "", category: "", sort_order: 0 });
   const fileRef = useRef<HTMLInputElement>(null);
   const { compress, isCompressing } = useImageUpload();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -27,8 +29,16 @@ const AdminGallery = () => {
       const { error } = await supabase.storage.from("media").upload(path, compressed, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("media").getPublicUrl(path);
-      setNewItem((p) => ({ ...p, src: data.publicUrl, alt: compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ") }));
-      toast({ title: "Image uploaded & compressed!" });
+      // Also register in media_library so it shows up in the picker
+      await supabase.from("media_library").insert({
+        file_name: compressed.name,
+        file_url: data.publicUrl,
+        file_type: compressed.type,
+        file_size: compressed.size,
+        alt_text: compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+      });
+      setNewItem((p) => ({ ...p, src: data.publicUrl, alt: p.alt || compressed.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ") }));
+      toast({ title: "Image uploaded & added to Media Library!" });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     }
