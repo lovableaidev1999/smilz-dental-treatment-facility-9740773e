@@ -83,6 +83,14 @@ const AdminGallery = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin_gallery"] }),
   });
 
+  const updateImageMutation = useMutation({
+    mutationFn: async ({ id, src }: { id: string; src: string }) => {
+      const { error } = await supabase.from("gallery").update({ src }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin_gallery"] }); toast({ title: "Image updated!" }); },
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
