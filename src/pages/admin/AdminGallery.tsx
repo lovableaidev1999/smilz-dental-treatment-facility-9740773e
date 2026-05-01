@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
 import { Plus, Trash2, Eye, EyeOff, Save, Upload, Loader2 } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { resolveImageUrl } from "@/lib/wpImageFallback";
 
 const AdminGallery = () => {
   const qc = useQueryClient();
