@@ -112,7 +112,7 @@ const AdminGallery = () => {
           {(items ?? []).map((item) => (
             <Card key={item.id} className={`group overflow-hidden ${!item.is_active ? "opacity-50" : ""}`}>
               <div className="aspect-video bg-secondary relative">
-                <img src={item.src} alt={item.alt} className="w-full h-full object-cover" />
+                <img src={resolveImageUrl(item.src) ?? item.src} alt={item.alt} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.2'; }} />
                 <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <Button size="icon" variant="secondary" onClick={() => toggleMutation.mutate({ id: item.id, is_active: !item.is_active })}>
                     {item.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
