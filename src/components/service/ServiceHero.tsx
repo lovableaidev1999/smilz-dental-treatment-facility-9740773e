@@ -23,16 +23,18 @@ const ServiceHero = ({ title, shortDesc, imageUrl, contact }: ServiceHeroProps) 
         {hasImage ? (
           <>
             <img
-              src={imageUrl as string}
+              src={resolvedImage as string}
               alt={title}
               className="w-full h-full object-cover"
+              style={{ objectPosition: "center 30%" }}
               width={1600}
               height={600}
               loading="eager"
               fetchPriority="high"
               decoding="async"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/50" />
+            <div className="absolute inset-0 bg-primary/75" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/60 via-primary/40 to-primary/60" />
           </>
         ) : (
           <div className="absolute inset-0 bg-gradient-primary" />
