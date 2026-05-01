@@ -105,19 +105,27 @@ const AdminGallery = () => {
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Image</label>
                 <div className="flex gap-2">
-                  <Input value={newItem.src} onChange={(e) => setNewItem({ ...newItem, src: e.target.value })} placeholder="URL or upload →" className="flex-1" />
-                  <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={isCompressing}>
+                  <Input value={newItem.src} onChange={(e) => setNewItem({ ...newItem, src: e.target.value })} placeholder="URL, upload, or pick →" className="flex-1" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => { setEditingItemId(null); setPickerOpen(true); }} title="Pick from Media Library">
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={isCompressing} title="Upload new image">
                     {isCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   </Button>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                 </div>
+                {newItem.src && (
+                  <div className="mt-2 aspect-video bg-secondary rounded overflow-hidden border">
+                    <img src={newItem.src} alt="preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
               <div><label className="text-sm font-medium mb-1.5 block">Alt Text</label><Input value={newItem.alt} onChange={(e) => setNewItem({ ...newItem, alt: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1.5 block">Caption</label><Input value={newItem.caption} onChange={(e) => setNewItem({ ...newItem, caption: e.target.value })} /></div>
               <div><label className="text-sm font-medium mb-1.5 block">Sort Order</label><Input type="number" value={newItem.sort_order} onChange={(e) => setNewItem({ ...newItem, sort_order: Number(e.target.value) })} /></div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => addMutation.mutate()} className="gap-2"><Save className="h-4 w-4" /> Save</Button>
+              <Button onClick={() => addMutation.mutate()} disabled={!newItem.src} className="gap-2"><Save className="h-4 w-4" /> Save</Button>
               <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
             </div>
           </CardContent>
