@@ -275,6 +275,15 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     if (e.key === 'Escape') {
       setEditing(false);
       if (ref.current) ref.current.innerHTML = value;
+      return;
+    }
+    // "/" on an empty line opens the inline block inserter (Notion-style)
+    if (e.key === '/' && isLineEmpty(caretLineElRef.current)) {
+      e.preventDefault();
+      // Ensure plus position is fresh, then open
+      updateCaretAffordance();
+      setTimeout(openInlineInserter, 0);
+      return;
     }
     // Shift+Enter for line break is default in contentEditable
   };
