@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
-import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter, Link as LinkIcon, Unlink } from 'lucide-react';
+import { createBlockFromType } from '@/hooks/useBuilderState';
+import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter, Link as LinkIcon, Unlink, Plus } from 'lucide-react';
+import InlineBlockInserter from './InlineBlockInserter';
 
 interface Props {
   blockId: string;
@@ -10,6 +12,7 @@ interface Props {
   className?: string;
   style?: React.CSSProperties;
 }
+
 
 const FONT_SIZES: { label: string; value: string }[] = [
   { label: 'S', value: '2' },
