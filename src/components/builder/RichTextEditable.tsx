@@ -33,6 +33,142 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
   const isSelected = state.selectedBlockId === blockId;
 
+  // ─── Inline block insertion (Notion-style "+" on empty lines) ───
+  const [inlineAdd, setInlineAdd] = useState<{ btnRect: DOMRect | null } | null>(null);
+  const [plusBtnPos, setPlusBtnPos] = useState<{ top: number; left: number } | null>(null);
+  const caretRangeRef = useRef<Range | null>(null);
+  const caretLineElRef = useRef<HTMLElement | null>(null);
+
+  // Find the closest block-level ancestor inside the editable region
+  const getLineElement = (node: Node | null): HTMLElement | null => {
+    let n: Node | null = node;
+    while (n && n !== ref.current) {
+      if (n.nodeType === 1) {
+        const tag = (n as HTMLElement).tagName;
+        if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI'].includes(tag)) {
+          return n as HTMLElement;
+        }
+      }
+      n = n.parentNode;
+    }
+    return ref.current as HTMLElement | null;
+  };
+
+  const isLineEmpty = (el: HTMLElement | null): boolean => {
+    if (!el) return false;
+    const text = (el.textContent || '').replace(/\u00A0/g, '').trim();
+    if (text.length > 0) return false;
+    // Allow lines with only <br> or whitespace
+    return true;
+  };
+
+  const updateCaretAffordance = useCallback(() => {
+    if (!editing || !ref.current) {
+      setPlusBtnPos(null);
+      return;
+    }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) { setPlusBtnPos(null); return; }
+    const range = sel.getRangeAt(0);
+    if (!ref.current.contains(range.startContainer)) { setPlusBtnPos(null); return; }
+    caretRangeRef.current = range.cloneRange();
+
+    const lineEl = getLineElement(range.startContainer);
+    caretLineElRef.current = lineEl;
+
+    // Always offer the "+" — appearance differs only by emptiness
+    if (!lineEl) { setPlusBtnPos(null); return; }
+    const lineRect = lineEl.getBoundingClientRect();
+    const containerRect = (ref.current.parentElement as HTMLElement).getBoundingClientRect();
+    setPlusBtnPos({
+      top: lineRect.top - containerRect.top + lineRect.height / 2 - 12,
+      left: lineRect.left - containerRect.left - 28,
+    });
+  }, [editing]);
+
+  useEffect(() => {
+    if (!editing) {
+      setPlusBtnPos(null);
+      setInlineAdd(null);
+      return;
+    }
+    const onSel = () => updateCaretAffordance();
+    document.addEventListener('selectionchange', onSel);
+    // Initial position after focus
+    const t = setTimeout(updateCaretAffordance, 50);
+    return () => {
+      document.removeEventListener('selectionchange', onSel);
+      clearTimeout(t);
+    };
+  }, [editing, updateCaretAffordance]);
+
+  const openInlineInserter = () => {
+    // Anchor popover to the "+" button position in viewport coordinates
+    const container = ref.current?.parentElement as HTMLElement | null;
+    if (!container || !plusBtnPos) {
+      setInlineAdd({ btnRect: null });
+      return;
+    }
+    const containerRect = container.getBoundingClientRect();
+    const fakeRect = new DOMRect(
+      containerRect.left + plusBtnPos.left,
+      containerRect.top + plusBtnPos.top,
+      24,
+      24
+    );
+    setInlineAdd({ btnRect: fakeRect });
+  };
+
+  const handleInlinePick = (blockType: string) => {
+    const newBlock = createBlockFromType(blockType);
+    if (!newBlock || !ref.current) {
+      setInlineAdd(null);
+      return;
+    }
+
+    // Compute beforeHtml / afterHtml by splitting at the caret range.
+    const root = ref.current;
+    const fullHtml = root.innerHTML;
+    let beforeHtml = '';
+    let afterHtml = '';
+
+    const range = caretRangeRef.current;
+    if (range && root.contains(range.startContainer)) {
+      // Build "before" range: from start of root to caret
+      const beforeRange = document.createRange();
+      beforeRange.setStart(root, 0);
+      beforeRange.setEnd(range.startContainer, range.startOffset);
+      const beforeFrag = beforeRange.cloneContents();
+      const beforeWrap = document.createElement('div');
+      beforeWrap.appendChild(beforeFrag);
+      beforeHtml = beforeWrap.innerHTML;
+
+      // Build "after" range: from caret to end of root
+      const afterRange = document.createRange();
+      afterRange.setStart(range.endContainer, range.endOffset);
+      afterRange.setEnd(root, root.childNodes.length);
+      const afterFrag = afterRange.cloneContents();
+      const afterWrap = document.createElement('div');
+      afterWrap.appendChild(afterFrag);
+      afterHtml = afterWrap.innerHTML;
+    } else {
+      // No caret info — append at end
+      beforeHtml = fullHtml;
+      afterHtml = '';
+    }
+
+    // Exit editing mode so the source block re-renders cleanly with new html
+    setEditing(false);
+    setInlineAdd(null);
+    setPlusBtnPos(null);
+
+    dispatch({
+      type: 'SPLIT_AND_INSERT',
+      payload: { sourceBlockId: blockId, beforeHtml, afterHtml, newBlock },
+    });
+  };
+
+
   const saveSelection = () => {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
