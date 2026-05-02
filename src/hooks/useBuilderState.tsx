@@ -198,11 +198,51 @@ function builderReducer(state: BuilderState, action: BuilderAction): BuilderStat
       };
     }
 
-    case 'TOGGLE_LAYERS':
-      return { ...state, showLayers: !state.showLayers };
+    case 'SPLIT_AND_INSERT': {
+      const { sourceBlockId, beforeHtml, afterHtml, newBlock } = action.payload;
+      const source = findNodeById(state.layout, sourceBlockId);
+      const parentInfo = findParent(state.layout, sourceBlockId);
+      if (!source || !parentInfo) return state;
 
-    case 'MARK_SAVED':
-      return { ...state, isDirty: false };
+      // Resolve parent id (null if top-level)
+      const findParentId = (nodes: LayoutNode[], id: string, pid: string | null): string | null | undefined => {
+        for (const n of nodes) {
+          if (n.id === id) return pid;
+          if (n.children) {
+            const found = findParentId(n.children, id, n.id);
+            if (found !== undefined) return found;
+          }
+        }
+        return undefined;
+      };
+      const parentId = findParentId(state.layout, sourceBlockId, null) ?? null;
+      const sourceIndex = parentInfo.index;
+
+      let layout = state.layout;
+      const trimmedBefore = (beforeHtml || '').replace(/<br\s*\/?>(\s|&nbsp;)*$/i, '').trim();
+      const trimmedAfter = (afterHtml || '').replace(/^(\s|&nbsp;|<br\s*\/?>)+/i, '').trim();
+
+      // If "before" is empty AND "after" equals original (caret at very start) — insert above source.
+      if (!trimmedBefore && trimmedAfter) {
+        layout = insertNode(layout, newBlock, parentId, sourceIndex);
+      } else {
+        // Update source with the "before" half
+        layout = updateNodeProps(layout, sourceBlockId, { html: trimmedBefore });
+        // Insert new block right after source
+        layout = insertNode(layout, newBlock, parentId, sourceIndex + 1);
+        // Insert "after" clone if it has content
+        if (trimmedAfter) {
+          const afterClone: LayoutNode = {
+            id: generateId(),
+            type: source.type,
+            props: { ...source.props, html: trimmedAfter, text: '' },
+            responsive: source.responsive ? deepClone(source.responsive) : undefined,
+          };
+          layout = insertNode(layout, afterClone, parentId, sourceIndex + 2);
+        }
+      }
+      return { ...state, layout, isDirty: true, selectedBlockId: newBlock.id };
+    }
 
     default:
       return state;
