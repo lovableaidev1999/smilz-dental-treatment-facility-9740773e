@@ -55,6 +55,58 @@ jobs:
             exit 1
           fi
 
+      - name: Cleanup Old Backups (older than 30 days)
+        run: |
+          echo "Listing existing backups in 'backups' bucket..."
+          LIST_RESPONSE=$(curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/storage/v1/object/list/backups" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":1000,"sortBy":{"column":"created_at","order":"asc"}}')
+
+          # Calculate cutoff timestamp (30 days ago, in seconds since epoch)
+          CUTOFF=$(date -u -d '30 days ago' +%s)
+          echo "Cutoff (UTC, epoch): $CUTOFF ($(date -u -d "@$CUTOFF"))"
+
+          # Build list of files to delete: name starts with db_backup_ AND created_at older than cutoff AND not the file we just uploaded
+          FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | python3 -c "
+          import json, sys, datetime
+          data = json.load(sys.stdin)
+          cutoff = $CUTOFF
+          current = '$FILE_NAME'
+          to_delete = []
+          for obj in data:
+              name = obj.get('name', '')
+              created = obj.get('created_at')
+              if not name.startswith('db_backup_') or name == current or not created:
+                  continue
+              ts = datetime.datetime.fromisoformat(created.replace('Z', '+00:00')).timestamp()
+              if ts < cutoff:
+                  to_delete.append(name)
+          print(json.dumps(to_delete))
+          ")
+          echo "Files to delete: $FILES_TO_DELETE"
+
+          COUNT=$(echo "$FILES_TO_DELETE" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+          echo "DELETED_COUNT=$COUNT" >> $GITHUB_ENV
+
+          if [ "$COUNT" -gt 0 ]; then
+            DELETE_PAYLOAD=$(echo "$FILES_TO_DELETE" | python3 -c "import json,sys; print(json.dumps({'prefixes': json.load(sys.stdin)}))")
+            DEL_CODE=$(curl -s -o /tmp/delete_response.txt -w "%{http_code}" \
+              -X DELETE "${{ secrets.SUPABASE_URL }}/storage/v1/object/backups" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "$DELETE_PAYLOAD")
+            echo "Delete HTTP status: $DEL_CODE"
+            cat /tmp/delete_response.txt
+            # Don't fail the workflow if cleanup fails - the backup itself succeeded
+            if [ "$DEL_CODE" -lt 200 ] || [ "$DEL_CODE" -ge 300 ]; then
+              echo "⚠️ Cleanup failed but backup succeeded - continuing."
+            fi
+          else
+            echo "No old backups to delete."
+          fi
+
       - name: Send Success Email
         if: success()
         run: |
@@ -65,7 +117,7 @@ jobs:
               \"from\": \"${{ secrets.BACKUP_FROM_EMAIL }}\",
               \"to\": [\"dr.d.dutta@gmail.com\"],
               \"subject\": \"✅ Smilz WEBSITE DB Backup Successful — ${IST_TS}\",
-              \"html\": \"<h3>✅ Backup Complete</h3><p>Your Smilz WEBSITE database has been backed up.</p><ul><li><strong>File:</strong> ${FILE_NAME}</li><li><strong>Size:</strong> ${FILE_SIZE}</li><li><strong>Bucket:</strong> backups (Supabase Storage)</li><li><strong>Time (IST):</strong> ${IST_TS}</li></ul><p><a href=\\\"${RUN_URL}\\\">View workflow run</a></p>\"
+              \"html\": \"<h3>✅ Backup Complete</h3><p>Your Smilz WEBSITE database has been backed up.</p><ul><li><strong>File:</strong> ${FILE_NAME}</li><li><strong>Size:</strong> ${FILE_SIZE}</li><li><strong>Bucket:</strong> backups (Supabase Storage)</li><li><strong>Time (IST):</strong> ${IST_TS}</li><li><strong>Old backups cleaned up (>30 days):</strong> ${DELETED_COUNT}</li></ul><p><a href=\\\"${RUN_URL}\\\">View workflow run</a></p>\"
             }"
 
       - name: Send Failure Email
