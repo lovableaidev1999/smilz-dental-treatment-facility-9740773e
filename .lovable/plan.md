@@ -1,88 +1,53 @@
-# Weekly Supabase Database Backup System
+## Problem
 
-Based on your sample YAML, here is the finalized plan adapted for **Sunday 12:00 AM IST**, **Supabase Storage** as the backup destination, and **Resend** for email notifications to `dr.d.dutta@gmail.com`.
+In the visual page builder, you can only append a new section at the **end** of the page using the "+ Add Section" button at the bottom. There is no way to insert a section *between* two existing sections (e.g. above the Spacer or above the FAQ in screenshot 1). When you click the "+" in the picker, the new section always lands at the end (screenshot 2).
 
-## Architecture
+The underlying state already supports inserting at any index — `SectionLayoutPicker` accepts `parentId` and `index` props, and the `ADD_BLOCK` reducer honors `index`. The UI just never wires it up.
+
+## Solution
+
+Add an **inline "+ Add Section here" affordance between every pair of top-level sections** (and above the first one) in the canvas. Clicking it opens the existing `SectionLayoutPicker` pre-targeted at that exact insertion index, so the new section gets inserted in place rather than appended.
+
+### UX details
+
+- A thin horizontal gutter appears between sections.
+- It stays subtle by default (e.g. 8 px tall, transparent), and on hover reveals a centered pill button: a "+" icon with the label "Add Section" and a hairline divider line on each side.
+- One gutter rendered above section 0, and one after each section. The existing big "+ Add Section" button at the bottom of the page is kept as-is for discoverability.
+- Same picker dialog appears — no new UI to learn — but selecting a layout inserts at the chosen position.
 
 ```text
-GitHub Actions (cron: Sun 00:00 IST = Sat 18:30 UTC)
-        │
-        ├── pg_dump (Postgres 17 client) → db_backup_YYYY_MM_DD.sql
-        ├── Upload to Supabase Storage bucket "backups"
-        └── Resend API → dr.d.dutta@gmail.com
-                         (✅ success or ❌ failure)
+┌─────────────────────────┐
+│   Section: Heading      │
+└─────────────────────────┘
+  ─────  + Add Section  ─────   ← new inline insert (hover to reveal)
+┌─────────────────────────┐
+│   Section: Spacer       │
+└─────────────────────────┘
+  ─────  + Add Section  ─────   ← new inline insert
+┌─────────────────────────┐
+│   Section: FAQ          │
+└─────────────────────────┘
+        [ + Add Section ]       ← existing bottom button (append)
 ```
 
-## File to Create
+## Technical changes
 
-### `.github/workflows/db-backup.yml`
-Based on your sample, with these changes:
-- **Cron**: `30 18 * * 6` (Saturday 18:30 UTC = **Sunday 00:00 IST**) instead of `0 2 * * *`
-- **Manual trigger** (`workflow_dispatch`) kept for on-demand backups
-- **Filename**: `db_backup_YYYY_MM_DD.sql` (date only, since it's weekly)
-- **Email recipient**: `dr.d.dutta@gmail.com` (hardcoded)
-- **From address**: read from `BACKUP_FROM_EMAIL` secret (so you can switch to a verified domain later without editing the workflow)
-- **Failure email**: includes a direct link to the failed GitHub Actions run for quick troubleshooting
-- **Success email**: includes filename, bucket name, and timestamp
-- Uses your exact pattern: PostgreSQL 17 client install, `pg_dump --clean --if-exists --no-owner`, multipart upload via curl to `/storage/v1/object/backups/<file>`
+**File:** `src/components/builder/BuilderCanvas.tsx`
 
-## What You Need to Do in Supabase Dashboard
+1. Change `showLayoutPicker` state from a boolean to `{ open: boolean; index?: number }` so we can remember *where* the next section should be inserted.
+2. Add a small `InlineAddSection` component — a hover-reveal gutter with a centered "+ Add Section" pill — rendered:
+   - Once before `layout[0]`
+   - Once after each `layout[i]`
+3. Each inline gutter calls `setShowLayoutPicker({ open: true, index: i })` with the correct insertion index.
+4. The existing bottom "+ Add Section" button calls it with no index (appends to end, current behavior).
+5. Pass `index={showLayoutPicker.index}` and `parentId={null}` through to `<SectionLayoutPicker />`.
 
-### 1. Create the Storage Bucket
-- Go to **Storage** → **New bucket**
-- Name: **`backups`** (must match exactly)
-- Public: **OFF** (keep it private — only service role can access)
-- Click **Create**
+No changes needed to:
+- `SectionLayoutPicker.tsx` — already accepts `parentId` / `index`.
+- `useBuilderState.tsx` — `ADD_BLOCK` reducer already inserts at the given index via `insertNode`.
+- Drag-and-drop reordering — unchanged; existing grip handle on each section still lets users reorder afterward.
 
-### 2. Get the Database Connection String
-- **Project Settings** → **Database** → **Connection string** → **URI** tab
-- Use the **Session pooler** or **Direct connection** string
-- Replace `[YOUR-PASSWORD]` with your actual database password
-- Full string looks like: `postgresql://postgres.eukymrxxmvkchxfpjjuz:PASSWORD@aws-0-region.pooler.supabase.com:5432/postgres`
+## Out of scope
 
-### 3. Get the Service Role Key
-- **Project Settings** → **API** → copy the **`service_role`** key (NOT anon)
-
-## What You Need to Do in Resend
-
-1. Sign up at **resend.com** (free tier: 100 emails/day — way more than enough)
-2. **Verify a sending domain** (e.g. `smilz.net`) for production. For initial testing you can use `onboarding@resend.dev` as the from address.
-3. Go to **API Keys** → **Create API Key** → copy it
-
-## GitHub Actions Secrets to Add
-
-Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
-
-| Secret Name | Value |
-|---|---|
-| `SUPABASE_DB_URL` | Full Postgres URI from Supabase Dashboard step 2 |
-| `SUPABASE_URL` | `https://eukymrxxmvkchxfpjjuz.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key from step 3 |
-| `EMAIL_API_KEY` | Resend API key |
-| `BACKUP_FROM_EMAIL` | `onboarding@resend.dev` for testing, or `backups@smilz.net` once domain is verified |
-
-The recipient `dr.d.dutta@gmail.com` will be hardcoded in the workflow, so no secret is needed for it.
-
-## Email Content
-
-**✅ Success** — Subject: `✅ Smilz DB Backup Successful — <date>`
-> Backup `db_backup_2026_05_03.sql` uploaded to Supabase Storage bucket `backups` at `<timestamp IST>`.
-
-**❌ Failure** — Subject: `❌ Smilz DB Backup FAILED — <date>`
-> Backup failed. View the run logs: `https://github.com/<owner>/<repo>/actions/runs/<run_id>`
-
-## Testing After Setup
-
-Once you've added all 5 secrets and created the `backups` bucket:
-1. Go to **Actions** → **Database Backup** → **Run workflow** (manual trigger)
-2. Within ~1 minute you should:
-   - See a new `db_backup_*.sql` file in the **backups** bucket
-   - Receive a success email at `dr.d.dutta@gmail.com`
-3. The next automatic run will be the upcoming **Sunday 12:00 AM IST**
-
-## Notes
-
-- **Cron timing**: GitHub Actions runs in UTC. Sunday 00:00 IST = Saturday 18:30 UTC, hence `30 18 * * 6`. Scheduled runs may be delayed a few minutes during GitHub peak load — this is normal and acceptable for backups.
-- **PostgreSQL 17** client is required because Supabase now runs Postgres 17; older `pg_dump` versions will fail with a version mismatch error.
-- **Restoration**: The dump uses `--clean --if-exists --no-owner` so it can be restored to any Supabase project via `psql "<DB_URL>" < db_backup_*.sql`.
-- **Retention**: Not included to keep this simple. If you want auto-deletion of dumps older than e.g. 90 days, say the word and I'll add a cleanup step.
+- Inserting between *child* blocks inside a section (that already works via the per-container drop placeholder and drag-and-drop).
+- Changing the section picker dialog itself.
