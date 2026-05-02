@@ -206,6 +206,25 @@ const AddSectionButton = ({ onOpen }: { onOpen: () => void }) => (
   </div>
 );
 
+// ─── Inline insert-section gutter (between sections) ────
+const InlineAddSection = ({ onOpen }: { onOpen: () => void }) => (
+  <div className="group/insert relative h-2 hover:h-9 transition-all duration-150 flex items-center justify-center">
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onOpen(); }}
+      className="opacity-0 group-hover/insert:opacity-100 transition-opacity flex items-center gap-2 w-full px-4"
+      aria-label="Add section here"
+    >
+      <span className="flex-1 h-px bg-primary/40" />
+      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium shadow-sm hover:bg-primary/90">
+        <Plus className="h-3 w-3" />
+        Add Section
+      </span>
+      <span className="flex-1 h-px bg-primary/40" />
+    </button>
+  </div>
+);
+
 // ─── Main Canvas ────────────────────────────────────────
 const DEVICE_WIDTHS: Record<DeviceMode, string> = {
   desktop: '100%',
