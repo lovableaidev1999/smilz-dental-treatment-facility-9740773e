@@ -204,6 +204,52 @@ function builderReducer(state: BuilderState, action: BuilderAction): BuilderStat
     case 'MARK_SAVED':
       return { ...state, isDirty: false };
 
+    case 'SPLIT_AND_INSERT': {
+      const { sourceBlockId, beforeHtml, afterHtml, newBlock } = action.payload;
+      const source = findNodeById(state.layout, sourceBlockId);
+      const parentInfo = findParent(state.layout, sourceBlockId);
+      if (!source || !parentInfo) return state;
+
+      // Resolve parent id (null if top-level)
+      const findParentId = (nodes: LayoutNode[], id: string, pid: string | null): string | null | undefined => {
+        for (const n of nodes) {
+          if (n.id === id) return pid;
+          if (n.children) {
+            const found = findParentId(n.children, id, n.id);
+            if (found !== undefined) return found;
+          }
+        }
+        return undefined;
+      };
+      const parentId = findParentId(state.layout, sourceBlockId, null) ?? null;
+      const sourceIndex = parentInfo.index;
+
+      let layout = state.layout;
+      const trimmedBefore = (beforeHtml || '').replace(/<br\s*\/?>(\s|&nbsp;)*$/i, '').trim();
+      const trimmedAfter = (afterHtml || '').replace(/^(\s|&nbsp;|<br\s*\/?>)+/i, '').trim();
+
+      // If "before" is empty AND "after" equals original (caret at very start) — insert above source.
+      if (!trimmedBefore && trimmedAfter) {
+        layout = insertNode(layout, newBlock, parentId, sourceIndex);
+      } else {
+        // Update source with the "before" half
+        layout = updateNodeProps(layout, sourceBlockId, { html: trimmedBefore });
+        // Insert new block right after source
+        layout = insertNode(layout, newBlock, parentId, sourceIndex + 1);
+        // Insert "after" clone if it has content
+        if (trimmedAfter) {
+          const afterClone: LayoutNode = {
+            id: generateId(),
+            type: source.type,
+            props: { ...source.props, html: trimmedAfter, text: '' },
+            responsive: source.responsive ? deepClone(source.responsive) : undefined,
+          };
+          layout = insertNode(layout, afterClone, parentId, sourceIndex + 2);
+        }
+      }
+      return { ...state, layout, isDirty: true, selectedBlockId: newBlock.id };
+    }
+
     default:
       return state;
   }
@@ -227,6 +273,23 @@ export const useBuilder = () => {
 
 // ─── Block factory (imported from registry lazily) ──────
 import { getBlockDefinition } from '@/components/builder/block-registry';
+
+/** Build a fresh LayoutNode for a given block type, with reassigned IDs. Exported for callers that need a node without dispatching. */
+export const createBlockFromType = (type: string): LayoutNode | null => {
+  const def = getBlockDefinition(type as any);
+  if (!def) return null;
+  const block: LayoutNode = {
+    id: generateId(),
+    type: def.type,
+    props: { ...def.defaultProps },
+    children: def.defaultChildren ? deepClone(def.defaultChildren) : (def.canHaveChildren ? [] : undefined),
+  };
+  if (block.children) {
+    const reassign = (n: LayoutNode): LayoutNode => ({ ...n, id: generateId(), children: n.children?.map(reassign) });
+    block.children = block.children.map(reassign);
+  }
+  return block;
+};
 
 export const BuilderProvider: React.FC<{ children: React.ReactNode; initialLayout?: LayoutNode[] }> = ({
   children,

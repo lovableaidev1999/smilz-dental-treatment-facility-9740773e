@@ -100,7 +100,16 @@ export type BuilderAction =
   | { type: 'TOGGLE_LAYERS' }
   | { type: 'MARK_SAVED' }
   | { type: 'COPY_BLOCK'; payload: string }
-  | { type: 'PASTE_BLOCK'; payload: { parentId: string | null; index?: number } };
+  | { type: 'PASTE_BLOCK'; payload: { parentId: string | null; index?: number } }
+  | {
+      type: 'SPLIT_AND_INSERT';
+      payload: {
+        sourceBlockId: string;
+        beforeHtml: string;
+        afterHtml: string;
+        newBlock: LayoutNode;
+      };
+    };
 
 // ─── Block Definition (registry) ────────────────────────
 export interface BlockDefinition {
