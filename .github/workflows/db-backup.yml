@@ -45,6 +45,7 @@ jobs:
           HTTP_CODE=$(curl -s -o /tmp/upload_response.txt -w "%{http_code}" \
             -X POST "${{ secrets.SUPABASE_URL }}/storage/v1/object/backups/$FILE_NAME" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "x-upsert: true" \
             -F "file=@$FILE_NAME" \
             -F "cacheControl=3600")
           echo "Upload HTTP status: $HTTP_CODE"
@@ -64,7 +65,7 @@ jobs:
               \"from\": \"${{ secrets.BACKUP_FROM_EMAIL }}\",
               \"to\": [\"dr.d.dutta@gmail.com\"],
               \"subject\": \"✅ Smilz WEBSITE DB Backup Successful — ${IST_TS}\",
-              \"html\": \"<h3>✅ Backup Complete</h3><p>The weekly Smilz WEBSITE database backup completed successfully.</p><ul><li><strong>File:</strong> ${FILE_NAME}</li><li><strong>Size:</strong> ${FILE_SIZE}</li><li><strong>Bucket:</strong> backups (Supabase Storage)</li><li><strong>Time (IST):</strong> ${IST_TS}</li></ul><p><a href=\\\"${RUN_URL}\\\">View workflow run</a></p>\"
+              \"html\": \"<h3>✅ Backup Complete</h3><p>Your Smilz WEBSITE database has been backed up.</p><ul><li><strong>File:</strong> ${FILE_NAME}</li><li><strong>Size:</strong> ${FILE_SIZE}</li><li><strong>Bucket:</strong> backups (Supabase Storage)</li><li><strong>Time (IST):</strong> ${IST_TS}</li></ul><p><a href=\\\"${RUN_URL}\\\">View workflow run</a></p>\"
             }"
 
       - name: Send Failure Email
