@@ -235,7 +235,10 @@ const DEVICE_WIDTHS: Record<DeviceMode, string> = {
 const BuilderCanvas = () => {
   const { state, dispatch, addBlock } = useBuilder();
   const { layout, deviceMode } = state;
-  const [showLayoutPicker, setShowLayoutPicker] = useState(false);
+  const [showLayoutPicker, setShowLayoutPicker] = useState<{ open: boolean; index?: number }>({ open: false });
+
+  const openPicker = (index?: number) => setShowLayoutPicker({ open: true, index });
+  const closePicker = () => setShowLayoutPicker({ open: false });
 
   const { setNodeRef: setCanvasRef } = useDroppable({
     id: 'canvas-root',
@@ -254,11 +257,15 @@ const BuilderCanvas = () => {
           <div ref={setCanvasRef} className="min-h-[70vh]">
             {layout.length > 0 ? (
               <>
-                {layout.map(node => (
-                  <SortableBlock key={node.id} node={node} parentId={null} />
+                <InlineAddSection onOpen={() => openPicker(0)} />
+                {layout.map((node, i) => (
+                  <div key={node.id}>
+                    <SortableBlock node={node} parentId={null} />
+                    <InlineAddSection onOpen={() => openPicker(i + 1)} />
+                  </div>
                 ))}
                 <div className="p-4">
-                  <AddSectionButton onOpen={() => setShowLayoutPicker(true)} />
+                  <AddSectionButton onOpen={() => openPicker()} />
                 </div>
               </>
             ) : (
@@ -267,7 +274,7 @@ const BuilderCanvas = () => {
                 <p className="text-sm font-medium">Start building your page</p>
                 <p className="text-xs mt-1">Choose a section layout to get started</p>
                 <button
-                  onClick={() => setShowLayoutPicker(true)}
+                  onClick={() => openPicker()}
                   className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   + Add Section
@@ -279,8 +286,10 @@ const BuilderCanvas = () => {
       </div>
 
       <SectionLayoutPicker
-        open={showLayoutPicker}
-        onClose={() => setShowLayoutPicker(false)}
+        open={showLayoutPicker.open}
+        onClose={closePicker}
+        parentId={null}
+        index={showLayoutPicker.index}
       />
     </div>
   );
