@@ -255,10 +255,13 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   }, [editing]);
 
   const handleBlur = useCallback((e: React.FocusEvent) => {
-    // Don't blur if focus moves into toolbar or link panel
+    // Don't blur if focus moves into toolbar, link panel, or inline inserter
     const next = e.relatedTarget as Node | null;
     if (toolbarRef.current?.contains(next)) return;
     if (next && (next as HTMLElement).closest?.('[data-rt-link-panel]')) return;
+    if (next && (next as HTMLElement).closest?.('[data-rt-inline-inserter]')) return;
+    // If the inline inserter popover is open, keep editing alive so dispatch happens cleanly
+    if (inlineAdd) return;
     if (ref.current) {
       const newHtml = ref.current.innerHTML;
       if (newHtml !== value) {
@@ -269,7 +272,8 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       }
     }
     setEditing(false);
-  }, [blockId, propKey, value, dispatch]);
+  }, [blockId, propKey, value, dispatch, inlineAdd]);
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
