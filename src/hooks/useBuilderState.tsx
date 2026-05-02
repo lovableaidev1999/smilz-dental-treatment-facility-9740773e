@@ -274,6 +274,23 @@ export const useBuilder = () => {
 // ─── Block factory (imported from registry lazily) ──────
 import { getBlockDefinition } from '@/components/builder/block-registry';
 
+/** Build a fresh LayoutNode for a given block type, with reassigned IDs. Exported for callers that need a node without dispatching. */
+export const createBlockFromType = (type: string): LayoutNode | null => {
+  const def = getBlockDefinition(type as any);
+  if (!def) return null;
+  const block: LayoutNode = {
+    id: generateId(),
+    type: def.type,
+    props: { ...def.defaultProps },
+    children: def.defaultChildren ? deepClone(def.defaultChildren) : (def.canHaveChildren ? [] : undefined),
+  };
+  if (block.children) {
+    const reassign = (n: LayoutNode): LayoutNode => ({ ...n, id: generateId(), children: n.children?.map(reassign) });
+    block.children = block.children.map(reassign);
+  }
+  return block;
+};
+
 export const BuilderProvider: React.FC<{ children: React.ReactNode; initialLayout?: LayoutNode[] }> = ({
   children,
   initialLayout,
