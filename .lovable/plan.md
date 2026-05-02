@@ -1,148 +1,88 @@
-# Hub-and-Spoke Local SEO — Revised Plan
+# Weekly Supabase Database Backup System
 
-Refactor the (intent × area) flat matrix into a **6-hub** architecture with **tier-filtered intent generation**, **automated hub↔spoke internal linking**, and a **footer-only navigation model** (no header menu changes — all spokes are reached via the 6 hub pages, which are themselves reached via a single "Areas We Serve" dropdown in the footer). All writes target the existing external Supabase project (`eukymrxxmvkchxfpjjuz`) — not Lovable Cloud.
+Based on your sample YAML, here is the finalized plan adapted for **Sunday 12:00 AM IST**, **Supabase Storage** as the backup destination, and **Resend** for email notifications to `dr.d.dutta@gmail.com`.
 
----
-
-## 1. Config refactor — `scripts/location-pages.config.mjs`
-
-### 1a. New `HUBS` export — the 6 Master Hubs
+## Architecture
 
 ```text
-garia-core         → Garia & Core South        (slug: dentist-in-garia-core)
-metro-corridor     → Metro Corridor            (slug: dentist-in-metro-corridor)
-em-bypass-east     → EM Bypass & East          (slug: dentist-in-em-bypass-east)
-central-south      → Central South             (slug: dentist-in-central-south)
-southern-urban     → Southern Urban            (slug: dentist-in-southern-urban)
-behala-west        → Behala / West             (slug: dentist-in-behala-west)
+GitHub Actions (cron: Sun 00:00 IST = Sat 18:30 UTC)
+        │
+        ├── pg_dump (Postgres 17 client) → db_backup_YYYY_MM_DD.sql
+        ├── Upload to Supabase Storage bucket "backups"
+        └── Resend API → dr.d.dutta@gmail.com
+                         (✅ success or ❌ failure)
 ```
 
-Shape: `{ key, name, slug, tagline, parentDescription, transitNote, neighborhoods: [areaKey...] }`.
+## File to Create
 
-### 1b. Extend every `AREAS` entry
+### `.github/workflows/db-backup.yml`
+Based on your sample, with these changes:
+- **Cron**: `30 18 * * 6` (Saturday 18:30 UTC = **Sunday 00:00 IST**) instead of `0 2 * * *`
+- **Manual trigger** (`workflow_dispatch`) kept for on-demand backups
+- **Filename**: `db_backup_YYYY_MM_DD.sql` (date only, since it's weekly)
+- **Email recipient**: `dr.d.dutta@gmail.com` (hardcoded)
+- **From address**: read from `BACKUP_FROM_EMAIL` secret (so you can switch to a verified domain later without editing the workflow)
+- **Failure email**: includes a direct link to the failed GitHub Actions run for quick troubleshooting
+- **Success email**: includes filename, bucket name, and timestamp
+- Uses your exact pattern: PostgreSQL 17 client install, `pg_dump --clean --if-exists --no-owner`, multipart upload via curl to `/storage/v1/object/backups/<file>`
 
-Add: `parentHub`, `tier: "core" | "specialized"`, and a per-area `transitNote` (e.g. *"15 min via Metro to Kavi Subhash Station, then 5 min auto"*).
+## What You Need to Do in Supabase Dashboard
 
-| Hub | Tier | Neighborhoods |
-|---|---|---|
-| garia-core | core | garia, garia-park, garia-buddha-mandir, near-andrews-college, narendrapur, sonarpur, baruipur*, kamalgazi*, mahamayatala*, patuli |
-| metro-corridor | core | naktala, bansdroni*, kudghat*, tollygunge, haridevpur* |
-| em-bypass-east | specialized | em-bypass*, ajaynagar*, santoshpur*, ruby-park*, anandapur*, kasba* |
-| central-south | specialized | jadavpur, prince-anwar-shah-road*, golf-green*, bijoygarh*, salimpur* |
-| southern-urban | specialized | dhakuria*, golpark*, gariahat*, ballygunge*, garfa* |
-| behala-west | specialized | behala* |
+### 1. Create the Storage Bucket
+- Go to **Storage** → **New bucket**
+- Name: **`backups`** (must match exactly)
+- Public: **OFF** (keep it private — only service role can access)
+- Click **Create**
 
-(*= new neighborhoods to add; each gets `landmarks`, `nearby`, `distanceFromClinicKm`, `uniqueIntro`, `uniqueAngle`, `transitNote`.)
+### 2. Get the Database Connection String
+- **Project Settings** → **Database** → **Connection string** → **URI** tab
+- Use the **Session pooler** or **Direct connection** string
+- Replace `[YOUR-PASSWORD]` with your actual database password
+- Full string looks like: `postgresql://postgres.eukymrxxmvkchxfpjjuz:PASSWORD@aws-0-region.pooler.supabase.com:5432/postgres`
 
-### 1c. Extend every `INTENTS` entry
+### 3. Get the Service Role Key
+- **Project Settings** → **API** → copy the **`service_role`** key (NOT anon)
 
-Add `tierRequirement`. The 4 general-dentistry intents become `tierRequirement: "core"` (only generated for core-tier areas). The 5 high-ticket `SERVICES` (RCT, Implants, Braces, Aligners, Smile Designing) generate for **all** areas.
+## What You Need to Do in Resend
 
-Result: ~17 core areas × 4 intents + 26 areas × 5 services + 6 hub pages ≈ **~204 pages**.
+1. Sign up at **resend.com** (free tier: 100 emails/day — way more than enough)
+2. **Verify a sending domain** (e.g. `smilz.net`) for production. For initial testing you can use `onboarding@resend.dev` as the from address.
+3. Go to **API Keys** → **Create API Key** → copy it
 
----
+## GitHub Actions Secrets to Add
 
-## 2. Generator refactor — `scripts/generate-location-pages.mjs`
+Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
 
-### 2a. Tier filter
+| Secret Name | Value |
+|---|---|
+| `SUPABASE_DB_URL` | Full Postgres URI from Supabase Dashboard step 2 |
+| `SUPABASE_URL` | `https://eukymrxxmvkchxfpjjuz.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key from step 3 |
+| `EMAIL_API_KEY` | Resend API key |
+| `BACKUP_FROM_EMAIL` | `onboarding@resend.dev` for testing, or `backups@smilz.net` once domain is verified |
 
-```text
-if (area.tier === 'specialized' && intent.tierRequirement !== 'specialized') continue;
-```
+The recipient `dr.d.dutta@gmail.com` will be hardcoded in the workflow, so no secret is needed for it.
 
-### 2b. New hub-page builder
+## Email Content
 
-Iterate `HUBS` and emit one page per hub (`template_type: "location-hub"`):
-- H1: *"Dentist in {Hub Name} — South Kolkata"*
-- **"Neighborhoods we serve in {Hub}"** grid → cards linking to each spoke (for specialized-tier areas with no `dentist-in-{area}` page, link to that area's strongest service spoke, e.g. `/dental-implants-in-jadavpur/`).
-- **"Treatments we offer across {Hub}"** block → links to `/services/...`.
-- JSON-LD: `Dentist`+`LocalBusiness` with `areaServed` = union of all neighborhoods/landmarks in the hub. Breadcrumb: `Home > Areas We Serve > {Hub}`.
+**✅ Success** — Subject: `✅ Smilz DB Backup Successful — <date>`
+> Backup `db_backup_2026_05_03.sql` uploaded to Supabase Storage bucket `backups` at `<timestamp IST>`.
 
-### 2c. Spoke pages — automated hub backlink
+**❌ Failure** — Subject: `❌ Smilz DB Backup FAILED — <date>`
+> Backup failed. View the run logs: `https://github.com/<owner>/<repo>/actions/runs/<run_id>`
 
-Inside `buildLayout()` and `buildServiceLayout()`, add a section above the FAQ:
+## Testing After Setup
 
-> *"Part of our **{Hub Name}** service area"* — CTA card linking back to `/dentist-in-{hub-slug}/`.
+Once you've added all 5 secrets and created the `backups` bucket:
+1. Go to **Actions** → **Database Backup** → **Run workflow** (manual trigger)
+2. Within ~1 minute you should:
+   - See a new `db_backup_*.sql` file in the **backups** bucket
+   - Receive a success email at `dr.d.dutta@gmail.com`
+3. The next automatic run will be the upcoming **Sunday 12:00 AM IST**
 
-Breadcrumb JSON-LD becomes 3-level: `Home > {Hub Name} > {Spoke Page}`.
+## Notes
 
-### 2d. Sibling-link cluster (replaces current `buildSiblingLinks`)
-
-Currently each spoke links to **all** other areas. New behavior:
-- Link only to **same-hub siblings** (max 8) — keeps PageRank concentrated within the hub cluster.
-- Plus a single "Explore other areas of South Kolkata →" link to `/dentist-in-{hub}/` of 1–2 adjacent hubs.
-
-### 2e. Transit data + mandatory FAQs
-
-Promote the bus/metro/auto bullets higher in the body. Append two FAQs to every page:
-- *"How do I reach Smilz Dental from {area}?"* — uses `transitNote`.
-- *"Is there parking at the clinic?"* — fixed answer.
-
-### 2f. Centralized `Dentist`/`LocalBusiness` schema helper
-
-Extract the inlined JSON-LD into one function so address (`21, Garia Park, Kolkata 700084`), `openingHoursSpecification`, geo coords, and `aggregateRating` are byte-identical across all 200+ pages.
-
-### 2g. Routing — no changes
-
-`scripts/_routes.mjs` already pulls every published `page_layouts` row and emits `/{slug}/`. Hubs and spokes auto-flow into prerender + sitemap.
-
----
-
-## 3. Site navigation — footer-only model
-
-### 3a. Header — **no changes**
-
-The header keeps its existing 6 nav links (Home, Services, About Us, Gallery, Insights, Contact). **No "Areas We Serve" dropdown is added to the header.**
-
-### 3b. Footer — single "Areas We Serve" dropdown with the 6 hubs
-
-The footer already has an `Areas We Serve` `<details>` block (`src/components/Footer.tsx`, lines 188-208) driven by `footer.areas_we_serve` from `site_settings`. Action:
-
-1. **Replace** the current per-neighborhood list with **just the 6 master hubs**:
-    ```text
-    - Garia & Core South        → /dentist-in-garia-core/
-    - Metro Corridor            → /dentist-in-metro-corridor/
-    - EM Bypass & East          → /dentist-in-em-bypass-east/
-    - Central South             → /dentist-in-central-south/
-    - Southern Urban            → /dentist-in-southern-urban/
-    - Behala / West             → /dentist-in-behala-west/
-    ```
-2. Update the `site_settings.footer.areas_we_serve` JSON in Supabase via a one-shot insert/update so the change is CMS-driven (no hardcoding) and admins can edit it later from Admin → Header & Footer.
-3. Keep the existing `<details>` collapsible UI as-is — it already renders correctly on desktop and mobile.
-
-### 3c. All other navigation flows through the hubs
-
-- Spoke pages are reachable **only** from their parent hub's "Neighborhoods we serve" grid (and from sibling spokes within the same hub).
-- Every hub page links to: its 4–10 spokes, all 5 high-ticket service pages, and the core site pages (Home, Services, About, Contact).
-- Every spoke page links **back up** to its hub via the new "Part of our {Hub} service area" block.
-
-This creates a clean two-level crawl tree: **Footer → Hub → Spoke**, with no menu clutter in the header and full SEO authority concentrated on the 6 hubs.
-
----
-
-## 4. Visible breadcrumbs on rendered pages
-
-`BuiltPage.tsx` already injects `seo.jsonLd` into `<SEOHead>`, so the new 3-level `BreadcrumbList` schema flows through automatically. For the **visible** trail on the page, I'll add a small inline-HTML breadcrumb block at the top of every hub/spoke layout (e.g. `Home › Garia & Core South › Best Dentist in Garia`) — no builder schema change needed.
-
----
-
-## 5. Execution order (once approved)
-
-1. Edit `scripts/location-pages.config.mjs` — add `HUBS`, extend AREAS (new neighborhoods + `parentHub`/`tier`/`transitNote`), tag INTENTS with `tierRequirement`.
-2. Edit `scripts/generate-location-pages.mjs` — tier filter, hub-page builder, hub-backlink section on spokes, sibling-link rewiring (same-hub only), centralized schema helper, transit FAQs, visible breadcrumb block.
-3. Update `site_settings.footer.areas_we_serve` in Supabase (single SQL/REST call) to the 6 hub entries.
-4. Run `node scripts/generate-location-pages.mjs --dry-run` and report the page count + sample slugs for review.
-5. After your "go", run the full upsert (writes to `eukymrxxmvkchxfpjjuz` using `SUPABASE_SERVICE_ROLE_KEY`).
-6. Trigger the existing `rebuild-content.yml` GitHub Action so prerender + sitemap + Hostinger deploy pick up the ~200 pages.
-
----
-
-## Technical details
-
-- **Backend:** External Supabase project `eukymrxxmvkchxfpjjuz` (hardcoded in `generate-location-pages.mjs` and `_routes.mjs`). Lovable Cloud is **not** touched.
-- **Idempotency:** existing `findExisting(slug)` + PATCH/POST flow reused — re-runs update rows in place by `page_slug`.
-- **Page count delta:** ~12 → ~204 rows in `page_layouts`. Sitemap auto-grows via `_routes.mjs`.
-- **No header changes** — `src/components/Header.tsx` is untouched.
-- **Footer change is data-only** — no JSX edits needed; the existing `Areas We Serve` `<details>` block in `Footer.tsx` (lines 188-208) already renders whatever is in `footer.areas_we_serve`. We only update the Supabase row.
-- **No DB schema migrations** — `page_layouts` columns already cover everything. New `template_type` value: `"location-hub"`.
-- **Reserved-slug guard:** `BuiltPage.tsx` `RESERVED_SLUGS` doesn't collide with any new hub or spoke slugs.
+- **Cron timing**: GitHub Actions runs in UTC. Sunday 00:00 IST = Saturday 18:30 UTC, hence `30 18 * * 6`. Scheduled runs may be delayed a few minutes during GitHub peak load — this is normal and acceptable for backups.
+- **PostgreSQL 17** client is required because Supabase now runs Postgres 17; older `pg_dump` versions will fail with a version mismatch error.
+- **Restoration**: The dump uses `--clean --if-exists --no-owner` so it can be restored to any Supabase project via `psql "<DB_URL>" < db_backup_*.sql`.
+- **Retention**: Not included to keep this simple. If you want auto-deletion of dumps older than e.g. 90 days, say the word and I'll add a cleanup step.
