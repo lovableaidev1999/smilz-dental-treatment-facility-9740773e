@@ -198,6 +198,12 @@ function builderReducer(state: BuilderState, action: BuilderAction): BuilderStat
       };
     }
 
+    case 'TOGGLE_LAYERS':
+      return { ...state, showLayers: !state.showLayers };
+
+    case 'MARK_SAVED':
+      return { ...state, isDirty: false };
+
     case 'SPLIT_AND_INSERT': {
       const { sourceBlockId, beforeHtml, afterHtml, newBlock } = action.payload;
       const source = findNodeById(state.layout, sourceBlockId);
