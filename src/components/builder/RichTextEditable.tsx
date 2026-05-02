@@ -461,6 +461,32 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
         </div>
       )}
 
+      {/* Floating "+" button on the current caret line */}
+      {editing && plusBtnPos && (
+        <button
+          type="button"
+          data-rt-inline-plus
+          onMouseDown={e => { e.preventDefault(); }}
+          onClick={openInlineInserter}
+          title="Insert block here ( / )"
+          className="absolute z-40 inline-flex items-center justify-center h-6 w-6 rounded-md bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/60 hover:bg-primary/5 shadow-sm transition-colors"
+          style={{ top: plusBtnPos.top, left: plusBtnPos.left }}
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* Inline block inserter popover */}
+      {editing && inlineAdd && (
+        <div data-rt-inline-inserter>
+          <InlineBlockInserter
+            anchorRect={inlineAdd.btnRect}
+            onPick={handleInlinePick}
+            onClose={() => setInlineAdd(null)}
+          />
+        </div>
+      )}
+
       <Tag
         ref={ref as any}
         className={`rt-editable ${className || ''} ${editing ? 'outline-none ring-2 ring-primary/30 rounded px-1' : ''} ${
