@@ -208,19 +208,17 @@ const AddSectionButton = ({ onOpen }: { onOpen: () => void }) => (
 
 // ─── Inline insert-section gutter (between sections) ────
 const InlineAddSection = ({ onOpen }: { onOpen: () => void }) => (
-  <div className="group/insert relative h-2 hover:h-9 transition-all duration-150 flex items-center justify-center">
+  <div className="group/insert relative h-8 flex items-center justify-center px-4 my-1">
+    {/* Baseline divider (always visible, subtle) */}
+    <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 h-px bg-border group-hover/insert:bg-primary/50 transition-colors pointer-events-none" />
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onOpen(); }}
-      className="opacity-0 group-hover/insert:opacity-100 transition-opacity flex items-center gap-2 w-full px-4"
+      className="relative z-10 flex items-center gap-1 px-3 py-1 rounded-full bg-card border border-border text-foreground/70 text-[11px] font-medium shadow-sm opacity-60 group-hover/insert:opacity-100 group-hover/insert:bg-primary group-hover/insert:text-primary-foreground group-hover/insert:border-primary transition-all"
       aria-label="Add section here"
     >
-      <span className="flex-1 h-px bg-primary/40" />
-      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium shadow-sm hover:bg-primary/90">
-        <Plus className="h-3 w-3" />
-        Add Section
-      </span>
-      <span className="flex-1 h-px bg-primary/40" />
+      <Plus className="h-3 w-3" />
+      Add Section
     </button>
   </div>
 );
