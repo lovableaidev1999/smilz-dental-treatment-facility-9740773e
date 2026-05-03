@@ -487,25 +487,30 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
 
           {/* Font family */}
           <select
-            defaultValue=""
-            className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground"
+            value={currentFont}
+            className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground max-w-[110px]"
             onMouseDown={e => e.stopPropagation()}
-            onChange={e => { const v = e.target.value; e.target.value = ''; applyFontFamily(v); }}
+            onChange={e => { const v = e.target.value; applyFontFamily(v); setCurrentFont(v); }}
             title="Font family"
           >
-            <option value="" disabled>Font</option>
+            {!FONT_FAMILIES.some(f => f.value === currentFont) && (
+              <option value={currentFont}>{currentFont || 'Font'}</option>
+            )}
             {FONT_FAMILIES.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
           </select>
 
           {/* Font size */}
           <select
-            defaultValue=""
+            value={currentSize}
             className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground"
             onMouseDown={e => e.stopPropagation()}
-            onChange={e => { const v = e.target.value; e.target.value = ''; applyFontSize(v); }}
+            onChange={e => { const v = e.target.value; applyFontSize(v); setCurrentSize(v); }}
             title="Font size (px)"
           >
-            <option value="" disabled>Size</option>
+            {!FONT_PX_SIZES.some(s => String(s) === currentSize) && currentSize && (
+              <option value={currentSize}>{currentSize}px</option>
+            )}
+            {!currentSize && <option value="">Size</option>}
             {FONT_PX_SIZES.map(s => <option key={s} value={s}>{s}px</option>)}
           </select>
 
