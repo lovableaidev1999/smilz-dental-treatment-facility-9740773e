@@ -666,6 +666,7 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
           setEditing(true);
         }}
         onBlur={handleBlur}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         dangerouslySetInnerHTML={!editing ? { __html: value } : undefined}
       />
