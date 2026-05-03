@@ -1,8 +1,76 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
 import { createBlockFromType } from '@/hooks/useBuilderState';
-import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter, Link as LinkIcon, Unlink, Plus } from 'lucide-react';
+import {
+  Bold, Italic, Underline, Strikethrough, Subscript, Superscript,
+  Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter,
+  Link as LinkIcon, Unlink, Plus, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  List, ListOrdered, Indent, Outdent, Quote
+} from 'lucide-react';
 import InlineBlockInserter from './InlineBlockInserter';
+
+// ─── Paste sanitizer: strip Word/Docs/web styles ───
+const PASTE_ALLOWED_TAGS = new Set([
+  'P','BR','STRONG','B','EM','I','U','S','STRIKE','A','UL','OL','LI',
+  'H1','H2','H3','H4','H5','H6','BLOCKQUOTE','SPAN','DIV',
+]);
+const sanitizePastedHtml = (html: string): string => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  // Remove dangerous/foreign tags entirely
+  tmp.querySelectorAll('script,style,meta,link,title,xml,o\\:p').forEach(n => n.remove());
+  const walk = (root: Element) => {
+    const all = Array.from(root.querySelectorAll('*'));
+    all.forEach(el => {
+      const tag = el.tagName;
+      if (!PASTE_ALLOWED_TAGS.has(tag)) {
+        // Replace unknown tag with its children
+        const parent = el.parentNode;
+        if (!parent) return;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+        return;
+      }
+      // Strip attributes except href/target/rel on anchors
+      Array.from(el.attributes).forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (tag === 'A' && (name === 'href' || name === 'target' || name === 'rel')) return;
+        el.removeAttribute(attr.name);
+      });
+      if (tag === 'A') {
+        const href = (el as HTMLAnchorElement).getAttribute('href') || '';
+        if (/^https?:\/\//i.test(href)) {
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+      // Unwrap empty spans/divs
+      if ((tag === 'SPAN' || tag === 'DIV') && el.attributes.length === 0) {
+        const parent = el.parentNode;
+        if (!parent) return;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+      }
+    });
+  };
+  walk(tmp);
+  // Remove empty paragraphs left by Word
+  tmp.querySelectorAll('p,div').forEach(p => {
+    if (!p.textContent?.trim() && !p.querySelector('img,br')) p.remove();
+  });
+  return tmp.innerHTML;
+};
+
+const FONT_PX_SIZES = [12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
+const FONT_FAMILIES = [
+  { label: 'Default', value: '' },
+  { label: 'Poppins', value: 'Poppins, sans-serif' },
+  { label: 'Arial', value: 'Arial, sans-serif' },
+  { label: 'Georgia', value: 'Georgia, serif' },
+  { label: 'Times New Roman', value: '"Times New Roman", serif' },
+  { label: 'Courier New', value: '"Courier New", monospace' },
+  { label: 'Verdana', value: 'Verdana, sans-serif' },
+];
 
 interface Props {
   blockId: string;
@@ -14,12 +82,6 @@ interface Props {
 }
 
 
-const FONT_SIZES: { label: string; value: string }[] = [
-  { label: 'S', value: '2' },
-  { label: 'M', value: '3' },
-  { label: 'L', value: '5' },
-  { label: 'XL', value: '6' },
-];
 
 const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, style }: Props) => {
   const Tag = tag as any;
@@ -302,109 +364,213 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     ref.current?.focus();
   };
 
+  // Apply CSS font-size to selection by wrapping in span (execCommand fontSize is 1-7 only)
+  const applyFontSize = (px: string) => {
+    if (!px) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return;
+    const span = document.createElement('span');
+    span.style.fontSize = `${px}px`;
+    try {
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      sel.addRange(newRange);
+    } catch {}
+    ref.current?.focus();
+  };
+
+  const applyFontFamily = (family: string) => {
+    if (!family) {
+      // Clear font-family on selection by wrapping with empty
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+      const span = document.createElement('span');
+      span.style.fontFamily = '';
+      try {
+        const frag = range.extractContents();
+        // strip font-family from descendants
+        frag.querySelectorAll('[style*="font-family"]').forEach((el: any) => {
+          el.style.fontFamily = '';
+        });
+        span.appendChild(frag);
+        range.insertNode(span);
+      } catch {}
+      ref.current?.focus();
+      return;
+    }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return;
+    const span = document.createElement('span');
+    span.style.fontFamily = family;
+    try {
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+    } catch {}
+    ref.current?.focus();
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
+    let cleaned: string;
+    if (html) {
+      cleaned = sanitizePastedHtml(html);
+    } else {
+      // Convert plain text to HTML (preserve line breaks)
+      const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      cleaned = escape(text).split(/\r?\n/).map(line => line || '<br>').join('<br>');
+    }
+    document.execCommand('insertHTML', false, cleaned);
+  };
+
+
   return (
     <div className="relative">
       {/* Floating toolbar */}
       {editing && (
         <div
           ref={toolbarRef}
-          className="absolute -top-9 left-0 z-50 flex items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5"
+          className="absolute -top-9 left-0 z-50 flex flex-wrap items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5 max-w-[680px]"
           onMouseDown={e => e.preventDefault()}
         >
-          {/* Heading buttons */}
-          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('p')} title="Paragraph">
+          {/* Block format */}
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => formatBlock('p')} title="Paragraph">
             <Pilcrow className="h-3.5 w-3.5" />
           </button>
-          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('h1')} title="Heading 1">
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => formatBlock('h1')} title="Heading 1">
             <Heading1 className="h-3.5 w-3.5" />
           </button>
-          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('h2')} title="Heading 2">
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => formatBlock('h2')} title="Heading 2">
             <Heading2 className="h-3.5 w-3.5" />
           </button>
-          <button type="button" className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold" onClick={() => formatBlock('h3')} title="Heading 3">
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => formatBlock('h3')} title="Heading 3">
             <Heading3 className="h-3.5 w-3.5" />
           </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => formatBlock('blockquote')} title="Blockquote">
+            <Quote className="h-3.5 w-3.5" />
+          </button>
+
           <div className="w-px h-4 bg-border mx-0.5" />
-          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('bold')} title="Bold">
+
+          {/* Font family */}
+          <select
+            defaultValue=""
+            className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground"
+            onMouseDown={e => e.stopPropagation()}
+            onChange={e => { const v = e.target.value; e.target.value = ''; applyFontFamily(v); }}
+            title="Font family"
+          >
+            <option value="" disabled>Font</option>
+            {FONT_FAMILIES.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
+          </select>
+
+          {/* Font size */}
+          <select
+            defaultValue=""
+            className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground"
+            onMouseDown={e => e.stopPropagation()}
+            onChange={e => { const v = e.target.value; e.target.value = ''; applyFontSize(v); }}
+            title="Font size (px)"
+          >
+            <option value="" disabled>Size</option>
+            {FONT_PX_SIZES.map(s => <option key={s} value={s}>{s}px</option>)}
+          </select>
+
+          <div className="w-px h-4 bg-border mx-0.5" />
+
+          {/* Inline marks */}
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('bold')} title="Bold (Ctrl+B)">
             <Bold className="h-3.5 w-3.5" />
           </button>
-          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('italic')} title="Italic">
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('italic')} title="Italic (Ctrl+I)">
             <Italic className="h-3.5 w-3.5" />
           </button>
-          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('underline')} title="Underline">
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('underline')} title="Underline (Ctrl+U)">
             <Underline className="h-3.5 w-3.5" />
           </button>
-          <div className="w-px h-4 bg-border mx-0.5" />
-          <div className="flex items-center gap-0.5">
-            <Type className="h-3 w-3 text-muted-foreground" />
-            {FONT_SIZES.map(fs => (
-              <button
-                key={fs.value}
-                type="button"
-                className="px-1.5 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-medium"
-                onClick={() => execCommand('fontSize', fs.value)}
-                title={`Font size ${fs.label}`}
-              >
-                {fs.label}
-              </button>
-            ))}
-          </div>
-          <div className="w-px h-4 bg-border mx-0.5" />
-          {/* Text color picker */}
-          <label
-            className="relative p-1 rounded hover:bg-accent cursor-pointer inline-flex items-center justify-center"
-            title="Text color"
-            onMouseDown={e => e.preventDefault()}
-          >
-            <Palette className="h-3.5 w-3.5 text-foreground" />
-            <input
-              type="color"
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              onChange={e => execCommand('foreColor', e.target.value)}
-            />
-          </label>
-          {/* Highlight color picker */}
-          <label
-            className="relative p-1 rounded hover:bg-accent cursor-pointer inline-flex items-center justify-center"
-            title="Highlight color"
-            onMouseDown={e => e.preventDefault()}
-          >
-            <Highlighter className="h-3.5 w-3.5 text-foreground" />
-            <input
-              type="color"
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              onChange={e => execCommand('hiliteColor', e.target.value)}
-            />
-          </label>
-          <button
-            type="button"
-            className="px-1 py-0.5 text-[10px] rounded hover:bg-accent text-foreground font-bold"
-            onClick={() => execCommand('removeFormat')}
-            title="Clear formatting"
-          >
-            ×
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('strikeThrough')} title="Strikethrough">
+            <Strikethrough className="h-3.5 w-3.5" />
           </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('subscript')} title="Subscript">
+            <Subscript className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('superscript')} title="Superscript">
+            <Superscript className="h-3.5 w-3.5" />
+          </button>
+
           <div className="w-px h-4 bg-border mx-0.5" />
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-accent text-foreground"
-            onMouseDown={e => { e.preventDefault(); saveSelection(); }}
-            onClick={openLinkPanel}
-            title="Insert / edit link"
-          >
+
+          {/* Colors */}
+          <label className="relative p-1 rounded hover:bg-accent cursor-pointer inline-flex items-center justify-center" title="Text color" onMouseDown={e => e.preventDefault()}>
+            <Palette className="h-3.5 w-3.5 text-foreground" />
+            <input type="color" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => execCommand('foreColor', e.target.value)} />
+          </label>
+          <label className="relative p-1 rounded hover:bg-accent cursor-pointer inline-flex items-center justify-center" title="Highlight color" onMouseDown={e => e.preventDefault()}>
+            <Highlighter className="h-3.5 w-3.5 text-foreground" />
+            <input type="color" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => execCommand('hiliteColor', e.target.value)} />
+          </label>
+
+          <div className="w-px h-4 bg-border mx-0.5" />
+
+          {/* Alignment */}
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('justifyLeft')} title="Align left">
+            <AlignLeft className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('justifyCenter')} title="Align center">
+            <AlignCenter className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('justifyRight')} title="Align right">
+            <AlignRight className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('justifyFull')} title="Justify">
+            <AlignJustify className="h-3.5 w-3.5" />
+          </button>
+
+          <div className="w-px h-4 bg-border mx-0.5" />
+
+          {/* Lists & indent */}
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('insertUnorderedList')} title="Bullet list">
+            <List className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('insertOrderedList')} title="Numbered list">
+            <ListOrdered className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('outdent')} title="Decrease indent">
+            <Outdent className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onClick={() => execCommand('indent')} title="Increase indent">
+            <Indent className="h-3.5 w-3.5" />
+          </button>
+
+          <div className="w-px h-4 bg-border mx-0.5" />
+
+          {/* Link */}
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onMouseDown={e => { e.preventDefault(); saveSelection(); }} onClick={openLinkPanel} title="Insert / edit link">
             <LinkIcon className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-accent text-foreground"
-            onMouseDown={e => e.preventDefault()}
-            onClick={removeLink}
-            title="Remove link"
-          >
+          <button type="button" className="p-1 rounded hover:bg-accent text-foreground" onMouseDown={e => e.preventDefault()} onClick={removeLink} title="Remove link">
             <Unlink className="h-3.5 w-3.5" />
+          </button>
+
+          <div className="w-px h-4 bg-border mx-0.5" />
+
+          {/* Clear formatting */}
+          <button type="button" className="px-1.5 py-0.5 text-[11px] rounded hover:bg-accent text-foreground font-bold" onClick={() => execCommand('removeFormat')} title="Clear formatting">
+            Tx
           </button>
         </div>
       )}
+
 
       {/* Link panel */}
       {editing && showLinkPanel && (
@@ -500,6 +666,7 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
           setEditing(true);
         }}
         onBlur={handleBlur}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         dangerouslySetInnerHTML={!editing ? { __html: value } : undefined}
       />
