@@ -434,37 +434,35 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   };
 
   const applyFontFamily = (family: string) => {
-    if (!family) {
-      // Clear font-family on selection by wrapping with empty
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-      const range = sel.getRangeAt(0);
-      if (range.collapsed) return;
-      const span = document.createElement('span');
-      span.style.fontFamily = '';
-      try {
-        const frag = range.extractContents();
-        // strip font-family from descendants
-        frag.querySelectorAll('[style*="font-family"]').forEach((el: any) => {
-          el.style.fontFamily = '';
-        });
-        span.appendChild(frag);
-        range.insertNode(span);
-      } catch {}
-      ref.current?.focus();
-      return;
-    }
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
     if (range.collapsed) return;
-    const span = document.createElement('span');
-    span.style.fontFamily = family;
+    ensureFontLoaded(family);
     try {
-      span.appendChild(range.extractContents());
-      range.insertNode(span);
+      const frag = range.extractContents();
+      // Strip any existing font-family from descendants so the new one wins
+      frag.querySelectorAll('[style*="font-family"]').forEach((el: any) => {
+        el.style.fontFamily = '';
+        if (!el.getAttribute('style')?.trim()) el.removeAttribute('style');
+      });
+      if (!family) {
+        // Inserting back without wrapping = inherit site default
+        range.insertNode(frag);
+      } else {
+        const span = document.createElement('span');
+        span.style.fontFamily = family;
+        span.appendChild(frag);
+        range.insertNode(span);
+        // Restore selection over the new span
+        sel.removeAllRanges();
+        const r = document.createRange();
+        r.selectNodeContents(span);
+        sel.addRange(r);
+      }
     } catch {}
     ref.current?.focus();
+    setTimeout(detectCurrentFormatting, 0);
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
