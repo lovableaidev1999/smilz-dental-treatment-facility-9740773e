@@ -364,6 +364,76 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     ref.current?.focus();
   };
 
+  // Apply CSS font-size to selection by wrapping in span (execCommand fontSize is 1-7 only)
+  const applyFontSize = (px: string) => {
+    if (!px) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return;
+    const span = document.createElement('span');
+    span.style.fontSize = `${px}px`;
+    try {
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      sel.addRange(newRange);
+    } catch {}
+    ref.current?.focus();
+  };
+
+  const applyFontFamily = (family: string) => {
+    if (!family) {
+      // Clear font-family on selection by wrapping with empty
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+      const span = document.createElement('span');
+      span.style.fontFamily = '';
+      try {
+        const frag = range.extractContents();
+        // strip font-family from descendants
+        frag.querySelectorAll('[style*="font-family"]').forEach((el: any) => {
+          el.style.fontFamily = '';
+        });
+        span.appendChild(frag);
+        range.insertNode(span);
+      } catch {}
+      ref.current?.focus();
+      return;
+    }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return;
+    const span = document.createElement('span');
+    span.style.fontFamily = family;
+    try {
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+    } catch {}
+    ref.current?.focus();
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
+    let cleaned: string;
+    if (html) {
+      cleaned = sanitizePastedHtml(html);
+    } else {
+      // Convert plain text to HTML (preserve line breaks)
+      const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      cleaned = escape(text).split(/\r?\n/).map(line => line || '<br>').join('<br>');
+    }
+    document.execCommand('insertHTML', false, cleaned);
+  };
+
+
   return (
     <div className="relative">
       {/* Floating toolbar */}
