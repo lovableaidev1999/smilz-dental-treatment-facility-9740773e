@@ -1,8 +1,76 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useBuilder } from '@/hooks/useBuilderState';
 import { createBlockFromType } from '@/hooks/useBuilderState';
-import { Bold, Italic, Underline, Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter, Link as LinkIcon, Unlink, Plus } from 'lucide-react';
+import {
+  Bold, Italic, Underline, Strikethrough, Subscript, Superscript,
+  Type, Heading1, Heading2, Heading3, Pilcrow, Palette, Highlighter,
+  Link as LinkIcon, Unlink, Plus, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  List, ListOrdered, Indent, Outdent, Quote
+} from 'lucide-react';
 import InlineBlockInserter from './InlineBlockInserter';
+
+// ─── Paste sanitizer: strip Word/Docs/web styles ───
+const PASTE_ALLOWED_TAGS = new Set([
+  'P','BR','STRONG','B','EM','I','U','S','STRIKE','A','UL','OL','LI',
+  'H1','H2','H3','H4','H5','H6','BLOCKQUOTE','SPAN','DIV',
+]);
+const sanitizePastedHtml = (html: string): string => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  // Remove dangerous/foreign tags entirely
+  tmp.querySelectorAll('script,style,meta,link,title,xml,o\\:p').forEach(n => n.remove());
+  const walk = (root: Element) => {
+    const all = Array.from(root.querySelectorAll('*'));
+    all.forEach(el => {
+      const tag = el.tagName;
+      if (!PASTE_ALLOWED_TAGS.has(tag)) {
+        // Replace unknown tag with its children
+        const parent = el.parentNode;
+        if (!parent) return;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+        return;
+      }
+      // Strip attributes except href/target/rel on anchors
+      Array.from(el.attributes).forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (tag === 'A' && (name === 'href' || name === 'target' || name === 'rel')) return;
+        el.removeAttribute(attr.name);
+      });
+      if (tag === 'A') {
+        const href = (el as HTMLAnchorElement).getAttribute('href') || '';
+        if (/^https?:\/\//i.test(href)) {
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+      // Unwrap empty spans/divs
+      if ((tag === 'SPAN' || tag === 'DIV') && el.attributes.length === 0) {
+        const parent = el.parentNode;
+        if (!parent) return;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+      }
+    });
+  };
+  walk(tmp);
+  // Remove empty paragraphs left by Word
+  tmp.querySelectorAll('p,div').forEach(p => {
+    if (!p.textContent?.trim() && !p.querySelector('img,br')) p.remove();
+  });
+  return tmp.innerHTML;
+};
+
+const FONT_PX_SIZES = [12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
+const FONT_FAMILIES = [
+  { label: 'Default', value: '' },
+  { label: 'Poppins', value: 'Poppins, sans-serif' },
+  { label: 'Arial', value: 'Arial, sans-serif' },
+  { label: 'Georgia', value: 'Georgia, serif' },
+  { label: 'Times New Roman', value: '"Times New Roman", serif' },
+  { label: 'Courier New', value: '"Courier New", monospace' },
+  { label: 'Verdana', value: 'Verdana, sans-serif' },
+];
 
 interface Props {
   blockId: string;
