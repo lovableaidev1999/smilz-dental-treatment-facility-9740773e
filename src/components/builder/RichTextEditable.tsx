@@ -95,6 +95,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
   const isSelected = state.selectedBlockId === blockId;
 
+  // Currently detected font family + size from caret/selection
+  const [currentFont, setCurrentFont] = useState<string>('');
+  const [currentSize, setCurrentSize] = useState<string>('');
+
   // ─── Inline block insertion (Notion-style "+" on empty lines) ───
   const [inlineAdd, setInlineAdd] = useState<{ btnRect: DOMRect | null } | null>(null);
   const [plusBtnPos, setPlusBtnPos] = useState<{ top: number; left: number } | null>(null);
