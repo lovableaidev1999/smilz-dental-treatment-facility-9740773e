@@ -82,12 +82,6 @@ interface Props {
 }
 
 
-const FONT_SIZES: { label: string; value: string }[] = [
-  { label: 'S', value: '2' },
-  { label: 'M', value: '3' },
-  { label: 'L', value: '5' },
-  { label: 'XL', value: '6' },
-];
 
 const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, style }: Props) => {
   const Tag = tag as any;
