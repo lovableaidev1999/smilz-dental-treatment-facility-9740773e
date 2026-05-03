@@ -152,21 +152,40 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     });
   }, [editing]);
 
+  // Detect current font family & size from the caret/selection
+  const detectCurrentFormatting = useCallback(() => {
+    if (!editing || !ref.current) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    let node: Node | null = range.startContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    if (!node || !ref.current.contains(node)) return;
+    const cs = window.getComputedStyle(node as Element);
+    const family = cs.fontFamily || '';
+    // Match against known families list (first match wins)
+    const match = FONT_FAMILIES.find(f => f.value && family.toLowerCase().includes(f.value.split(',')[0].replace(/['"]/g, '').toLowerCase().trim()));
+    setCurrentFont(match?.value || '');
+    // Size: round to nearest int px
+    const sizePx = parseFloat(cs.fontSize);
+    if (!isNaN(sizePx)) setCurrentSize(String(Math.round(sizePx)));
+  }, [editing]);
+
   useEffect(() => {
     if (!editing) {
       setPlusBtnPos(null);
       setInlineAdd(null);
       return;
     }
-    const onSel = () => updateCaretAffordance();
+    const onSel = () => { updateCaretAffordance(); detectCurrentFormatting(); };
     document.addEventListener('selectionchange', onSel);
     // Initial position after focus
-    const t = setTimeout(updateCaretAffordance, 50);
+    const t = setTimeout(() => { updateCaretAffordance(); detectCurrentFormatting(); }, 50);
     return () => {
       document.removeEventListener('selectionchange', onSel);
       clearTimeout(t);
     };
-  }, [editing, updateCaretAffordance]);
+  }, [editing, updateCaretAffordance, detectCurrentFormatting]);
 
   const openInlineInserter = () => {
     // Anchor popover to the "+" button position in viewport coordinates
