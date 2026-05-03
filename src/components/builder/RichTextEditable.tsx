@@ -63,14 +63,40 @@ const sanitizePastedHtml = (html: string): string => {
 
 const FONT_PX_SIZES = [12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72];
 const FONT_FAMILIES = [
-  { label: 'Default', value: '' },
+  { label: 'Site Default', value: '' },
   { label: 'Poppins', value: 'Poppins, sans-serif' },
+  { label: 'Merriweather', value: 'Merriweather, serif' },
+  { label: 'Playfair Display', value: '"Playfair Display", serif' },
+  { label: 'Cormorant Garamond', value: '"Cormorant Garamond", serif' },
+  { label: 'Open Sans', value: '"Open Sans", sans-serif' },
+  { label: 'Roboto', value: 'Roboto, sans-serif' },
+  { label: 'Lato', value: 'Lato, sans-serif' },
+  { label: 'Montserrat', value: 'Montserrat, sans-serif' },
+  { label: 'Inter', value: 'Inter, sans-serif' },
   { label: 'Arial', value: 'Arial, sans-serif' },
+  { label: 'Helvetica', value: 'Helvetica, Arial, sans-serif' },
   { label: 'Georgia', value: 'Georgia, serif' },
   { label: 'Times New Roman', value: '"Times New Roman", serif' },
   { label: 'Courier New', value: '"Courier New", monospace' },
   { label: 'Verdana', value: 'Verdana, sans-serif' },
+  { label: 'Tahoma', value: 'Tahoma, sans-serif' },
 ];
+
+// Lazily load a Google Font when user picks a custom face in the editor
+const ensureFontLoaded = (family: string) => {
+  if (!family) return;
+  const name = family.split(',')[0].replace(/['"]/g, '').trim();
+  if (!name) return;
+  const id = `rt-font-${name.replace(/\s+/g, '-').toLowerCase()}`;
+  if (document.getElementById(id)) return;
+  // Skip system fonts
+  if (['Arial','Helvetica','Georgia','Times New Roman','Courier New','Verdana','Tahoma'].includes(name)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${name.replace(/ /g, '+')}:wght@400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+};
 
 interface Props {
   blockId: string;
@@ -408,37 +434,35 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   };
 
   const applyFontFamily = (family: string) => {
-    if (!family) {
-      // Clear font-family on selection by wrapping with empty
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-      const range = sel.getRangeAt(0);
-      if (range.collapsed) return;
-      const span = document.createElement('span');
-      span.style.fontFamily = '';
-      try {
-        const frag = range.extractContents();
-        // strip font-family from descendants
-        frag.querySelectorAll('[style*="font-family"]').forEach((el: any) => {
-          el.style.fontFamily = '';
-        });
-        span.appendChild(frag);
-        range.insertNode(span);
-      } catch {}
-      ref.current?.focus();
-      return;
-    }
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
     if (range.collapsed) return;
-    const span = document.createElement('span');
-    span.style.fontFamily = family;
+    ensureFontLoaded(family);
     try {
-      span.appendChild(range.extractContents());
-      range.insertNode(span);
+      const frag = range.extractContents();
+      // Strip any existing font-family from descendants so the new one wins
+      frag.querySelectorAll('[style*="font-family"]').forEach((el: any) => {
+        el.style.fontFamily = '';
+        if (!el.getAttribute('style')?.trim()) el.removeAttribute('style');
+      });
+      if (!family) {
+        // Inserting back without wrapping = inherit site default
+        range.insertNode(frag);
+      } else {
+        const span = document.createElement('span');
+        span.style.fontFamily = family;
+        span.appendChild(frag);
+        range.insertNode(span);
+        // Restore selection over the new span
+        sel.removeAllRanges();
+        const r = document.createRange();
+        r.selectNodeContents(span);
+        sel.addRange(r);
+      }
     } catch {}
     ref.current?.focus();
+    setTimeout(detectCurrentFormatting, 0);
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
