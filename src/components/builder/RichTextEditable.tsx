@@ -95,6 +95,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
   const isSelected = state.selectedBlockId === blockId;
 
+  // Currently detected font family + size from caret/selection
+  const [currentFont, setCurrentFont] = useState<string>('');
+  const [currentSize, setCurrentSize] = useState<string>('');
+
   // ─── Inline block insertion (Notion-style "+" on empty lines) ───
   const [inlineAdd, setInlineAdd] = useState<{ btnRect: DOMRect | null } | null>(null);
   const [plusBtnPos, setPlusBtnPos] = useState<{ top: number; left: number } | null>(null);
@@ -148,21 +152,40 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     });
   }, [editing]);
 
+  // Detect current font family & size from the caret/selection
+  const detectCurrentFormatting = useCallback(() => {
+    if (!editing || !ref.current) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    let node: Node | null = range.startContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    if (!node || !ref.current.contains(node)) return;
+    const cs = window.getComputedStyle(node as Element);
+    const family = cs.fontFamily || '';
+    // Match against known families list (first match wins)
+    const match = FONT_FAMILIES.find(f => f.value && family.toLowerCase().includes(f.value.split(',')[0].replace(/['"]/g, '').toLowerCase().trim()));
+    setCurrentFont(match?.value || '');
+    // Size: round to nearest int px
+    const sizePx = parseFloat(cs.fontSize);
+    if (!isNaN(sizePx)) setCurrentSize(String(Math.round(sizePx)));
+  }, [editing]);
+
   useEffect(() => {
     if (!editing) {
       setPlusBtnPos(null);
       setInlineAdd(null);
       return;
     }
-    const onSel = () => updateCaretAffordance();
+    const onSel = () => { updateCaretAffordance(); detectCurrentFormatting(); };
     document.addEventListener('selectionchange', onSel);
     // Initial position after focus
-    const t = setTimeout(updateCaretAffordance, 50);
+    const t = setTimeout(() => { updateCaretAffordance(); detectCurrentFormatting(); }, 50);
     return () => {
       document.removeEventListener('selectionchange', onSel);
       clearTimeout(t);
     };
-  }, [editing, updateCaretAffordance]);
+  }, [editing, updateCaretAffordance, detectCurrentFormatting]);
 
   const openInlineInserter = () => {
     // Anchor popover to the "+" button position in viewport coordinates
@@ -464,25 +487,30 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
 
           {/* Font family */}
           <select
-            defaultValue=""
-            className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground"
+            value={currentFont}
+            className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground max-w-[110px]"
             onMouseDown={e => e.stopPropagation()}
-            onChange={e => { const v = e.target.value; e.target.value = ''; applyFontFamily(v); }}
+            onChange={e => { const v = e.target.value; applyFontFamily(v); setCurrentFont(v); }}
             title="Font family"
           >
-            <option value="" disabled>Font</option>
+            {!FONT_FAMILIES.some(f => f.value === currentFont) && (
+              <option value={currentFont}>{currentFont || 'Font'}</option>
+            )}
             {FONT_FAMILIES.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
           </select>
 
           {/* Font size */}
           <select
-            defaultValue=""
+            value={currentSize}
             className="text-[11px] h-6 px-1 rounded border border-input bg-background text-foreground"
             onMouseDown={e => e.stopPropagation()}
-            onChange={e => { const v = e.target.value; e.target.value = ''; applyFontSize(v); }}
+            onChange={e => { const v = e.target.value; applyFontSize(v); setCurrentSize(v); }}
             title="Font size (px)"
           >
-            <option value="" disabled>Size</option>
+            {!FONT_PX_SIZES.some(s => String(s) === currentSize) && currentSize && (
+              <option value={currentSize}>{currentSize}px</option>
+            )}
+            {!currentSize && <option value="">Size</option>}
             {FONT_PX_SIZES.map(s => <option key={s} value={s}>{s}px</option>)}
           </select>
 
