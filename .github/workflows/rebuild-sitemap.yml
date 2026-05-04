@@ -1,0 +1,52 @@
+name: Rebuild Sitemap Only
+
+# Fast workflow: regenerate sitemap.xml and upload it (no full prerender).
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sitemap-updated]
+
+concurrency:
+  group: rebuild-sitemap-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sitemap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - run: npm install --legacy-peer-deps
+
+      - name: Ensure dist/ exists
+        run: mkdir -p dist
+
+      - name: Generate sitemap.xml
+        run: node scripts/generate-sitemap.mjs
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Stage sitemap-only deploy folder
+        run: |
+          mkdir -p sitemap-deploy
+          cp dist/sitemap.xml sitemap-deploy/sitemap.xml
+
+      - name: Deploy sitemap.xml via FTP
+        timeout-minutes: 5
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: ./sitemap-deploy/
+          server-dir: ${{ secrets.FTP_PATH }}
+          dangerous-clean-slate: false
+          log-level: minimal

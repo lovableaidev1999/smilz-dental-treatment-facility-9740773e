@@ -124,7 +124,22 @@ const AdminServiceEdit = () => {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Slug</label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: normalizeServiceSlug(e.target.value) })} />
+                <Input
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      // Allow dashes while typing — only lowercase + digits + dashes.
+                      // Final normalization (trim, dedupe dashes) happens on blur.
+                      slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
+                    })
+                  }
+                  onBlur={(e) => setForm((p) => ({ ...p, slug: normalizeServiceSlug(e.target.value) }))}
+                  placeholder="e.g. tooth-whitening"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use lowercase words separated by dashes. Will become <code>/services/{form.slug || "your-slug"}</code>.
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Short Description</label>
