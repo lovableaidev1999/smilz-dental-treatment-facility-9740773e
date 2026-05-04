@@ -20,6 +20,7 @@ const AdminPublishSEO = () => {
   const { toast } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isTriggering, setIsTriggering] = useState(false);
+  const [isTriggeringSitemap, setIsTriggeringSitemap] = useState(false);
   const [lastTriggeredAt, setLastTriggeredAt] = useState<number | null>(null);
   const [actionsUrl, setActionsUrl] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
