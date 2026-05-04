@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Rocket, ExternalLink, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Rocket, ExternalLink, Clock, AlertTriangle, CheckCircle2, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
