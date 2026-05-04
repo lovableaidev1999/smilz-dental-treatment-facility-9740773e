@@ -212,7 +212,7 @@ const AdminPublishSEO = () => {
         </CardContent>
       </Card>
 
-
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">What gets rebuilt?</CardTitle>
         </CardHeader>
