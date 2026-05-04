@@ -162,7 +162,57 @@ const AdminPublishSEO = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Map className="h-5 w-5 text-primary" />
+            Update sitemap.xml only
+          </CardTitle>
+          <CardDescription>
+            Faster than a full rebuild — regenerates <code>sitemap.xml</code> from
+            current published services / pages / blog posts and uploads only that
+            file. Use this after slug or SEO changes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full"
+            disabled={isTriggeringSitemap}
+            onClick={async () => {
+              setIsTriggeringSitemap(true);
+              try {
+                const { data, error } = await supabase.functions.invoke(
+                  "trigger-sitemap-rebuild",
+                  { body: {} },
+                );
+                if (error) throw new Error(error.message || "Request failed");
+                if (data?.error) throw new Error(data.error);
+                toast({
+                  title: "Sitemap rebuild triggered ✓",
+                  description:
+                    "GitHub Actions is regenerating sitemap.xml and uploading it (~2–3 min).",
+                });
+                if (data?.actionsUrl) setActionsUrl(data.actionsUrl);
+              } catch (err: any) {
+                toast({
+                  title: "Trigger failed",
+                  description: err?.message || "Could not start the sitemap rebuild.",
+                  variant: "destructive",
+                });
+              } finally {
+                setIsTriggeringSitemap(false);
+              }
+            }}
+          >
+            <Map className="h-5 w-5 mr-2" />
+            {isTriggeringSitemap ? "Triggering..." : "Update sitemap.xml & deploy"}
+          </Button>
+        </CardContent>
+      </Card>
+
+
         <CardHeader>
           <CardTitle className="text-base">What gets rebuilt?</CardTitle>
         </CardHeader>
