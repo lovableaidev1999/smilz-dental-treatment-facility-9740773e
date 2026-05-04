@@ -1,0 +1,82 @@
+name: FULL RECOVERY - Rebuild & Deploy Everything
+
+# Run manually from GitHub Actions UI only
+on:
+  workflow_dispatch:
+
+jobs:
+  full-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # GitHub Actions hard maximum (6 hours)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Cache Puppeteer Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npm install --legacy-peer-deps
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Supabase Edge Functions
+        run: supabase functions deploy sync-google-reviews --project-ref eukymrxxmvkchxfpjjuz --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Build app
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Generate sitemap.xml
+        run: node scripts/generate-sitemap.mjs
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Prerender all public pages
+        timeout-minutes: 300
+        run: node scripts/prerender.mjs
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Verify root index.html exists before deploying
+        run: |
+          if [ ! -f ./dist/index.html ]; then
+            echo "❌ ERROR: dist/index.html is missing! Aborting deploy."
+            exit 1
+          else
+            echo "✅ dist/index.html found. Proceeding with deploy."
+          fi
+
+      - name: Deploy EVERYTHING via FTP (clean slate)
+        timeout-minutes: 300
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_PATH }}
+          # Clean slate: ignores previous sync state and re-uploads EVERYTHING
+          dangerous-clean-slate: true
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.DS_Store
+            **/prerender-report.json
