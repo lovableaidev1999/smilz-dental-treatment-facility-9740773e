@@ -765,6 +765,97 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
         </div>
       )}
 
+      {/* Right-click context menu (vertical) */}
+      {editing && ctxMenu && (
+        <div
+          data-rt-ctx-menu
+          tabIndex={-1}
+          onMouseDown={e => e.preventDefault()}
+          onContextMenu={e => e.preventDefault()}
+          className="fixed z-[60] w-[240px] max-h-[360px] overflow-y-auto bg-card border border-border rounded-md shadow-lg p-2 flex flex-col gap-1"
+          style={{ top: ctxMenu.top, left: ctxMenu.left }}
+        >
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1">Format</div>
+          <div className="grid grid-cols-5 gap-0.5">
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => formatBlock('p')} title="Paragraph"><Pilcrow className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => formatBlock('h1')} title="Heading 1"><Heading1 className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => formatBlock('h2')} title="Heading 2"><Heading2 className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => formatBlock('h3')} title="Heading 3"><Heading3 className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => formatBlock('blockquote')} title="Blockquote"><Quote className="h-3.5 w-3.5" /></button>
+          </div>
+
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1 mt-1">Font</div>
+          <select
+            value={currentFont}
+            className="text-[11px] h-7 px-1 rounded border border-input bg-background text-foreground"
+            onMouseDown={e => e.stopPropagation()}
+            onChange={e => { const v = e.target.value; applyFontFamily(v); setCurrentFont(v); }}
+          >
+            {!FONT_FAMILIES.some(f => f.value === currentFont) && (
+              <option value={currentFont}>{currentFont || 'Font'}</option>
+            )}
+            {FONT_FAMILIES.map(f => <option key={f.label} value={f.value}>{f.label}</option>)}
+          </select>
+          <select
+            value={currentSize}
+            className="text-[11px] h-7 px-1 rounded border border-input bg-background text-foreground"
+            onMouseDown={e => e.stopPropagation()}
+            onChange={e => { const v = e.target.value; applyFontSize(v); setCurrentSize(v); }}
+          >
+            {!FONT_PX_SIZES.some(s => String(s) === currentSize) && currentSize && (
+              <option value={currentSize}>{currentSize}px</option>
+            )}
+            {!currentSize && <option value="">Size</option>}
+            {FONT_PX_SIZES.map(s => <option key={s} value={s}>{s}px</option>)}
+          </select>
+
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1 mt-1">Style</div>
+          <div className="grid grid-cols-6 gap-0.5">
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('bold')} title="Bold"><Bold className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('italic')} title="Italic"><Italic className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('underline')} title="Underline"><Underline className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('strikeThrough')} title="Strikethrough"><Strikethrough className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('subscript')} title="Subscript"><Subscript className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('superscript')} title="Superscript"><Superscript className="h-3.5 w-3.5" /></button>
+          </div>
+
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1 mt-1">Color</div>
+          <div className="flex gap-1">
+            <label className="relative flex-1 h-7 rounded border border-input hover:bg-accent cursor-pointer inline-flex items-center justify-center gap-1 text-[11px] text-foreground" onMouseDown={e => e.preventDefault()}>
+              <Palette className="h-3.5 w-3.5" /> Text
+              <input type="color" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => execCommand('foreColor', e.target.value)} />
+            </label>
+            <label className="relative flex-1 h-7 rounded border border-input hover:bg-accent cursor-pointer inline-flex items-center justify-center gap-1 text-[11px] text-foreground" onMouseDown={e => e.preventDefault()}>
+              <Highlighter className="h-3.5 w-3.5" /> Hi-lite
+              <input type="color" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onChange={e => execCommand('hiliteColor', e.target.value)} />
+            </label>
+          </div>
+
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1 mt-1">Align</div>
+          <div className="grid grid-cols-4 gap-0.5">
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('justifyLeft')} title="Left"><AlignLeft className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('justifyCenter')} title="Center"><AlignCenter className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('justifyRight')} title="Right"><AlignRight className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('justifyFull')} title="Justify"><AlignJustify className="h-3.5 w-3.5" /></button>
+          </div>
+
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1 mt-1">List</div>
+          <div className="grid grid-cols-4 gap-0.5">
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('insertUnorderedList')} title="Bullets"><List className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('insertOrderedList')} title="Numbered"><ListOrdered className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('outdent')} title="Outdent"><Outdent className="h-3.5 w-3.5" /></button>
+            <button type="button" className="p-1.5 rounded hover:bg-accent text-foreground inline-flex items-center justify-center" onClick={() => execCommand('indent')} title="Indent"><Indent className="h-3.5 w-3.5" /></button>
+          </div>
+
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium px-1 mt-1">Link</div>
+          <div className="flex gap-1">
+            <button type="button" className="flex-1 h-7 rounded border border-input hover:bg-accent text-foreground inline-flex items-center justify-center gap-1 text-[11px]" onClick={() => { setCtxMenu(null); openLinkPanel(); }}><LinkIcon className="h-3.5 w-3.5" /> Link</button>
+            <button type="button" className="flex-1 h-7 rounded border border-input hover:bg-accent text-foreground inline-flex items-center justify-center gap-1 text-[11px]" onClick={() => { removeLink(); setCtxMenu(null); }}><Unlink className="h-3.5 w-3.5" /> Unlink</button>
+            <button type="button" className="flex-1 h-7 rounded border border-input hover:bg-accent text-foreground inline-flex items-center justify-center gap-1 text-[11px] font-bold" onClick={() => execCommand('removeFormat')} title="Clear formatting">Tx</button>
+          </div>
+        </div>
+      )}
+
       <Tag
         ref={ref as any}
         className={`rt-editable ${className || ''} ${editing ? 'outline-none ring-2 ring-primary/30 rounded px-1' : ''} ${
@@ -780,6 +871,7 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
         onBlur={handleBlur}
         onPaste={handlePaste}
         onKeyDown={handleKeyDown}
+        onContextMenu={handleContextMenu}
         dangerouslySetInnerHTML={!editing ? { __html: value } : undefined}
       />
       <style>{`
