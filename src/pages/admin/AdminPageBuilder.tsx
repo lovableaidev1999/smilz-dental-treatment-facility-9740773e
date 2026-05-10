@@ -168,10 +168,69 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
       const activeId = activeData.blockId;
       const overId = over.id as string;
       if (activeId === overId) return;
-      const overContainerId = overData?.containerId ?? overData?.parentId ?? null;
+
+      // Locate active and over within the layout tree
+      const findLocation = (
+        nodes: LayoutNode[],
+        id: string,
+        parentId: string | null = null,
+      ): { parentId: string | null; index: number; siblings: LayoutNode[] } | null => {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === id) return { parentId, index: i, siblings: nodes };
+          if (nodes[i].children) {
+            const found = findLocation(nodes[i].children!, id, nodes[i].id);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      // Case A: dropped on a container's empty area → append at end
+      if (typeof overId === 'string' && overId.startsWith('container-')) {
+        const containerId = overData?.containerId ?? null;
+        // Append at end of that container
+        const findChildren = (nodes: LayoutNode[]): LayoutNode[] | null => {
+          if (containerId === null) return nodes;
+          for (const n of nodes) {
+            if (n.id === containerId) return n.children || [];
+            if (n.children) {
+              const r = findChildren(n.children);
+              if (r) return r;
+            }
+          }
+          return null;
+        };
+        const targetSiblings = findChildren(state.layout) || [];
+        // Filter out the active itself in case it's already in this container
+        const targetIndex = targetSiblings.filter(s => s.id !== activeId).length;
+        dispatch({ type: 'MOVE_BLOCK', payload: { blockId: activeId, targetParentId: containerId, targetIndex } });
+        return;
+      }
+
+      // Case B: dropped on a sibling block → place above/below depending on position
+      const overLoc = findLocation(state.layout, overId);
+      const activeLoc = findLocation(state.layout, activeId);
+      if (!overLoc) return;
+
+      const sameParent = activeLoc?.parentId === overLoc.parentId;
+      // Decide drop side using pointer/translated rect vs over rect
+      const activeRect = (event.active.rect.current.translated || event.active.rect.current.initial);
+      const overRect = over.rect;
+      let dropAfter = false;
+      if (activeRect && overRect) {
+        const activeMid = activeRect.top + activeRect.height / 2;
+        const overMid = overRect.top + overRect.height / 2;
+        dropAfter = activeMid > overMid;
+      }
+
+      let targetIndex = overLoc.index + (dropAfter ? 1 : 0);
+      // If moving within the same parent and removing active first shifts index left
+      if (sameParent && activeLoc && activeLoc.index < targetIndex) {
+        targetIndex -= 1;
+      }
       dispatch({
         type: 'MOVE_BLOCK',
-        payload: { blockId: activeId, targetParentId: overContainerId, targetIndex: 0 },
+        payload: { blockId: activeId, targetParentId: overLoc.parentId, targetIndex },
       });
     }
   };
