@@ -367,13 +367,15 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   }, [editing]);
 
   const handleBlur = useCallback((e: React.FocusEvent) => {
-    // Don't blur if focus moves into toolbar, link panel, or inline inserter
+    // Don't blur if focus moves into toolbar, link panel, context menu, or inline inserter
     const next = e.relatedTarget as Node | null;
     if (toolbarRef.current?.contains(next)) return;
     if (next && (next as HTMLElement).closest?.('[data-rt-link-panel]')) return;
     if (next && (next as HTMLElement).closest?.('[data-rt-inline-inserter]')) return;
+    if (next && (next as HTMLElement).closest?.('[data-rt-ctx-menu]')) return;
     // If the inline inserter popover is open, keep editing alive so dispatch happens cleanly
     if (inlineAdd) return;
+    if (ctxMenu) return;
     if (ref.current) {
       const newHtml = ref.current.innerHTML;
       if (newHtml !== value) {
@@ -384,7 +386,64 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       }
     }
     setEditing(false);
-  }, [blockId, propKey, value, dispatch, inlineAdd]);
+  }, [blockId, propKey, value, dispatch, inlineAdd, ctxMenu]);
+
+  // Close context menu on outside click / scroll / resize
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest('[data-rt-ctx-menu]')) return;
+      setCtxMenu(null);
+    };
+    const onScroll = () => setCtxMenu(null);
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [ctxMenu]);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!editing) return;
+    e.preventDefault();
+    e.stopPropagation();
+    saveSelection();
+    const sel = window.getSelection();
+    let anchorRect: DOMRect | null = null;
+    if (sel && sel.rangeCount > 0) {
+      const r = sel.getRangeAt(0);
+      const rects = r.getClientRects();
+      if (rects.length > 0) {
+        // Use the last rect (end of selection) so menu appears to its right
+        anchorRect = rects[rects.length - 1];
+      } else {
+        anchorRect = r.getBoundingClientRect();
+      }
+    }
+    const fallback = { top: e.clientY, left: e.clientX };
+    if (!anchorRect || (anchorRect.width === 0 && anchorRect.height === 0)) {
+      setCtxMenu(fallback);
+      return;
+    }
+    // Position to the right of the selection rect, vertically centered on click Y
+    const MENU_WIDTH = 240;
+    const PAD = 8;
+    let left = anchorRect.right + PAD;
+    if (left + MENU_WIDTH > window.innerWidth - 8) {
+      // Not enough room on right → place to the left of selection start
+      const startRect = sel?.getRangeAt(0).getClientRects()[0];
+      left = (startRect ? startRect.left : anchorRect.left) - MENU_WIDTH - PAD;
+      if (left < 8) left = 8;
+    }
+    let top = e.clientY - 20;
+    const MENU_MAX_H = 360;
+    if (top + MENU_MAX_H > window.innerHeight - 8) top = Math.max(8, window.innerHeight - MENU_MAX_H - 8);
+    setCtxMenu({ top, left });
+  };
 
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
