@@ -592,10 +592,11 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   return (
     <div className="relative">
       {/* Floating toolbar */}
-      {editing && (
+      {editing && toolbarPos && (
         <div
           ref={toolbarRef}
-          className="absolute -top-9 left-0 z-50 flex flex-wrap items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5 max-w-[680px]"
+          className="fixed z-[60] flex flex-wrap items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5 max-w-[680px]"
+          style={{ top: toolbarPos.top, left: toolbarPos.left }}
           onMouseDown={e => e.preventDefault()}
         >
           {/* Block format */}
