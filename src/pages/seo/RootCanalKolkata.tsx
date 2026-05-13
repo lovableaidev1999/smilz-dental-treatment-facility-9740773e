@@ -3,8 +3,8 @@ import SeoLanding from "@/components/seo/SeoLanding";
 const RootCanalKolkata = () => (
   <SeoLanding
     slug="root-canal-treatment-kolkata"
-    title="Root Canal Treatment in Kolkata | Painless RCT at Smilz, Garia"
-    description="Painless single-sitting root canal treatment in Kolkata by Dr. Dibyendu Dutta at Smilz Dental Clinic, Garia. Modern rotary endodontics, apex locators, digital X-rays and tooth-coloured crowns — most cases finished in one comfortable visit. Book on +91 8961775554."
+    title="Root Canal Treatment in Kolkata | Painless RCT, Garia"
+    description="Painless single-sitting root canal treatment in Kolkata at Smilz Dental, Garia. Modern rotary endodontics, apex locators & tooth-coloured crowns. Book +91 8961775554."
     keywords="root canal treatment Kolkata, RCT Kolkata cost, painless root canal Kolkata, single sitting root canal"
     h1="Root Canal Treatment in Kolkata – Painless, Single-Sitting RCT"
     intro="At Smilz Dental Treatment Facility, root canal treatment in Kolkata is delivered using modern rotary endodontics — most cases are completed in a single comfortable sitting, with patients walking out the same day."
