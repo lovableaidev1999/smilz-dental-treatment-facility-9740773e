@@ -817,8 +817,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       {/* Right-click context menu (vertical) */}
       {editing && ctxMenu && (
         <div
+          ref={ctxMenuRef}
           data-rt-ctx-menu
           tabIndex={-1}
+          onWheel={e => e.stopPropagation()}
           onMouseDown={e => e.preventDefault()}
           onContextMenu={e => e.preventDefault()}
           className="fixed z-[60] w-[240px] max-h-[360px] overflow-y-auto bg-card border border-border rounded-md shadow-lg p-2 flex flex-col gap-1"
