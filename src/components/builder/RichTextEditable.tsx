@@ -119,7 +119,9 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [showLinkPanel, setShowLinkPanel] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
   const [ctxMenu, setCtxMenu] = useState<{ top: number; left: number } | null>(null);
+  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; placement: 'top' | 'bottom' } | null>(null);
   const isSelected = state.selectedBlockId === blockId;
 
   // Currently detected font family + size from caret/selection
