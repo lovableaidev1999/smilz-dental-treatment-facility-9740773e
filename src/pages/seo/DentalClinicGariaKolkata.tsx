@@ -3,8 +3,8 @@ import SeoLanding from "@/components/seo/SeoLanding";
 const DentalClinicGariaKolkata = () => (
   <SeoLanding
     slug="dental-clinic-in-garia-kolkata"
-    title="Dental Clinic in Garia, Kolkata | Smilz Dental Treatment Facility"
-    description="Smilz Dental Treatment Facility — the trusted full-service dental clinic in Garia, Kolkata since 1999. Painless root canal, implants, braces, aligners, cosmetic dentistry, paediatric care and emergency treatment under one roof, opposite Garia Park. Call +91 8961775554."
+    title="Dental Clinic in Garia, Kolkata | Smilz Dental"
+    description="Trusted full-service dental clinic in Garia, Kolkata since 1999. Painless root canal, implants, braces, aligners & cosmetic dentistry. Call +91 8961775554."
     keywords="dental clinic in Garia, dentist Garia Kolkata, dental clinic near Garia metro, best dental clinic Garia"
     h1="Dental Clinic in Garia, Kolkata – Smilz Dental Treatment Facility"
     intro="Located at 21, Garia Park, Smilz Dental Treatment Facility is the neighbourhood's most trusted full-service dental clinic — serving families in Garia, Patuli and South Kolkata since 1999."
