@@ -200,21 +200,60 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     if (!isNaN(sizePx)) setCurrentSize(String(Math.round(sizePx)));
   }, [editing]);
 
+  // Compute floating toolbar position from current selection / caret
+  const updateToolbarPos = useCallback(() => {
+    if (!editing || !ref.current) { setToolbarPos(null); return; }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !ref.current.contains(sel.anchorNode)) return;
+    const range = sel.getRangeAt(0);
+    const rects = range.getClientRects();
+    let rect: DOMRect | null = null;
+    if (rects.length > 0) {
+      // Use first rect (start of selection) so toolbar sits above the selected word
+      rect = rects[0] as DOMRect;
+    } else {
+      rect = range.getBoundingClientRect();
+    }
+    if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0)) {
+      // Fallback to block rect
+      rect = ref.current.getBoundingClientRect();
+    }
+    const TOOLBAR_H = 36;
+    const PAD = 8;
+    let placement: 'top' | 'bottom' = 'top';
+    let top = rect.top - TOOLBAR_H - PAD;
+    if (top < 8) {
+      top = rect.bottom + PAD;
+      placement = 'bottom';
+    }
+    let left = rect.left;
+    const maxLeft = window.innerWidth - 700;
+    if (left > maxLeft) left = Math.max(8, maxLeft);
+    if (left < 8) left = 8;
+    setToolbarPos({ top, left, placement });
+  }, [editing]);
+
   useEffect(() => {
     if (!editing) {
       setPlusBtnPos(null);
       setInlineAdd(null);
+      setToolbarPos(null);
       return;
     }
-    const onSel = () => { updateCaretAffordance(); detectCurrentFormatting(); };
+    const onSel = () => { updateCaretAffordance(); detectCurrentFormatting(); updateToolbarPos(); };
     document.addEventListener('selectionchange', onSel);
+    const onScrollResize = () => updateToolbarPos();
+    window.addEventListener('scroll', onScrollResize, true);
+    window.addEventListener('resize', onScrollResize);
     // Initial position after focus
-    const t = setTimeout(() => { updateCaretAffordance(); detectCurrentFormatting(); }, 50);
+    const t = setTimeout(() => { updateCaretAffordance(); detectCurrentFormatting(); updateToolbarPos(); }, 50);
     return () => {
       document.removeEventListener('selectionchange', onSel);
+      window.removeEventListener('scroll', onScrollResize, true);
+      window.removeEventListener('resize', onScrollResize);
       clearTimeout(t);
     };
-  }, [editing, updateCaretAffordance, detectCurrentFormatting]);
+  }, [editing, updateCaretAffordance, detectCurrentFormatting, updateToolbarPos]);
 
   const openInlineInserter = () => {
     // Anchor popover to the "+" button position in viewport coordinates
