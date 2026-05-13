@@ -429,7 +429,7 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     setEditing(false);
   }, [blockId, propKey, value, dispatch, inlineAdd, ctxMenu]);
 
-  // Close context menu on outside click / scroll / resize
+  // Close context menu on outside click. Ignore scrolls happening inside the menu itself.
   useEffect(() => {
     if (!ctxMenu) return;
     const onDown = (e: MouseEvent) => {
@@ -437,14 +437,21 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       if (t.closest('[data-rt-ctx-menu]')) return;
       setCtxMenu(null);
     };
-    const onScroll = () => setCtxMenu(null);
+    const onScroll = (e: Event) => {
+      const t = e.target as Node | null;
+      // Don't close if the scroll is inside the menu (its own overflow scroll)
+      if (t && ctxMenuRef.current && ctxMenuRef.current.contains(t)) return;
+      if (t && (t as HTMLElement).closest?.('[data-rt-ctx-menu]')) return;
+      setCtxMenu(null);
+    };
+    const onResize = () => setCtxMenu(null);
     document.addEventListener('mousedown', onDown);
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
     return () => {
       document.removeEventListener('mousedown', onDown);
       window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('resize', onResize);
     };
   }, [ctxMenu]);
 
