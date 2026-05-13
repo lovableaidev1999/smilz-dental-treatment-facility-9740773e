@@ -1,0 +1,41 @@
+# Smilz Dental Treatment Facility
+
+> Trusted full-service dental clinic in Garia, South Kolkata since 1999. Led by Dr. Dibyendu Dutta. Painless root canal, dental implants, braces & invisible aligners, cosmetic dentistry, paediatric care and emergency treatment.
+
+Address: 21, Garia Park, Opposite Garia Park Club, Near Andrews College, Garia, Kolkata, West Bengal 700084
+Phone: +91 8961775554
+Hours: Mon–Sat 9 AM–1 PM, 5 PM–9 PM
+
+## Pages
+
+- [Home](/): Overview of Smilz Dental, services and clinic info.
+- [About](/about/): Clinic history, doctor profile and facilities.
+- [Services](/services/): Full list of dental treatments offered.
+- [Contact](/contact/): Address, phone, WhatsApp and clinic map.
+- [Gallery](/gallery/): Clinic photos and patient smile gallery.
+- [Blog](/blog/): Dental health articles and patient education.
+
+## Services
+
+- [Dental Implants](/services/dental-implants/): Single, multiple & All-on-4 implants.
+- [Painless Root Canal](/services/painless-root-canal-treatment/): Single-sitting RCT with rotary endodontics.
+- [Orthodontic Braces](/services/orthodontic-braces/): Metal, ceramic and self-ligating braces.
+- [Clear Aligners](/services/clear-aligners/): Invisible aligner therapy.
+- [Cosmetic Dentistry](/services/cosmetic-dentistry/): Smile design, veneers and whitening.
+- [Crown & Bridge](/services/crown-bridge/): Tooth-coloured crowns and bridges.
+- [Pediatric Dentistry](/services/pediatric-dentistry/): Dental care for children.
+- [Scaling & Polishing](/services/scaling-polishing/): Professional cleaning.
+- [Tooth Whitening](/services/tooth-whitening/): In-office whitening.
+- [Oral & Dental Surgery](/services/oral-dental-surgery/): Extractions and minor surgery.
+
+## Location landing pages
+
+- [Dentist in Kolkata](/dentist-in-kolkata/)
+- [Dental Clinic in Garia, Kolkata](/dental-clinic-in-garia-kolkata/)
+- [Dental Implants in Kolkata](/dental-implants-kolkata/)
+- [Root Canal Treatment in Kolkata](/root-canal-treatment-kolkata/)
+- [Braces & Aligners in Kolkata](/braces-aligners-kolkata/)
+
+## Optional
+
+- [Sitemap](/sitemap.xml): Full XML sitemap of indexable pages.
