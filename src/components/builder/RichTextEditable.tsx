@@ -119,7 +119,9 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   const [showLinkPanel, setShowLinkPanel] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkTarget, setLinkTarget] = useState<'_self' | '_blank'>('_blank');
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
   const [ctxMenu, setCtxMenu] = useState<{ top: number; left: number } | null>(null);
+  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; placement: 'top' | 'bottom' } | null>(null);
   const isSelected = state.selectedBlockId === blockId;
 
   // Currently detected font family + size from caret/selection
@@ -198,21 +200,60 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     if (!isNaN(sizePx)) setCurrentSize(String(Math.round(sizePx)));
   }, [editing]);
 
+  // Compute floating toolbar position from current selection / caret
+  const updateToolbarPos = useCallback(() => {
+    if (!editing || !ref.current) { setToolbarPos(null); return; }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !ref.current.contains(sel.anchorNode)) return;
+    const range = sel.getRangeAt(0);
+    const rects = range.getClientRects();
+    let rect: DOMRect | null = null;
+    if (rects.length > 0) {
+      // Use first rect (start of selection) so toolbar sits above the selected word
+      rect = rects[0] as DOMRect;
+    } else {
+      rect = range.getBoundingClientRect();
+    }
+    if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0)) {
+      // Fallback to block rect
+      rect = ref.current.getBoundingClientRect();
+    }
+    const TOOLBAR_H = 36;
+    const PAD = 8;
+    let placement: 'top' | 'bottom' = 'top';
+    let top = rect.top - TOOLBAR_H - PAD;
+    if (top < 8) {
+      top = rect.bottom + PAD;
+      placement = 'bottom';
+    }
+    let left = rect.left;
+    const maxLeft = window.innerWidth - 700;
+    if (left > maxLeft) left = Math.max(8, maxLeft);
+    if (left < 8) left = 8;
+    setToolbarPos({ top, left, placement });
+  }, [editing]);
+
   useEffect(() => {
     if (!editing) {
       setPlusBtnPos(null);
       setInlineAdd(null);
+      setToolbarPos(null);
       return;
     }
-    const onSel = () => { updateCaretAffordance(); detectCurrentFormatting(); };
+    const onSel = () => { updateCaretAffordance(); detectCurrentFormatting(); updateToolbarPos(); };
     document.addEventListener('selectionchange', onSel);
+    const onScrollResize = () => updateToolbarPos();
+    window.addEventListener('scroll', onScrollResize, true);
+    window.addEventListener('resize', onScrollResize);
     // Initial position after focus
-    const t = setTimeout(() => { updateCaretAffordance(); detectCurrentFormatting(); }, 50);
+    const t = setTimeout(() => { updateCaretAffordance(); detectCurrentFormatting(); updateToolbarPos(); }, 50);
     return () => {
       document.removeEventListener('selectionchange', onSel);
+      window.removeEventListener('scroll', onScrollResize, true);
+      window.removeEventListener('resize', onScrollResize);
       clearTimeout(t);
     };
-  }, [editing, updateCaretAffordance, detectCurrentFormatting]);
+  }, [editing, updateCaretAffordance, detectCurrentFormatting, updateToolbarPos]);
 
   const openInlineInserter = () => {
     // Anchor popover to the "+" button position in viewport coordinates
@@ -388,7 +429,7 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
     setEditing(false);
   }, [blockId, propKey, value, dispatch, inlineAdd, ctxMenu]);
 
-  // Close context menu on outside click / scroll / resize
+  // Close context menu on outside click. Ignore scrolls happening inside the menu itself.
   useEffect(() => {
     if (!ctxMenu) return;
     const onDown = (e: MouseEvent) => {
@@ -396,14 +437,21 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       if (t.closest('[data-rt-ctx-menu]')) return;
       setCtxMenu(null);
     };
-    const onScroll = () => setCtxMenu(null);
+    const onScroll = (e: Event) => {
+      const t = e.target as Node | null;
+      // Don't close if the scroll is inside the menu (its own overflow scroll)
+      if (t && ctxMenuRef.current && ctxMenuRef.current.contains(t)) return;
+      if (t && (t as HTMLElement).closest?.('[data-rt-ctx-menu]')) return;
+      setCtxMenu(null);
+    };
+    const onResize = () => setCtxMenu(null);
     document.addEventListener('mousedown', onDown);
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
     return () => {
       document.removeEventListener('mousedown', onDown);
       window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('resize', onResize);
     };
   }, [ctxMenu]);
 
@@ -544,10 +592,11 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
   return (
     <div className="relative">
       {/* Floating toolbar */}
-      {editing && (
+      {editing && toolbarPos && (
         <div
           ref={toolbarRef}
-          className="absolute -top-9 left-0 z-50 flex flex-wrap items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5 max-w-[680px]"
+          className="fixed z-[60] flex flex-wrap items-center gap-0.5 bg-card border border-border rounded-md shadow-md px-1 py-0.5 max-w-[680px]"
+          style={{ top: toolbarPos.top, left: toolbarPos.left }}
           onMouseDown={e => e.preventDefault()}
         >
           {/* Block format */}
@@ -768,8 +817,10 @@ const RichTextEditable = ({ blockId, propKey, value, tag = 'span', className, st
       {/* Right-click context menu (vertical) */}
       {editing && ctxMenu && (
         <div
+          ref={ctxMenuRef}
           data-rt-ctx-menu
           tabIndex={-1}
+          onWheel={e => e.stopPropagation()}
           onMouseDown={e => e.preventDefault()}
           onContextMenu={e => e.preventDefault()}
           className="fixed z-[60] w-[240px] max-h-[360px] overflow-y-auto bg-card border border-border rounded-md shadow-lg p-2 flex flex-col gap-1"
