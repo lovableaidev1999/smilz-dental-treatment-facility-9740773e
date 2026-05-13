@@ -4,7 +4,7 @@ const BracesAlignersKolkata = () => (
   <SeoLanding
     slug="braces-aligners-kolkata"
     title="Braces & Invisible Aligners in Kolkata | Smilz Dental, Garia"
-    description="Metal braces, ceramic braces, self-ligating braces and clear invisible aligners in Kolkata at Smilz Dental, Garia. Affordable orthodontic treatment for teens and adults by Dr. Dibyendu Dutta with EMI options, free consultation and monthly follow-ups. Book +91 8961775554."
+    description="Metal, ceramic & self-ligating braces plus clear invisible aligners in Kolkata at Smilz Dental, Garia. Affordable orthodontics with EMI options. Book +91 8961775554."
     keywords="braces in Kolkata, invisible aligners Kolkata, ceramic braces Kolkata, orthodontist Kolkata, dental braces cost Kolkata"
     h1="Braces & Invisible Aligners in Kolkata – Straight Teeth, Confident Smile"
     intro="Whether you prefer traditional metal braces, discreet ceramic braces or virtually invisible clear aligners, Smilz Dental Treatment Facility in Garia offers personalised orthodontic treatment for teenagers and adults."
