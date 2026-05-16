@@ -26,7 +26,11 @@ RedirectMatch 301 ^/wp-admin/?.*$ /admin/login
 RedirectMatch 301 ^/wp-login\.php.*$ /admin/login
 
 # ── Skip static assets from SPA fallback ──
-RewriteCond %{REQUEST_URI} \.(css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|json|map)$ [NC]
+# NOTE: txt and xml are included so files like /deploy-marker.txt, /robots.txt,
+# /sitemap.xml, and /llms.txt are served as real files (or return a clean 404)
+# instead of falling through to the SPA index.html. The verify-deploy CI step
+# depends on /deploy-marker.txt returning plain text.
+RewriteCond %{REQUEST_URI} \.(css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|json|map|txt|xml)$ [NC]
 RewriteRule ^ - [L]
 
 # ── SPA fallback ──
