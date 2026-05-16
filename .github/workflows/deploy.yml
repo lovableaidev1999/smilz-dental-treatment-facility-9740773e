@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 120  # hard cap: 90min prerender + 15min FTP + ~15min build/install headroom
+    timeout-minutes: 180  # increased: 90min prerender + 45min FTP + ~15min build/install headroom
     steps:
       - uses: actions/checkout@v4
 
@@ -58,7 +58,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Deploy via FTP (incremental)
-        timeout-minutes: 12
+        timeout-minutes: 45  # increased from 12: first-run uploads all files, subsequent runs are fast
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -78,3 +78,4 @@ jobs:
             **/node_modules/**
             **/.DS_Store
             **/prerender-report.json
+            **/*.map
