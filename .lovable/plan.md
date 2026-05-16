@@ -1,55 +1,85 @@
 ## Goal
 
-Fix two issues in the Visual Page Builder's inline text editor (`RichTextEditable.tsx`):
+Install Google Analytics 4 (Measurement ID **`G-FGCJBS9KG8`** — the active "Smilz" Web stream) on **every page** of smilz.net:
 
-1. **Pasted content from Word/Google Docs/web pages brings in foreign font sizes, colors, fonts, and styles** that break the page's design.
-2. **Lack of MS Word-style formatting controls** — currently only S/M/L/XL size presets and limited tools.
+- Every React SPA route (current and future)
+- Every prerendered/SSR HTML page in `html-site/` and `dist/` produced by `scripts/prerender.mjs`
+- Every CMS-built page rendered through the shell
+
+Goal achieved with a **single edit to `index.html`** — no React, Supabase, or dependency changes.
+
+## Why one edit covers all SSR/prerendered pages
+
+`scripts/prerender.mjs` boots Puppeteer against the built SPA, and every static HTML file it writes starts from `index.html`. Anything in `<head>` of `index.html` is therefore baked into every prerendered page automatically. The next CI run of `rebuild-content.yml` regenerates all static files with the tag and FTP-deploys them to Hostinger.
 
 ## Changes
 
-### 1. Sanitize pasted content (`onPaste` handler)
+### 1. Edit `index.html` — add the GA4 snippet
 
-Add a `handlePaste` handler on the contentEditable element that:
-- Calls `e.preventDefault()` to block default paste.
-- Reads `text/html` from `e.clipboardData`; falls back to `text/plain`.
-- Runs HTML through a sanitizer that:
-  - Strips all inline `style` attributes (removes `font-size`, `font-family`, `color`, `background`, `line-height`, MSO styles).
-  - Strips `class`, `id`, `lang`, `dir`, and all `mso-*`, `o:*`, `w:*` Word/Office attributes & tags.
-  - Removes `<style>`, `<meta>`, `<script>`, `<link>`, `<o:p>`, `<xml>` blocks entirely.
-  - Keeps a safe whitelist of tags: `p, br, strong, b, em, i, u, s, a, ul, ol, li, h1-h6, blockquote, span` (span only without style → unwrapped).
-  - Preserves `href`, `target`, `rel` on `<a>` and converts external links to `target="_blank" rel="noopener noreferrer"`.
-- Inserts the cleaned HTML at the caret via `document.execCommand('insertHTML', false, cleanHtml)` so it inherits the block's own typography.
+Insert immediately after the existing Ahrefs analytics `<script>` block in `<head>`.
 
-This guarantees pasted text adopts the page's font, size, and color tokens instead of the source document's.
+Pattern (mirrors the existing Ahrefs deferred-load pattern):
 
-### 2. Expand the floating toolbar (Word-like)
+```html
+<!-- Google tag (gtag.js) — GA4 G-FGCJBS9KG8 -->
+<script>
+  // Define dataLayer + gtag shim SYNCHRONOUSLY so any later gtag('event', ...)
+  // calls queue safely before the remote script loads.
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-FGCJBS9KG8');
 
-Replace the current S/M/L/XL preset row with a richer toolbar. Add the following controls beside the existing Bold/Italic/Underline/Heading/Color/Link buttons:
+  // Defer the actual gtag.js download until after window.load,
+  // matching the Ahrefs pattern so LCP/FCP/TBT are not impacted.
+  window.addEventListener('load', function () {
+    var s = document.createElement('script');
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-FGCJBS9KG8';
+    s.async = true;
+    s.defer = true;
+    document.head.appendChild(s);
+  });
+</script>
+```
 
-- **Font size dropdown** — numeric pixel sizes (`12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 64 px`). Applies via wrapping the selection in a `<span style="font-size: Npx">` (using a small custom helper, since `execCommand('fontSize')` only supports 1–7).
-- **Font family dropdown** — Default (inherit), Poppins, Arial, Georgia, Times New Roman, Courier New. Applied with `execCommand('fontName')`. Default option clears any inline font-family on the selection.
-- **Strikethrough** button (`execCommand('strikeThrough')`).
-- **Subscript / Superscript** buttons.
-- **Alignment** buttons — Left / Center / Right / Justify (`justifyLeft`, `justifyCenter`, `justifyRight`, `justifyFull`).
-- **Bullet list / Numbered list** buttons (`insertUnorderedList`, `insertOrderedList`).
-- **Indent / Outdent** buttons.
-- **Blockquote** toggle (`formatBlock` → `blockquote`).
-- Keep existing: Paragraph/H1/H2/H3, Bold, Italic, Underline, Text color, Highlight, Clear formatting, Link, Unlink.
+Notes:
+- `gtag('config', ...)` queued before script load → GA4 records the initial pageview correctly once the script arrives.
+- Coexists with Ahrefs analytics (no conflict).
+- No `<noscript>` pixel inside `<head>` (against HTML5 head rules; not needed for GA4).
 
-Toolbar layout will be reorganized into grouped clusters with thin separators, wrapping naturally if width is constrained.
+### 2. SPA route changes — no code needed
 
-### 3. Small UX improvements
+GA4 Enhanced Measurement → "Page changes based on browser history events" is **on by default** (visible in the screenshot under "+ 4 more"). React Router's `history.pushState` navigations are auto-tracked. No changes to `App.tsx`, `Layout.tsx`, or `SEOHead.tsx`.
 
-- Make the toolbar `flex-wrap` so it stays usable on narrow blocks.
-- Add tooltips (`title`) for every button.
-- Ensure dropdowns (font size, font family) don't blur the editor — use `onMouseDown={e => e.preventDefault()}` and restore selection before applying.
+### 3. Prerendered / SSR HTML pages — covered automatically
 
-## Files to modify
+- After merge to `main`, run the **"Rebuild Prerendered Pages"** workflow (`rebuild-content.yml`) — or just push, since it can be triggered on demand.
+- It rebuilds `dist/` from the new `index.html`, regenerates every static file in the prerender pass, then FTP-deploys to Hostinger.
+- Result: every existing page in `html-site/services/*`, `html-site/blog/*`, SEO landing pages, etc. ships with the tag.
+- Every **future** page (new blog post, new builder page, new service) inherits it the same way — no further edits.
 
-- `src/components/builder/RichTextEditable.tsx` — add `handlePaste`, sanitizer helper, expanded toolbar with new controls and dropdowns.
+## What is NOT touched
 
-No new dependencies required (uses native `document.execCommand` and a small inline sanitizer; no DOMPurify needed since output stays inside the contentEditable and is later saved as the block's own HTML).
+- Supabase (no migrations, no schema, no edge function, no RLS).
+- React components (`Layout`, `SEOHead`, router, builder, admin).
+- `package.json` / dependencies (gtag.js loads from Google's CDN at runtime).
+- `vite.config.ts` / build pipeline.
+- Performance posture: deferred load preserves current LCP/FCP and PageSpeed cache work.
 
-## Result
+## Verification (after deploy)
 
-Pasting from Word, Google Docs, websites, or emails will produce clean text that matches the page's design system. The floating toolbar gains MS Word–level controls: numeric font size, font family, alignment, lists, indent, strikethrough, sub/superscript, and blockquote.
+1. Open `https://smilz.net/` → DevTools → Network → filter `collect?` → confirm `google-analytics.com/g/collect` request fires.
+2. GA4 → **Reports → Realtime** → confirm own visit appears.
+3. Re-run Google's **"Test your website"** button in Web stream details — should succeed.
+4. Spot-check a blog post, a service page, an SEO landing page, and a CMS-built page — all should fire `collect`.
+5. Navigate between SPA routes — confirm an additional `collect` per navigation (Enhanced Measurement page_view).
+
+## Rollback
+
+Delete the snippet from `index.html` and rerun the rebuild workflow. ~30-second reversal.
+
+## Files touched
+
+- `index.html` — one ~15-line block added after the Ahrefs script.
+
+No other files modified. No CI/workflow file changes required.
