@@ -67,6 +67,12 @@ jobs:
           echo "run_id=${{ github.run_id }}" >> dist/deploy-marker.txt
           echo "deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> dist/deploy-marker.txt
           echo "workflow=deploy" >> dist/deploy-marker.txt
+          echo "--- dist root contents ---"
+          ls -la dist/ | head -50
+          echo "--- marker preview ---"
+          cat dist/deploy-marker.txt
+          echo "--- .htaccess present? ---"
+          ls -la dist/.htaccess || echo "MISSING .htaccess"
 
       # NOTE: continue-on-error is set so that non-fatal FTP errors
       # (e.g. 550 "No such file or directory" when removing a stale folder
@@ -107,16 +113,24 @@ jobs:
           set -e
           EXPECTED_SHA="${{ github.sha }}"
           echo "Expected SHA: $EXPECTED_SHA"
-          for i in 1 2 3 4 5 6; do
-            DEPLOYED=$(curl -fsS "https://smilz.net/deploy-marker.txt?cb=$(date +%s)" || echo "MISSING")
-            echo "Attempt $i — server marker:"
-            echo "$DEPLOYED"
+          # Retry up to 12 times over ~2 minutes — the new .htaccess in this
+          # deploy may need a brief moment to take effect on Apache before
+          # /deploy-marker.txt stops being rewritten to the SPA index.html.
+          for i in $(seq 1 12); do
+            DEPLOYED=$(curl -fsSL "https://smilz.net/deploy-marker.txt?cb=$(date +%s)" || echo "MISSING")
+            FIRST_LINE=$(echo "$DEPLOYED" | head -1)
+            echo "Attempt $i — first line: $FIRST_LINE"
             if echo "$DEPLOYED" | grep -q "$EXPECTED_SHA"; then
               echo "✅ Deploy verified — live site is at SHA $EXPECTED_SHA"
               exit 0
             fi
-            sleep 5
+            if echo "$FIRST_LINE" | grep -qi "<!doctype\|<html"; then
+              echo "   (.htaccess still rewriting .txt → SPA fallback; waiting)"
+            fi
+            sleep 10
           done
           echo "❌ Deploy verification failed — live deploy-marker.txt does not contain $EXPECTED_SHA"
           echo "   FTP step outcome: ${{ steps.ftp_deploy.outcome }}"
+          echo "   Last response (first 20 lines):"
+          echo "$DEPLOYED" | head -20
           exit 1
