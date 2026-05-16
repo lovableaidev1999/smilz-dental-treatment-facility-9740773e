@@ -67,6 +67,12 @@ jobs:
           echo "run_id=${{ github.run_id }}" >> dist/deploy-marker.txt
           echo "deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> dist/deploy-marker.txt
           echo "workflow=deploy" >> dist/deploy-marker.txt
+          echo "--- dist root contents ---"
+          ls -la dist/ | head -50
+          echo "--- marker preview ---"
+          cat dist/deploy-marker.txt
+          echo "--- .htaccess present? ---"
+          ls -la dist/.htaccess || echo "MISSING .htaccess"
 
       # NOTE: continue-on-error is set so that non-fatal FTP errors
       # (e.g. 550 "No such file or directory" when removing a stale folder
