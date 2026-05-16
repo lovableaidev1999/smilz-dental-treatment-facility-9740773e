@@ -57,7 +57,26 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # Write a per-run deploy marker so the verify step below can confirm
+      # the new build actually reached the server — independent of whether
+      # the FTP action's delete phase encountered a stale folder (550 RMD).
+      - name: Write deploy marker
+        run: |
+          mkdir -p dist
+          echo "sha=${{ github.sha }}" > dist/deploy-marker.txt
+          echo "run_id=${{ github.run_id }}" >> dist/deploy-marker.txt
+          echo "deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> dist/deploy-marker.txt
+          echo "workflow=deploy" >> dist/deploy-marker.txt
+
+      # NOTE: continue-on-error is set so that non-fatal FTP errors
+      # (e.g. 550 "No such file or directory" when removing a stale folder
+      # whose RMD fails because it is not empty) do NOT abort the workflow.
+      # Real failures (auth, network, nothing uploaded) are caught by the
+      # Verify Deploy step below, which only passes if the new deploy-marker
+      # is actually live on smilz.net.
       - name: Deploy via FTP (incremental)
+        id: ftp_deploy
+        continue-on-error: true
         timeout-minutes: 45  # increased from 12: first-run uploads all files, subsequent runs are fast
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -79,3 +98,25 @@ jobs:
             **/.DS_Store
             **/prerender-report.json
             **/*.map
+
+      # Verify the new build is actually live by fetching the deploy marker
+      # we just wrote into dist/. If the FTP upload truly failed, the marker
+      # on the server will be stale (different SHA) or missing → fail the run.
+      - name: Verify Deploy
+        run: |
+          set -e
+          EXPECTED_SHA="${{ github.sha }}"
+          echo "Expected SHA: $EXPECTED_SHA"
+          for i in 1 2 3 4 5 6; do
+            DEPLOYED=$(curl -fsS "https://smilz.net/deploy-marker.txt?cb=$(date +%s)" || echo "MISSING")
+            echo "Attempt $i — server marker:"
+            echo "$DEPLOYED"
+            if echo "$DEPLOYED" | grep -q "$EXPECTED_SHA"; then
+              echo "✅ Deploy verified — live site is at SHA $EXPECTED_SHA"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ Deploy verification failed — live deploy-marker.txt does not contain $EXPECTED_SHA"
+          echo "   FTP step outcome: ${{ steps.ftp_deploy.outcome }}"
+          exit 1
