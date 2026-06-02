@@ -285,7 +285,7 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     console.error("dental-chat error", err);
     return new Response(
-      JSON.stringify({ error: "Internal error", detail: String(err) }),
+      JSON.stringify({ error: "Internal error. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
