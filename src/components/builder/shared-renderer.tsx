@@ -175,16 +175,35 @@ const ServiceLoopWidget = ({ props }: { props: any }) => {
 // ─── Contact form (live only) ───────────────────────────
 const ContactFormWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; rClasses: string; baseStyles: React.CSSProperties }) => {
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [honeypot, setHoneypot] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validate = (name: string, email: string, phone: string, message: string): string | null => {
+    if (name.length < 1 || name.length > 100) return 'Please enter a valid name (1-100 characters).';
+    if (email && (email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return 'Please enter a valid email address.';
+    if (phone && (phone.length > 30 || !/^[0-9+\-()\s]{6,30}$/.test(phone))) return 'Please enter a valid phone number.';
+    if (message.length > 5000) return 'Message is too long (max 5000 characters).';
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    if (honeypot.trim() !== '') { setSubmitted(true); return; } // silent bot drop
+    const name = (formData['Name'] || '').trim().slice(0, 100);
+    const email = (formData['Email'] || '').trim().slice(0, 255);
+    const phone = (formData['Phone'] || '').trim().slice(0, 30);
+    const message = (formData['Message'] || '').trim().slice(0, 5000);
+    const v = validate(name, email, phone, message);
+    if (v) { setError(v); return; }
     setSubmitting(true);
     try {
-      await supabase.from('contact_submissions').insert({ name: formData['Name'] || '', email: formData['Email'] || '', phone: formData['Phone'] || '', message: formData['Message'] || '', source: 'page-builder' });
+      await supabase.from('contact_submissions').insert({ name, email, phone, message, source: 'page-builder' });
       setSubmitted(true);
       setFormData({});
-    } catch (err) { console.error('Form submission error:', err); } finally { setSubmitting(false); }
+    } catch (err) { console.error('Form submission error:', err); setError('Could not submit. Please try again.'); } finally { setSubmitting(false); }
   };
   if (submitted) return (
     <div className={`p-8 text-center bg-primary/5 rounded-xl ${rClasses}`} style={baseStyles}>
@@ -192,18 +211,30 @@ const ContactFormWidget = ({ node, rClasses, baseStyles }: { node: LayoutNode; r
       <p className="text-muted-foreground mt-1">We'll be in touch soon.</p>
     </div>
   );
+  const maxLenFor = (label: string) => label === 'Message' ? 5000 : label === 'Email' ? 255 : label === 'Phone' ? 30 : 100;
   return (
-    <form className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={handleSubmit}>
+    <form className={`space-y-4 ${rClasses}`} style={baseStyles} onSubmit={handleSubmit} noValidate>
+      {/* Honeypot — hidden from real users */}
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        value={honeypot}
+        onChange={e => setHoneypot(e.target.value)}
+        style={{ position: 'absolute', left: '-10000px', width: 1, height: 1, opacity: 0 }}
+        aria-hidden="true"
+      />
       {(node.props.fields || []).map((field: any, i: number) => (
         <div key={i}>
           <label className="block text-sm font-medium text-foreground mb-1">{field.label}</label>
           {field.type === 'textarea' ? (
-            <textarea className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" rows={4} required={field.required} value={formData[field.label] || ''} onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))} />
+            <textarea className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" rows={4} required={field.required} maxLength={maxLenFor(field.label)} value={formData[field.label] || ''} onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))} />
           ) : (
-            <input type={field.type} className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" required={field.required} value={formData[field.label] || ''} onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))} />
+            <input type={field.type === 'email' ? 'email' : field.type} className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground" required={field.required} maxLength={maxLenFor(field.label)} value={formData[field.label] || ''} onChange={e => setFormData(prev => ({ ...prev, [field.label]: e.target.value }))} />
           )}
         </div>
       ))}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       <button type="submit" disabled={submitting} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50">
         {submitting ? 'Sending...' : (node.props.submitText || 'Submit')}
       </button>
