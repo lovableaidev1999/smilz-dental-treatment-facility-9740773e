@@ -1,7 +1,7 @@
 project_id = "eukymrxxmvkchxfpjjuz"
 
 [functions.sync-google-reviews]
-verify_jwt = false
+verify_jwt = true
 
 [functions.migrate-image]
 verify_jwt = false
