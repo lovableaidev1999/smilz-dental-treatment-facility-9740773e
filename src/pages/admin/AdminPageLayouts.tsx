@@ -122,13 +122,24 @@ const AdminPageLayouts = () => {
           <Globe className="h-4 w-4 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">Core Pages</h2>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          Redesign your main pages through the visual builder. Original design is used until you publish a builder layout.
-        </p>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 px-4 py-3 mb-4 text-sm flex gap-2">
+          <Lock className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <strong>These pages use the site's fixed design and cannot be edited in the Visual Builder.</strong>
+            <div className="mt-1 text-amber-800">
+              To change their text, images, or CTAs safely (without breaking the design), use{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/admin/pages')}
+                className="underline font-medium hover:text-amber-950"
+              >
+                Admin → Pages
+              </button>.
+            </div>
+          </div>
+        </div>
         <div className="grid gap-3">
           {CORE_PAGES.map(cp => {
-            const layout = getCorePageLayout(cp.slug);
-            const isPublished = layout?.is_published || false;
             return (
               <Card key={cp.slug} className="hover:shadow-card transition-shadow">
                 <CardContent className="flex items-center justify-between p-4">
@@ -140,33 +151,25 @@ const AdminPageLayouts = () => {
                       <h3 className="font-semibold text-foreground">{cp.title}</h3>
                       <p className="text-xs text-muted-foreground">{cp.path}</p>
                     </div>
-                    <Badge variant={isPublished ? 'default' : 'secondary'} className="ml-2">
-                      {isPublished ? '✨ Visual Builder' : 'Original Design'}
+                    <Badge variant="secondary" className="ml-2 gap-1">
+                      <Lock className="h-3 w-3" /> Fixed Design
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="outline" size="sm" className="text-xs h-8"
-                      onClick={() => handleDesignCorePage(cp.slug, cp.title)}>
-                      <Paintbrush className="h-3.5 w-3.5 mr-1" />
-                      {layout ? 'Edit Design' : 'Design'}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="text-xs h-8"
+                      onClick={() => navigate(`/admin/pages?page=${cp.slug}`)}
+                      title="Edit page content safely"
+                    >
+                      <FileText className="h-3.5 w-3.5 mr-1" />
+                      Edit Content
                     </Button>
-                    {layout && (
-                      <>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"
-                          onClick={() => window.open(cp.path, '_blank')} title="Preview">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant={isPublished ? 'default' : 'outline'}
-                          size="sm"
-                          className="text-xs h-8"
-                          onClick={() => setPublishConfirm({ id: layout.id, title: cp.title, publish: !isPublished })}
-                        >
-                          {isPublished ? <ToggleRight className="h-3.5 w-3.5 mr-1" /> : <ToggleLeft className="h-3.5 w-3.5 mr-1" />}
-                          {isPublished ? 'Unpublish' : 'Publish'}
-                        </Button>
-                      </>
-                    )}
+                    <Button variant="ghost" size="icon" className="h-8 w-8"
+                      onClick={() => window.open(cp.path, '_blank')} title="Preview">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -174,6 +177,7 @@ const AdminPageLayouts = () => {
           })}
         </div>
       </div>
+
 
       <Separator className="my-6" />
 
