@@ -75,12 +75,23 @@ const titleCase = (s) =>
 const HUB_BY_KEY = Object.fromEntries(HUBS.map((h) => [h.key, h]));
 const AREAS_BY_KEY = Object.fromEntries(AREAS.map((a) => [a.key, a]));
 
+// Strip stray "near-" / "in-" prefixes from area keys so generated URLs
+// never contain double prepositions like `/dentist-in-near-andrews-college/`.
+// Called wherever an area.key becomes part of a slug or spoke URL.
+const normalizeAreaKey = (key) =>
+  String(key || "")
+    .replace(/^near-/i, "")
+    .replace(/^in-/i, "")
+    .replace(/-near-/gi, "-")
+    .replace(/-in-near-/gi, "-in-");
+
 // Best landing-page slug for an area (used by hub "Neighborhoods we serve" cards).
 // Core-tier → /dentist-in-{area}/ ;  Specialized → strongest service spoke.
 function spokeUrlForArea(area) {
-  if (area.tier === "core") return `/dentist-in-${area.key}/`;
+  const k = normalizeAreaKey(area.key);
+  if (area.tier === "core") return `/dentist-in-${k}/`;
   // Prefer dental-implants as the marquee service spoke for specialized areas.
-  return `/dental-implants-in-${area.key}/`;
+  return `/dental-implants-in-${k}/`;
 }
 
 function spokeLabelForArea(area) {
