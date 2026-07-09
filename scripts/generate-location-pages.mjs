@@ -1043,7 +1043,7 @@ function generatePages() {
       };
 
       const ov = OVERRIDES[pairKey] || {};
-      const slug = ov.slug || slugify(fill(intent.slugTemplate, { area: area.key }));
+      const slug = ov.slug || slugify(fill(intent.slugTemplate, { area: normalizeAreaKey(area.key) }));
       const h1 = ov.h1 || fill(intent.h1, vars);
       const title = ov.title || fill(intent.title, vars);
       const description = ov.description || fill(intent.description, vars);
