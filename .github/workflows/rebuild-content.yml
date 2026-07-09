@@ -59,7 +59,12 @@ jobs:
           port: ${{ secrets.FTP_PORT }}
           local-dir: ./dist/
           server-dir: ${{ secrets.FTP_PATH }}
-          state-name: .ftp-deploy-sync-state.json
+          # Reset the FTP action's remote sync state. The old state file contains
+          # a stale/corrupted directory entry (/***best-dentist-in-garia-park),
+          # so the action kept trying to remove a folder that Hostinger reports
+          # as missing. A new state file forces a clean inventory without using
+          # that bad delete queue.
+          state-name: .ftp-deploy-sync-state-rebuild-v2.json
           dangerous-clean-slate: false
           log-level: minimal
           security: loose
@@ -69,3 +74,4 @@ jobs:
             **/node_modules/**
             **/.DS_Store
             **/prerender-report.json
+            **/*.map
