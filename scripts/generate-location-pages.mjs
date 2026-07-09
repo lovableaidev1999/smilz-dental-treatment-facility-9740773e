@@ -1081,7 +1081,7 @@ function generatePages() {
         reviews: String(CLINIC.reviewCount),
       };
       const ov = OVERRIDES[pairKey] || {};
-      const slug = ov.slug || slugify(`${service.key}-in-${area.key}`);
+      const slug = ov.slug || slugify(`${service.key}-in-${normalizeAreaKey(area.key)}`);
       const h1 = ov.h1 || fill(service.h1, vars);
       const title = ov.title || fill(service.title, vars);
       const description = ov.description || fill(service.description, vars);
