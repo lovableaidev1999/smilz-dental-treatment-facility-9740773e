@@ -589,9 +589,11 @@ export const INTENTS = [
     key: "dentist-in",
     slugTemplate: "dentist-in-{area}",
     h1: "Dentist in {area}",
-    title: "Dentist in {area} | {clinic}",
+    // CTR-boost blueprint: doctor name + Google rating in the title, and a
+    // trust-loaded description ending with a clear phone CTA.
+    title: "Dentist in {area}, Kolkata | Dr. Dibyendu Dutta ({rating}★)",
     description:
-      "Need a dentist in {area}? Smilz Dental, led by {doctor}, delivers implants, painless root canal, braces, clear aligners and cosmetic dentistry under one roof. Rated {rating}★. Call {phone}.",
+      "Need a trusted dentist in {area}? Visit Smilz Dental (Garia Park) for expert dental implants, braces, and painless root canal treatments by Dr. Dibyendu Dutta. Call +91 8961 77 5554.",
     angle: "general",
     tierRequirement: "core",
   },
