@@ -921,6 +921,54 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
       );
     }
 
+    // ─── CTA ROW ──────────────────────────────────────────
+    // Rendered from generated location pages. Emits raw <a> tags so
+    // tel:/mailto:/wa.me links reach the browser un-sanitized (React's
+    // URL sanitizer would otherwise reduce unknown-protocol strings to
+    // `about:invalid#zSClosurez`-style placeholders).
+    case 'cta-row': {
+      const buttons: Array<{ label: string; href: string; variant?: string }> =
+        Array.isArray(node.props.buttons) ? node.props.buttons : [];
+      const align = node.props.align || 'left';
+      const alignClass =
+        align === 'center' ? 'justify-center' :
+        align === 'right' ? 'justify-end' : 'justify-start';
+      const variantClass = (v?: string) => v === 'outline'
+        ? 'border-2 border-primary text-primary hover:bg-primary/10'
+        : 'bg-primary text-primary-foreground hover:bg-primary/90';
+      return (
+        <div key={key} className={`flex flex-wrap gap-3 ${alignClass} ${rClasses}`} style={baseStyles}>
+          {buttons.map((b, i) => {
+            const href = String(b.href || '').trim();
+            // Force a safe protocol match so tel:/mailto:/wa.me pass through untouched.
+            const isPhone = /^tel:/i.test(href);
+            const isMail = /^mailto:/i.test(href);
+            const isExternal = /^(https?:|\/\/)/i.test(href) || isPhone || isMail;
+            const isWhatsApp = /wa\.me\//i.test(href);
+            const commonClass = `inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold transition-all ${variantClass(b.variant)}`;
+            if (isExternal) {
+              return (
+                <a
+                  key={i}
+                  href={editorMode ? undefined : href}
+                  className={commonClass}
+                  target={isWhatsApp ? '_blank' : undefined}
+                  rel={isWhatsApp ? 'noopener noreferrer' : undefined}
+                  aria-label={isPhone ? `Call ${b.label}` : b.label}
+                  onClick={editorMode ? (e) => e.preventDefault() : undefined}
+                >
+                  {b.label}
+                </a>
+              );
+            }
+            return editorMode
+              ? <span key={i} className={commonClass}>{b.label}</span>
+              : <Link key={i} to={href || '/contact'} className={commonClass}>{b.label}</Link>;
+          })}
+        </div>
+      );
+    }
+
     // ─── HTML EMBED ─────────────────────────────────────
     case 'html-embed':
       if (editorMode) {
