@@ -75,13 +75,18 @@ export async function getAllRoutes() {
       changefreq: "monthly",
       lastmod: (s.updated_at || new Date().toISOString()).split("T")[0],
     })),
-    ...posts.map((p) => ({
-      path: `/blog/${p.slug}/`,
-      type: "blog",
-      priority: "0.7",
-      changefreq: "monthly",
-      lastmod: (p.updated_at || p.published_at || new Date().toISOString()).split("T")[0],
-    })),
+    ...posts
+      // Skip legacy blog slugs containing non-ASCII (emoji) characters — they
+      // become percent-encoded URLs that hurt CTR and confuse indexing. The
+      // canonical clean-slug variant should be created in the CMS if needed.
+      .filter((p) => p.slug && /^[a-z0-9-]+$/i.test(p.slug))
+      .map((p) => ({
+        path: `/blog/${p.slug}/`,
+        type: "blog",
+        priority: "0.7",
+        changefreq: "monthly",
+        lastmod: (p.updated_at || p.published_at || new Date().toISOString()).split("T")[0],
+      })),
     ...builtPages
       .filter((pg) => {
         if (!pg.page_slug) return false;
