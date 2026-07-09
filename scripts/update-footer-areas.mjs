@@ -82,7 +82,17 @@ async function main() {
     },
   );
   if (!u.ok) {
-    console.error(`[footer] Write failed: ${u.status} ${await u.text()}`);
+    const body = await u.text();
+    const isRls = u.status === 401 || u.status === 403 || body.includes("row-level security");
+    const usingServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (isRls && !usingServiceRole) {
+      console.warn(`[footer] ⚠️  Write blocked by RLS (${u.status}). Skipping footer update.`);
+      console.warn(`[footer]     To enable: add SUPABASE_SERVICE_ROLE_KEY to GitHub Actions secrets.`);
+      console.warn(`[footer]     Response: ${body}`);
+      console.warn(`[footer] Continuing — this is a soft failure, does not block deploy.`);
+      return;
+    }
+    console.error(`[footer] Write failed: ${u.status} ${body}`);
     process.exit(1);
   }
   console.log(`[footer] Updated site_settings[key=footer].value.areas_we_serve with the 6 hub links.`);
