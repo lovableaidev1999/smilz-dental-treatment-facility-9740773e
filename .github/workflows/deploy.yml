@@ -65,15 +65,30 @@ jobs:
       # Write a per-run deploy marker so the verify step below can confirm
       # the new build actually reached the server — independent of whether
       # the FTP action's delete phase encountered a stale folder (550 RMD).
+      #
+      # Hostinger may route unknown root-level .txt requests through the SPA
+      # fallback while Apache/.htaccess changes propagate, so verification uses
+      # a real JS file under /assets/. Existing static asset files are served
+      # directly even when the SPA fallback would rewrite missing paths.
       - name: Write deploy marker
         run: |
           mkdir -p dist
+          mkdir -p dist/assets
           echo "sha=${{ github.sha }}" > dist/deploy-marker.txt
           echo "run_id=${{ github.run_id }}" >> dist/deploy-marker.txt
           echo "deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> dist/deploy-marker.txt
           echo "workflow=deploy" >> dist/deploy-marker.txt
+          cat > "dist/assets/deploy-marker-${{ github.sha }}.js" <<'EOF'
+          window.__SMILZ_DEPLOY_MARKER__ = {
+            sha: "${{ github.sha }}",
+            runId: "${{ github.run_id }}",
+            workflow: "deploy"
+          };
+          EOF
           echo "--- dist root contents ---"
           ls -la dist/ | head -50
+          echo "--- marker asset ---"
+          ls -la "dist/assets/deploy-marker-${{ github.sha }}.js"
           echo "--- marker preview ---"
           cat dist/deploy-marker.txt
           echo "--- .htaccess present? ---"
@@ -113,18 +128,18 @@ jobs:
             **/*.map
 
       # Verify the new build is actually live by fetching the deploy marker
-      # we just wrote into dist/. If the FTP upload truly failed, the marker
-      # on the server will be stale (different SHA) or missing → fail the run.
+      # asset we just wrote into dist/assets/. If the FTP upload truly failed,
+      # this SHA-specific file will be missing or stale → fail the run.
       - name: Verify Deploy
         run: |
           set -e
           EXPECTED_SHA="${{ github.sha }}"
+          MARKER_URL="https://smilz.net/assets/deploy-marker-${EXPECTED_SHA}.js"
           echo "Expected SHA: $EXPECTED_SHA"
-          # Retry up to 12 times over ~2 minutes — the new .htaccess in this
-          # deploy may need a brief moment to take effect on Apache before
-          # /deploy-marker.txt stops being rewritten to the SPA index.html.
+          echo "Marker URL: $MARKER_URL"
+          # Retry up to 12 times over ~2 minutes for FTP/CDN propagation.
           for i in $(seq 1 12); do
-            DEPLOYED=$(curl -fsSL "https://smilz.net/deploy-marker.txt?cb=$(date +%s)" || echo "MISSING")
+            DEPLOYED=$(curl -fsSL "$MARKER_URL?cb=$(date +%s)" || echo "MISSING")
             FIRST_LINE=$(echo "$DEPLOYED" | head -1)
             echo "Attempt $i — first line: $FIRST_LINE"
             if echo "$DEPLOYED" | grep -q "$EXPECTED_SHA"; then
@@ -132,11 +147,13 @@ jobs:
               exit 0
             fi
             if echo "$FIRST_LINE" | grep -qi "<!doctype\|<html"; then
-              echo "   (.htaccess still rewriting .txt → SPA fallback; waiting)"
+              echo "   (server returned SPA fallback for marker asset; waiting)"
+            elif [ "$DEPLOYED" = "MISSING" ]; then
+              echo "   (marker asset not available yet; waiting)"
             fi
             sleep 10
           done
-          echo "❌ Deploy verification failed — live deploy-marker.txt does not contain $EXPECTED_SHA"
+          echo "❌ Deploy verification failed — live marker asset does not contain $EXPECTED_SHA"
           echo "   FTP step outcome: ${{ steps.ftp_deploy.outcome }}"
           echo "   Last response (first 20 lines):"
           echo "$DEPLOYED" | head -20
