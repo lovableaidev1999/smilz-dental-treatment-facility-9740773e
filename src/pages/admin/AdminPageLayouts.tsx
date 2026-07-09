@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Layout, Globe, Paintbrush, ToggleLeft, ToggleRight, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Layout, Globe, Paintbrush, ToggleLeft, ToggleRight, ExternalLink, Lock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePageLayouts, useDeletePageLayout, useSavePageLayout } from '@/hooks/usePageLayouts';
