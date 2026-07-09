@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Info } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -69,9 +71,26 @@ const SortableSectionCard = ({ section, isEditing, onEdit, onSave, onCancelEdit,
 const AdminPages = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [activePage, setActivePage] = useState("home");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialPage = (() => {
+    const p = searchParams.get("page");
+    return p && PAGES.includes(p) ? p : "home";
+  })();
+  const [activePage, setActivePage] = useState(initialPage);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
+
+  // Keep state in sync when the ?page= query param changes (e.g. deep link
+  // from Visual Page Builder "Edit Content" button).
+  useEffect(() => {
+    const p = searchParams.get("page");
+    if (p && PAGES.includes(p) && p !== activePage) {
+      setActivePage(p);
+      setEditingSection(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState<any>({
     page_name: "home",
@@ -298,7 +317,7 @@ const AdminPages = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-heading font-bold text-foreground">Page Sections</h1>
         <div className="flex items-center gap-2">
           <Button
@@ -323,12 +342,27 @@ const AdminPages = () => {
         </div>
       </div>
 
+      {/* Safety banner */}
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 mb-6 text-sm flex gap-2">
+        <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div>
+          <strong>Safe to edit.</strong> Changes here update the text, images, and CTAs inside your existing page design — the layout and styling of the live site will not change.
+        </div>
+      </div>
+
       {/* Page tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         {PAGES.map((page) => (
           <button
             key={page}
-            onClick={() => { setActivePage(page); setEditingSection(null); setShowNewForm(false); }}
+            onClick={() => {
+              setActivePage(page);
+              setEditingSection(null);
+              setShowNewForm(false);
+              const next = new URLSearchParams(searchParams);
+              next.set("page", page);
+              setSearchParams(next, { replace: true });
+            }}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
               activePage === page ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary/10"
             }`}
@@ -337,6 +371,7 @@ const AdminPages = () => {
           </button>
         ))}
       </div>
+
 
       {/* New section form */}
       {showNewForm && (

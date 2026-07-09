@@ -94,7 +94,18 @@ class RendererErrorBoundary extends Component<
 // NOTE: 'referral' was removed so the page becomes fully editable in the
 // Visual Builder (matches Home/Services/About behavior). The hardcoded
 // Referral.tsx still serves as the fallback when no layout is published.
-const FORCE_FALLBACK_SLUGS = new Set<string>([]);
+// Main marketing pages are locked to their hardcoded designs. Content is
+// still fully editable via Admin → Pages (which writes to `page_content`
+// and is read by each page component). Any accidental `page_layouts` rows
+// for these slugs are ignored — nothing is deleted from the database.
+const FORCE_FALLBACK_SLUGS = new Set<string>([
+  'home',
+  'about',
+  'services',
+  'contact',
+  'gallery',
+  'blog',
+]);
 
 const SmartPage = ({ slug, fallback: Fallback, fallbackSeoProps }: SmartPageProps) => {
   const isServicePage = slug.startsWith('service-');
