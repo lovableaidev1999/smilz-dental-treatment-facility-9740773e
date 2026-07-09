@@ -1150,6 +1150,38 @@ async function upsertPage(page) {
   return "inserted";
 }
 
+// ─── cleanup: unpublish stale dirty-slug rows ────────────────────────
+// Older generator runs produced double-preposition slugs
+// (e.g. `dentist-in-near-andrews-college`). We now emit the clean
+// `-in-<area>` variants — unpublish the legacy rows so the sitemap
+// and prerender pipeline both drop them.
+async function unpublishDirtySlugs() {
+  const url =
+    `${SUPABASE_URL}/rest/v1/page_layouts` +
+    `?is_published=eq.true` +
+    `&or=(page_slug.like.*-in-near-*,page_slug.like.near-*)`;
+  const r = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({ is_published: false, updated_at: new Date().toISOString() }),
+  });
+  if (!r.ok) {
+    console.warn(`[locations] cleanup: could not unpublish dirty slugs — ${r.status} ${await r.text()}`);
+    return 0;
+  }
+  const rows = await r.json();
+  if (rows.length) {
+    console.log(`[locations] cleanup: unpublished ${rows.length} legacy dirty-slug rows`);
+    rows.forEach((row) => console.log(`   - /${row.page_slug}/`));
+  }
+  return rows.length;
+}
+
 // ─── main ─────────────────────────────────────────────────────────────
 async function main() {
   const pages = generatePages();
@@ -1191,7 +1223,9 @@ async function main() {
     }
   }
 
-  console.log(`\n[locations] Done — ${inserted} inserted, ${updated} updated, ${failed} failed`);
+  const cleaned = await unpublishDirtySlugs();
+
+  console.log(`\n[locations] Done — ${inserted} inserted, ${updated} updated, ${failed} failed, ${cleaned} legacy unpublished`);
   console.log(`[locations] These pages will be auto-included in the next prerender + sitemap build.`);
   if (failed > 0) process.exit(1);
 }

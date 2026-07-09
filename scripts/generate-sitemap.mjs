@@ -11,6 +11,7 @@ import { getAllRoutes } from "./_routes.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, "..", "dist");
+const PUBLIC = join(__dirname, "..", "public");
 const SITE = "https://smilz.net";
 
 async function main() {
@@ -28,7 +29,10 @@ async function main() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>\n`;
 
   writeFileSync(join(DIST, "sitemap.xml"), xml);
-  console.log(`[sitemap] ✓ Wrote dist/sitemap.xml with ${entries.length} URLs`);
+  // Also refresh the committed public/sitemap.xml so Hostinger picks up
+  // the cleaned URL set immediately on next deploy (build copies public/→dist/).
+  writeFileSync(join(PUBLIC, "sitemap.xml"), xml);
+  console.log(`[sitemap] ✓ Wrote dist/sitemap.xml and public/sitemap.xml with ${entries.length} URLs`);
 }
 
 main().catch((err) => {
