@@ -216,10 +216,11 @@ function buildSameHubSiblings({ currentArea, currentIntentKey }) {
   const intentSlug = currentIntentKey || "dentist-in";
   const sameHubLinks = siblings
     .map((a) => {
+      const k = normalizeAreaKey(a.key);
       // Use the same intent slug only if the sibling is core-tier (intents are core-only).
       // Otherwise fall back to its strongest spoke URL.
       const url =
-        a.tier === "core" ? `/${intentSlug}-${a.key}/` : spokeUrlForArea(a);
+        a.tier === "core" ? `/${intentSlug}-${k}/` : spokeUrlForArea(a);
       const label = a.tier === "core" ? `${titleCase(intentSlug)} ${a.name}` : spokeLabelForArea(a);
       return `<li><a href="${url}">${label}</a></li>`;
     })
