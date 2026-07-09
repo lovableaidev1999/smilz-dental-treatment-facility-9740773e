@@ -75,12 +75,23 @@ const titleCase = (s) =>
 const HUB_BY_KEY = Object.fromEntries(HUBS.map((h) => [h.key, h]));
 const AREAS_BY_KEY = Object.fromEntries(AREAS.map((a) => [a.key, a]));
 
+// Strip stray "near-" / "in-" prefixes from area keys so generated URLs
+// never contain double prepositions like `/dentist-in-near-andrews-college/`.
+// Called wherever an area.key becomes part of a slug or spoke URL.
+const normalizeAreaKey = (key) =>
+  String(key || "")
+    .replace(/^near-/i, "")
+    .replace(/^in-/i, "")
+    .replace(/-near-/gi, "-")
+    .replace(/-in-near-/gi, "-in-");
+
 // Best landing-page slug for an area (used by hub "Neighborhoods we serve" cards).
 // Core-tier → /dentist-in-{area}/ ;  Specialized → strongest service spoke.
 function spokeUrlForArea(area) {
-  if (area.tier === "core") return `/dentist-in-${area.key}/`;
+  const k = normalizeAreaKey(area.key);
+  if (area.tier === "core") return `/dentist-in-${k}/`;
   // Prefer dental-implants as the marquee service spoke for specialized areas.
-  return `/dental-implants-in-${area.key}/`;
+  return `/dental-implants-in-${k}/`;
 }
 
 function spokeLabelForArea(area) {
@@ -205,10 +216,11 @@ function buildSameHubSiblings({ currentArea, currentIntentKey }) {
   const intentSlug = currentIntentKey || "dentist-in";
   const sameHubLinks = siblings
     .map((a) => {
+      const k = normalizeAreaKey(a.key);
       // Use the same intent slug only if the sibling is core-tier (intents are core-only).
       // Otherwise fall back to its strongest spoke URL.
       const url =
-        a.tier === "core" ? `/${intentSlug}-${a.key}/` : spokeUrlForArea(a);
+        a.tier === "core" ? `/${intentSlug}-${k}/` : spokeUrlForArea(a);
       const label = a.tier === "core" ? `${titleCase(intentSlug)} ${a.name}` : spokeLabelForArea(a);
       return `<li><a href="${url}">${label}</a></li>`;
     })
@@ -1031,7 +1043,7 @@ function generatePages() {
       };
 
       const ov = OVERRIDES[pairKey] || {};
-      const slug = ov.slug || slugify(fill(intent.slugTemplate, { area: area.key }));
+      const slug = ov.slug || slugify(fill(intent.slugTemplate, { area: normalizeAreaKey(area.key) }));
       const h1 = ov.h1 || fill(intent.h1, vars);
       const title = ov.title || fill(intent.title, vars);
       const description = ov.description || fill(intent.description, vars);
@@ -1069,7 +1081,7 @@ function generatePages() {
         reviews: String(CLINIC.reviewCount),
       };
       const ov = OVERRIDES[pairKey] || {};
-      const slug = ov.slug || slugify(`${service.key}-in-${area.key}`);
+      const slug = ov.slug || slugify(`${service.key}-in-${normalizeAreaKey(area.key)}`);
       const h1 = ov.h1 || fill(service.h1, vars);
       const title = ov.title || fill(service.title, vars);
       const description = ov.description || fill(service.description, vars);
