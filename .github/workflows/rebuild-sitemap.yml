@@ -33,6 +33,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # Fail the workflow if any dirty slugs (in-near-, near-, %-encoded)
+      # slipped into the freshly generated sitemap.
+      - name: Validate sitemap (static)
+        run: node scripts/validate-sitemap.mjs dist/sitemap.xml
+
       - name: Stage sitemap-only deploy folder
         run: |
           mkdir -p sitemap-deploy
