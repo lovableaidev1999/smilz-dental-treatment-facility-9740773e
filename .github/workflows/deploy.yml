@@ -139,3 +139,9 @@ jobs:
           echo "   Last response (first 20 lines):"
           echo "$DEPLOYED" | head -20
           exit 1
+
+      # Live HTTP validation — every sitemap URL must return 2xx/3xx on
+      # smilz.net. Runs only after the deploy marker confirms the new build
+      # is live, so it validates the just-shipped URLs, not the previous one.
+      - name: Validate sitemap (live HTTP)
+        run: node scripts/validate-sitemap.mjs dist/sitemap.xml --live
