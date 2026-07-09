@@ -1210,7 +1210,8 @@ async function main() {
 
   let inserted = 0,
     updated = 0,
-    failed = 0;
+    failed = 0,
+    rlsInsertFailures = 0;
   for (const page of pages) {
     try {
       const action = await upsertPage(page);
@@ -1219,7 +1220,15 @@ async function main() {
       console.log(` ${action === "inserted" ? "+" : "~"} [${page.template_type}] /${page.page_slug}/`);
     } catch (err) {
       failed++;
-      console.error(` x /${page.page_slug}/  →  ${err.message}`);
+      const msg = err.message || String(err);
+      // 42501 = RLS violation on INSERT. Happens when the workflow is running
+      // with the anon key (SUPABASE_SERVICE_ROLE_KEY secret not set) AND the
+      // slug is brand new (no existing row to PATCH). Existing rows still
+      // update fine, so treat this as a soft warning — don't fail the build.
+      if (/42501|row-level security/i.test(msg) && /^insert /.test(msg)) {
+        rlsInsertFailures++;
+      }
+      console.error(` x /${page.page_slug}/  →  ${msg}`);
     }
   }
 
@@ -1227,7 +1236,23 @@ async function main() {
 
   console.log(`\n[locations] Done — ${inserted} inserted, ${updated} updated, ${failed} failed, ${cleaned} legacy unpublished`);
   console.log(`[locations] These pages will be auto-included in the next prerender + sitemap build.`);
-  if (failed > 0) process.exit(1);
+
+  if (rlsInsertFailures > 0) {
+    console.warn(
+      `\n[locations] ⚠  ${rlsInsertFailures} new page(s) could not be inserted because the run is using the anon key (RLS blocks INSERT).`,
+    );
+    console.warn(
+      `[locations]    To seed brand-new areas, set the GitHub Actions secret SUPABASE_SERVICE_ROLE_KEY (bypasses RLS).`,
+    );
+    console.warn(
+      `[locations]    Existing pages (${updated}) were refreshed successfully — the deployment is safe to proceed.`,
+    );
+  }
+
+  // Only fail the workflow if we hit a hard failure that isn't just
+  // "new-slug + anon-key RLS". Partial success must not block deploy.
+  const hardFailures = failed - rlsInsertFailures;
+  if (hardFailures > 0) process.exit(1);
 }
 
 main().catch((e) => {
