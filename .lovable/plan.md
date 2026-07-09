@@ -1,85 +1,55 @@
-## Goal
+## What happened
 
-Install Google Analytics 4 (Measurement ID **`G-FGCJBS9KG8`** — the active "Smilz" Web stream) on **every page** of smilz.net:
+Your site has **two separate CMS systems** — both under Admin — and they do very different things:
 
-- Every React SPA route (current and future)
-- Every prerendered/SSR HTML page in `html-site/` and `dist/` produced by `scripts/prerender.mjs`
-- Every CMS-built page rendered through the shell
+| CMS section | Table | Effect on the live page |
+|---|---|---|
+| **Admin → Pages** (content sections) | `page_content` | Edits text/images inside the existing hardcoded design (safe). |
+| **Admin → Visual Page Builder** | `page_layouts` | **Completely replaces** the hardcoded page with the drag-and-drop layout when you hit *Publish*. |
 
-Goal achieved with a **single edit to `index.html`** — no React, Supabase, or dependency changes.
+`src/components/SmartPage.tsx` (used by `/`, `/about`, `/services`, `/contact`, `/gallery`, `/blog`, `/referral`) checks `page_layouts` first: if a published row exists for that slug, it renders that layout via `VisualRenderer` and the original `Home.tsx` design is bypassed entirely.
 
-## Why one edit covers all SSR/prerendered pages
+So when you opened Home in the Page Builder and published, `SmartPage` started rendering the builder layout instead of the real `Home.tsx` — that's why the design changed.
 
-`scripts/prerender.mjs` boots Puppeteer against the built SPA, and every static HTML file it writes starts from `index.html`. Anything in `<head>` of `index.html` is therefore baked into every prerendered page automatically. The next CI run of `rebuild-content.yml` regenerates all static files with the tag and FTP-deploys them to Hostinger.
+## Fix (no risk to the live site)
 
-## Changes
+### 1. Restore the Home design immediately
 
-### 1. Edit `index.html` — add the GA4 snippet
+Add `'home'` to `FORCE_FALLBACK_SLUGS` in `src/components/SmartPage.tsx`. That set already exists and is designed for exactly this case: when a slug is in it, `SmartPage` **never** reads `page_layouts` and always renders the hardcoded component (`Home.tsx`). The stray `page_layouts` row for `home` stays in the database untouched — we just stop reading it. Zero DB change, zero deploy risk. Home will render exactly like it did before the accidental publish, using your current `page_content` sections.
 
-Insert immediately after the existing Ahrefs analytics `<script>` block in `<head>`.
+We'll do the same defensive lock for the other main pages that already have polished hardcoded designs you likely don't want overwritten by accident: `about`, `services`, `contact`, `gallery`, `blog`. (Any page_layouts you already have for these will simply be ignored — nothing is deleted.)
 
-Pattern (mirrors the existing Ahrefs deferred-load pattern):
+### 2. Make "safe content editing" obvious in the CMS
 
-```html
-<!-- Google tag (gtag.js) — GA4 G-FGCJBS9KG8 -->
-<script>
-  // Define dataLayer + gtag shim SYNCHRONOUSLY so any later gtag('event', ...)
-  // calls queue safely before the remote script loads.
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-FGCJBS9KG8');
+- In **Admin → Visual Page Builder** (`src/pages/admin/AdminPageLayouts.tsx`), for the six locked core pages listed above:
+  - Replace the "Design in Builder" action with a clear notice: *"This page uses the site's fixed design. Edit its content in Admin → Pages."* plus a direct link/button that navigates to `/admin/pages?page=home` (etc.).
+  - Keep the builder accessible only for **custom pages** (slugs not in the locked list), which is what it's meant for.
+- In **Admin → Pages** (`src/pages/admin/AdminPages.tsx`), add a small header banner: *"Editing content here is safe — the page design will not change."*
+- Support the `?page=home` query param in `AdminPages` so the "Edit content" button from the Builder screen lands directly on the right page's sections.
 
-  // Defer the actual gtag.js download until after window.load,
-  // matching the Ahrefs pattern so LCP/FCP/TBT are not impacted.
-  window.addEventListener('load', function () {
-    var s = document.createElement('script');
-    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-FGCJBS9KG8';
-    s.async = true;
-    s.defer = true;
-    document.head.appendChild(s);
-  });
-</script>
-```
+### 3. Nothing else changes
 
-Notes:
-- `gtag('config', ...)` queued before script load → GA4 records the initial pageview correctly once the script arrives.
-- Coexists with Ahrefs analytics (no conflict).
-- No `<noscript>` pixel inside `<head>` (against HTML5 head rules; not needed for GA4).
-
-### 2. SPA route changes — no code needed
-
-GA4 Enhanced Measurement → "Page changes based on browser history events" is **on by default** (visible in the screenshot under "+ 4 more"). React Router's `history.pushState` navigations are auto-tracked. No changes to `App.tsx`, `Layout.tsx`, or `SEOHead.tsx`.
-
-### 3. Prerendered / SSR HTML pages — covered automatically
-
-- After merge to `main`, run the **"Rebuild Prerendered Pages"** workflow (`rebuild-content.yml`) — or just push, since it can be triggered on demand.
-- It rebuilds `dist/` from the new `index.html`, regenerates every static file in the prerender pass, then FTP-deploys to Hostinger.
-- Result: every existing page in `html-site/services/*`, `html-site/blog/*`, SEO landing pages, etc. ships with the tag.
-- Every **future** page (new blog post, new builder page, new service) inherits it the same way — no further edits.
-
-## What is NOT touched
-
-- Supabase (no migrations, no schema, no edge function, no RLS).
-- React components (`Layout`, `SEOHead`, router, builder, admin).
-- `package.json` / dependencies (gtag.js loads from Google's CDN at runtime).
-- `vite.config.ts` / build pipeline.
-- Performance posture: deferred load preserves current LCP/FCP and PageSpeed cache work.
-
-## Verification (after deploy)
-
-1. Open `https://smilz.net/` → DevTools → Network → filter `collect?` → confirm `google-analytics.com/g/collect` request fires.
-2. GA4 → **Reports → Realtime** → confirm own visit appears.
-3. Re-run Google's **"Test your website"** button in Web stream details — should succeed.
-4. Spot-check a blog post, a service page, an SEO landing page, and a CMS-built page — all should fire `collect`.
-5. Navigate between SPA routes — confirm an additional `collect` per navigation (Enhanced Measurement page_view).
-
-## Rollback
-
-Delete the snippet from `index.html` and rerun the rebuild workflow. ~30-second reversal.
+- No database migration, no schema change, no changes to `page_content`, no changes to the published site's routes.
+- `Home.tsx`, `About.tsx`, `Services.tsx`, `Contact.tsx`, `Gallery.tsx`, `Blog.tsx` are untouched — they keep reading from `page_content` exactly as they do today, so edits you make in **Admin → Pages** appear on the live site.
+- Custom builder pages (anything not in the locked list, e.g. landing pages) keep working exactly as before.
 
 ## Files touched
 
-- `index.html` — one ~15-line block added after the Ahrefs script.
+```text
+src/components/SmartPage.tsx        # add home/about/services/contact/gallery/blog to FORCE_FALLBACK_SLUGS
+src/pages/admin/AdminPageLayouts.tsx # show "Edit content in Pages" for locked core pages
+src/pages/admin/AdminPages.tsx      # support ?page= query param + safe-edit banner
+```
 
-No other files modified. No CI/workflow file changes required.
+## Verification
+
+1. `npm run build` passes.
+2. Visit `/` in preview — matches the original Home design (hero, services carousel, reviews, FAQ, CTA).
+3. Admin → Pages → Home: edit a section heading, save, reload `/` — new text appears, design unchanged.
+4. Admin → Visual Page Builder: Home/About/Services/Contact/Gallery/Blog rows show the "Edit content in Pages" action instead of opening the builder. Custom pages still open the builder normally.
+
+## Technical notes
+
+- `FORCE_FALLBACK_SLUGS` short-circuits **before** the `page_layouts` query runs (it's already gated by `enabled: !!slug && !forceFallback`), so the lock is authoritative and cheap.
+- We do not delete the accidental `page_layouts` row for `home`. If in future you want to re-enable builder mode for Home, remove `'home'` from the set — no data loss.
+- `RESERVED_SLUGS` in `src/pages/BuiltPage.tsx` already blocks these slugs from being rendered by the generic `/p/:slug` fallback, so there's no second render path to worry about.
