@@ -90,6 +90,12 @@ export async function getAllRoutes() {
         // Skip legacy singular `service-*` slugs — these are duplicates of /services/:slug/
         // from an older seeding format and render empty pages at the root level.
         if (/^service-[a-z0-9-]+$/i.test(pg.page_slug)) return false;
+        // Skip legacy dirty location slugs with double prepositions
+        // (e.g. `dentist-in-near-andrews-college`). Superseded by the
+        // clean `-in-<area>` variants; excluding them keeps the sitemap
+        // free of duplicates while old DB rows are being cleaned up.
+        if (/-in-near-/i.test(pg.page_slug)) return false;
+        if (/^near-/i.test(pg.page_slug)) return false;
         return true;
       })
       .map((pg) => {
