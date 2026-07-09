@@ -71,9 +71,26 @@ const SortableSectionCard = ({ section, isEditing, onEdit, onSave, onCancelEdit,
 const AdminPages = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [activePage, setActivePage] = useState("home");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialPage = (() => {
+    const p = searchParams.get("page");
+    return p && PAGES.includes(p) ? p : "home";
+  })();
+  const [activePage, setActivePage] = useState(initialPage);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
+
+  // Keep state in sync when the ?page= query param changes (e.g. deep link
+  // from Visual Page Builder "Edit Content" button).
+  useEffect(() => {
+    const p = searchParams.get("page");
+    if (p && PAGES.includes(p) && p !== activePage) {
+      setActivePage(p);
+      setEditingSection(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState<any>({
     page_name: "home",
