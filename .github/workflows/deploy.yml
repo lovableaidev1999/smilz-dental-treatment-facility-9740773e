@@ -99,7 +99,9 @@ jobs:
           server-dir: ${{ secrets.FTP_PATH }}
           # Incremental sync: only files whose hash changed are uploaded.
           # The state file lives on the server and is read on the next run.
-          state-name: .ftp-deploy-sync-state.json
+          # v2 intentionally avoids the old state file that contains a stale
+          # /***best-dentist-in-garia-park delete entry.
+          state-name: .ftp-deploy-sync-state-v2.json
           dangerous-clean-slate: false
           log-level: minimal
           exclude: |
