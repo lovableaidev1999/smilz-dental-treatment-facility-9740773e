@@ -9,6 +9,10 @@ Disallow: /login
 Disallow: /login-form/
 Disallow: /preview/
 Disallow: /referral-register/
+# Legacy dirty location slugs — superseded by clean /-in-<area>/ variants.
+# Explicitly disallow so Google drops them from the index.
+Disallow: /*-in-near-
+Disallow: /near-
 
 # AI / GEO crawlers — explicitly allowed for generative search visibility
 User-agent: GPTBot
