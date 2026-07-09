@@ -317,7 +317,7 @@ const AdminPages = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-heading font-bold text-foreground">Page Sections</h1>
         <div className="flex items-center gap-2">
           <Button
@@ -342,12 +342,27 @@ const AdminPages = () => {
         </div>
       </div>
 
+      {/* Safety banner */}
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 mb-6 text-sm flex gap-2">
+        <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div>
+          <strong>Safe to edit.</strong> Changes here update the text, images, and CTAs inside your existing page design — the layout and styling of the live site will not change.
+        </div>
+      </div>
+
       {/* Page tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         {PAGES.map((page) => (
           <button
             key={page}
-            onClick={() => { setActivePage(page); setEditingSection(null); setShowNewForm(false); }}
+            onClick={() => {
+              setActivePage(page);
+              setEditingSection(null);
+              setShowNewForm(false);
+              const next = new URLSearchParams(searchParams);
+              next.set("page", page);
+              setSearchParams(next, { replace: true });
+            }}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
               activePage === page ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary/10"
             }`}
@@ -356,6 +371,7 @@ const AdminPages = () => {
           </button>
         ))}
       </div>
+
 
       {/* New section form */}
       {showNewForm && (
