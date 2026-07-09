@@ -50,6 +50,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # Static validation — fails the build if any dirty slugs
+      # (in-near-, near-, percent-encoded) made it into sitemap.xml.
+      - name: Validate sitemap (static)
+        run: node scripts/validate-sitemap.mjs dist/sitemap.xml
+
       - name: Prerender public pages
         timeout-minutes: 90
         run: node scripts/prerender.mjs
