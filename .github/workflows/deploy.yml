@@ -62,6 +62,63 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # Final safety net before FTP upload: every sitemap route must have a
+      # physical index.html in dist/. Hostinger/Apache returns 403 for an
+      # existing directory without an index.html (Options -Indexes), so if a
+      # prerender miss leaves dist/services/ without dist/services/index.html,
+      # the live sitemap validator fails before the SPA fallback can run.
+      - name: Ensure sitemap route index files exist
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const dist = path.resolve('dist');
+          const sitemapPath = path.join(dist, 'sitemap.xml');
+          const shellPath = path.join(dist, 'index.html');
+
+          if (!fs.existsSync(sitemapPath)) {
+            throw new Error(`Missing sitemap: ${sitemapPath}`);
+          }
+          if (!fs.existsSync(shellPath)) {
+            throw new Error(`Missing SPA shell: ${shellPath}`);
+          }
+
+          const xml = fs.readFileSync(sitemapPath, 'utf8');
+          const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
+          const backfilled = [];
+
+          for (const loc of locs) {
+            const url = new URL(loc);
+            if (url.hostname !== 'smilz.net') continue;
+            const routePath = decodeURIComponent(url.pathname);
+            const indexPath = routePath === '/'
+              ? shellPath
+              : path.join(dist, routePath, 'index.html');
+
+            if (fs.existsSync(indexPath)) continue;
+
+            fs.mkdirSync(path.dirname(indexPath), { recursive: true });
+            fs.copyFileSync(shellPath, indexPath);
+            const now = new Date();
+            fs.utimesSync(indexPath, now, now);
+            backfilled.push(routePath);
+          }
+
+          if (backfilled.length) {
+            console.warn(`[route-index-guard] Backfilled ${backfilled.length} route index file(s):`);
+            for (const route of backfilled) console.warn(`  - ${route}`);
+          } else {
+            console.log('[route-index-guard] All sitemap routes already have index.html files');
+          }
+
+          const servicesIndex = path.join(dist, 'services', 'index.html');
+          if (!fs.existsSync(servicesIndex)) {
+            throw new Error('dist/services/index.html is still missing after route index guard');
+          }
+          console.log(`[route-index-guard] Confirmed ${path.relative(process.cwd(), servicesIndex)} exists`);
+          NODE
+
       # Write a per-run deploy marker so the verify step below can confirm
       # the new build actually reached the server — independent of whether
       # the FTP action's delete phase encountered a stale folder (550 RMD).
@@ -134,7 +191,7 @@ jobs:
           mkdir -p "$FTP_PATH"
           set cmd:fail-exit true
           cd "$FTP_PATH"
-          mirror -R --verbose=1 --parallel=4 --only-newer \
+          mirror -R --verbose=1 --parallel=4 \
             --exclude-glob ".git*" \
             --exclude-glob ".git*/**" \
             --exclude-glob "node_modules/**" \

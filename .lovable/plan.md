@@ -1,41 +1,37 @@
-## Problem
+## Goal
+Make the deploy workflow reliably upload `dist/services/index.html` before live sitemap validation, so `/services/` stops returning 403.
 
-`validate-sitemap.mjs --live` reports `[403] https://smilz.net/services/` while all 375 other sitemap URLs return 200.
+## Diagnosis
+The previous backfill is in `scripts/prerender.mjs`, but the workflow still fails on live `/services/`. That means either:
+- the workflow run did not include the changed prerender script, or
+- `lftp mirror --only-newer` is not uploading the newly backfilled `dist/services/index.html` because its timestamp/size does not appear newer than the remote state, or
+- the backfilled file is overwritten/omitted before upload.
 
-Root cause: `dist/services/` exists as a directory on Hostinger (its children `dist/services/<slug>/index.html` were prerendered fine), but `dist/services/index.html` itself is missing. `.htaccess` has `Options -Indexes` + `DirectoryIndex index.html`, so Apache returns **403** for a directory without an index instead of falling through to the SPA rewrite. The prerender pass for the parent route `/services/` didn't produce a file — either it was skipped (SPA returned 404 on retry), it timed out, or a concurrency race left it unwritten. Either way, live URL 403s and CI fails.
+The strongest fix is to add an explicit verification/backfill step in `deploy.yml` after prerender and before FTP upload, independent of the prerender script.
 
-## Fix
+## Plan
+1. **Add a CI filesystem guard after prerender**
+   - In `.github/workflows/deploy.yml`, add a step after `Prerender public pages` and before `Write deploy marker`.
+   - The step checks every `<loc>` in `dist/sitemap.xml`.
+   - For each site route, it verifies the corresponding `dist/<route>/index.html` exists.
+   - If missing, it creates the folder and copies `dist/index.html` there.
+   - It specifically logs whether `dist/services/index.html` exists.
 
-Two-part safety net so a single prerender miss can never break the deploy again.
+2. **Force lftp to upload HTML changes**
+   - Keep incremental upload, but change the upload command so HTML/index files are not skipped due to `--only-newer` timestamp edge cases.
+   - Preferred: remove `--only-newer` from `lftp mirror`, while keeping exclusions and parallel upload.
+   - This makes the deploy slower but much safer: changed/backfilled HTML files definitely reach Hostinger.
 
-### 1. Post-prerender "SPA shell backfill" step
+3. **Keep validator hint as-is**
+   - `scripts/validate-sitemap.mjs` already explains the 403 cause clearly.
+   - No further validator logic change is needed.
 
-Add a small block near the end of `scripts/prerender.mjs` (after all pages are written, before writing the report) that:
+4. **Optional cleanup**
+   - Keep the `scripts/prerender.mjs` backfill as an earlier safety net.
+   - The workflow guard becomes the final pre-upload safety net.
 
-- Reads every route from `getAllRoutes()` — the same source the sitemap uses.
-- For each route, computes the expected file path (`dist<route>index.html`, with the root special-cased to `dist/index.html`).
-- If the file does **not** exist, copies `dist/index.html` (the raw Vite SPA shell) to that location and logs `[prerender] ⚠ backfilled <route> with SPA shell`.
-- Increments a new `report.backfilled` counter and adds a page entry with `status: "backfilled"` so it's visible in `prerender-report.json`.
-
-Effect: every route in the sitemap is guaranteed to have an on-disk `index.html`. Missing prerenders degrade gracefully to a client-rendered SPA page (still crawlable via the existing prerender-for-bots strategy) instead of a 403.
-
-### 2. Validator diagnostics improvement (optional, small)
-
-In `scripts/validate-sitemap.mjs`, when a URL returns 403, print a hint line: `hint: likely missing <route>/index.html on server (Apache -Indexes)`. Purely to make future occurrences self-explanatory in CI logs. No behavior change.
-
-### 3. Investigate the underlying /services/ prerender failure (follow-up, non-blocking)
-
-In this same change, read the previous run's `prerender-report.json` if available and add a `console.warn` in `prerender.mjs` when a **core** route (`/`, `/services/`, `/about/`, `/contact/`, `/blog/`, `/gallery/`, `/referral/`) ends up in the backfilled bucket — those should never be missing, so we want a loud signal to fix the real root cause later. No hard failure, just a visible warning.
-
-## Files to change
-
-- `scripts/prerender.mjs` — add backfill loop + core-route warning.
-- `scripts/validate-sitemap.mjs` — add 403 hint in the failure log.
-
-Nothing to change in `.htaccess`, the workflow YAML, or the sitemap generator. `lftp mirror --only-newer` will pick the backfilled files up automatically.
-
-## Verification
-
-- After the change, the CI job's prerender step will log a `backfilled` line for `/services/` (or whatever route was previously missing).
-- The subsequent `Validate sitemap (live HTTP)` step should see 200 for every URL.
-- `dist/prerender-report.json` will contain a `backfilled` array we can inspect to chase down the real prerender failure separately, without breaking future deploys.
+## Expected result
+On the next `Build & Deploy to Hostinger` run:
+- CI logs show `dist/services/index.html` exists before FTP.
+- FTP uploads that file.
+- `node scripts/validate-sitemap.mjs dist/sitemap.xml --live` returns 200 for `/services/` and passes.
