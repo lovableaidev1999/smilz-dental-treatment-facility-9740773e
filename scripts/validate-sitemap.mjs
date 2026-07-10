@@ -126,6 +126,12 @@ async function main() {
     console.error(`[validate-sitemap] ✗ ${failed.length} URL(s) did not return 2xx/3xx:`);
     for (const f of failed.slice(0, 50)) {
       console.error(`   - [${f.status || "ERR"}] ${f.url}${f.error ? "  " + f.error : ""}`);
+      if (f.status === 403) {
+        try {
+          const path = new URL(f.url).pathname;
+          console.error(`     hint: likely missing dist${path}index.html — Apache -Indexes returns 403 before SPA fallback runs`);
+        } catch {}
+      }
     }
     if (failed.length > 50) console.error(`   ...and ${failed.length - 50} more`);
     process.exit(1);
