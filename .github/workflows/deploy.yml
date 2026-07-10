@@ -130,7 +130,9 @@ jobs:
           set net:max-retries 5
           set net:timeout 45
           set net:reconnect-interval-base 5
-          -mkdir -p "$FTP_PATH"
+          set cmd:fail-exit false
+          mkdir -p "$FTP_PATH"
+          set cmd:fail-exit true
           cd "$FTP_PATH"
           mirror -R --verbose=1 --parallel=4 --only-newer \
             --exclude-glob ".git*" \
@@ -141,7 +143,9 @@ jobs:
             --exclude-glob "*.map" \
             --exclude-glob "deploy-marker-*.js" \
             ./dist/ ./
-          -mkdir -p assets
+          set cmd:fail-exit false
+          mkdir -p assets
+          set cmd:fail-exit true
           put -O assets "dist/assets/$DEPLOY_MARKER"
           cls -l "assets/$DEPLOY_MARKER"
           bye
