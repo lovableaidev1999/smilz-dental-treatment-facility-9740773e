@@ -123,6 +123,7 @@ jobs:
           : "${FTP_PATH:?FTP_PATH is required}"
 
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_SERVER" <<LFTP
+          set cmd:fail-exit true
           set ftp:ssl-allow true
           set ftp:ssl-force false
           set ssl:verify-certificate no
