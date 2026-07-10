@@ -16,7 +16,7 @@
  * Usage: node scripts/prerender.mjs
  */
 import { createServer } from "http";
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { getAllRoutes, SKIP_PREFIXES } from "./_routes.mjs";
