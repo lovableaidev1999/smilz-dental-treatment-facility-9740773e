@@ -1,13 +1,11 @@
-## Goal
-Stop the `Rebuild Prerendered Pages` workflow from using `SamKirkland/FTP-Deploy-Action`, because it is still reading a stale remote sync inventory and trying to delete the already-missing `/***best-dentist-in-garia-park` folder.
-
 ## Plan
-1. Update `.github/workflows/rebuild-content.yml` only.
-2. Replace the `Deploy via FTP (incremental)` step that uses `SamKirkland/FTP-Deploy-Action@v4.3.5` with the safer `lftp` deployment method already used in `Build & Deploy to Hostinger`.
-3. Add an `Install lftp` step before the deploy step.
-4. Configure `lftp mirror -R --only-newer` so it uploads changed prerendered files without relying on the FTP action’s stale state file and without processing the corrupted delete queue.
-5. Keep the existing build, sitemap generation, and prerender steps unchanged.
-6. Verify the workflow no longer references `SamKirkland/FTP-Deploy-Action` or any FTP deploy sync state file in `rebuild-content.yml`.
 
-## Expected result
-The rebuild workflow deploys changed prerendered pages without attempting to remove `/***best-dentist-in-garia-park`, so the `FTPError: 550 ... No such file or directory` loop should stop.
+1. Update `.github/workflows/deploy.yml` so the deploy marker upload is no longer dependent on a potentially incorrect `$FTP_PATH/assets` path.
+2. Make the `lftp` deploy step explicitly create and enter the configured remote publish directory, then mirror `dist/` into that directory.
+3. Upload the SHA marker file last using a relative `assets/` target from inside the remote publish directory, ensuring it lands at `/assets/deploy-marker-<sha>.js` on the live site.
+4. Add a quick post-upload remote listing/check inside the FTP session for `assets/deploy-marker-<sha>.js` so the action fails earlier if the marker was not actually placed on the server.
+5. Keep the existing HTTP verification step, but optionally add a short initial wait before the retry loop for Hostinger propagation.
+
+## Technical details
+
+The current verification fails with 404 even though FTP reports success. The likely issue is that the marker is being uploaded to a path that does not map to the public `/assets/...` URL, or the marker upload command succeeds without proving the file exists in the target directory. The fix will make the remote working directory deterministic and verify the marker exists remotely before the HTTP curl check runs.

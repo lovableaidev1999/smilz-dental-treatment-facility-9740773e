@@ -130,6 +130,7 @@ jobs:
           set net:timeout 45
           set net:reconnect-interval-base 5
           mkdir -p "$FTP_PATH"
+          cd "$FTP_PATH"
           mirror -R --verbose=1 --parallel=4 --only-newer \
             --exclude-glob ".git*" \
             --exclude-glob ".git*/**" \
@@ -138,9 +139,10 @@ jobs:
             --exclude-glob "prerender-report.json" \
             --exclude-glob "*.map" \
             --exclude-glob "deploy-marker-*.js" \
-            ./dist/ "$FTP_PATH"
-          mkdir -p "$FTP_PATH/assets"
-          put -O "$FTP_PATH/assets" "dist/assets/$DEPLOY_MARKER"
+            ./dist/ ./
+          mkdir -p assets
+          put -O assets "dist/assets/$DEPLOY_MARKER"
+          cls -l "assets/$DEPLOY_MARKER"
           bye
           LFTP
 
@@ -154,6 +156,7 @@ jobs:
           MARKER_URL="https://smilz.net/assets/deploy-marker-${EXPECTED_SHA}.js"
           echo "Expected SHA: $EXPECTED_SHA"
           echo "Marker URL: $MARKER_URL"
+          sleep 10
           # Retry up to 12 times over ~2 minutes for FTP/CDN propagation.
           for i in $(seq 1 12); do
             DEPLOYED=$(curl -fsSL "$MARKER_URL?cb=$(date +%s)" || echo "MISSING")
