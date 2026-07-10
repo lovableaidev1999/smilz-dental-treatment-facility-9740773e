@@ -482,6 +482,37 @@ async function prerender() {
   await browser.close();
   server.close();
 
+  // ── SPA-shell backfill ────────────────────────────────────────────────
+  // Guarantee every sitemap route has an on-disk index.html. Without this,
+  // Hostinger's Apache (Options -Indexes + DirectoryIndex index.html) returns
+  // 403 for any directory whose index.html is missing (e.g. /services/ when
+  // child /services/<slug>/index.html files exist but the parent doesn't).
+  // Missing routes degrade to a client-rendered SPA page instead of a 403.
+  const CORE_ROUTES = new Set(["/", "/about/", "/services/", "/contact/", "/blog/", "/gallery/", "/referral/"]);
+  const spaShellPath = join(DIST, "index.html");
+  const spaShell = existsSync(spaShellPath) ? readFileSync(spaShellPath) : null;
+  report.backfilled = [];
+  if (spaShell) {
+    for (const r of routesToRender) {
+      const filePath = r.path === "/" ? spaShellPath : join(DIST, r.path, "index.html");
+      if (existsSync(filePath)) continue;
+      const dir = dirname(filePath);
+      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+      copyFileSync(spaShellPath, filePath);
+      report.backfilled.push(r.path);
+      const isCore = CORE_ROUTES.has(r.path);
+      const prefix = isCore ? "[prerender] 🚨 CORE route" : "[prerender] ⚠ backfilled";
+      console.warn(`${prefix} ${r.path} with SPA shell (prerender did not produce a file)`);
+    }
+    if (report.backfilled.length === 0) {
+      console.log(`[prerender] ✓ Backfill check: all routes have an index.html`);
+    } else {
+      console.warn(`[prerender] ⚠ Backfilled ${report.backfilled.length} route(s) with SPA shell`);
+    }
+  } else {
+    console.warn(`[prerender] ⚠ Skipping backfill — dist/index.html missing`);
+  }
+
   // Write machine report
   writeFileSync(join(DIST, 'prerender-report.json'), JSON.stringify(report, null, 2));
 
