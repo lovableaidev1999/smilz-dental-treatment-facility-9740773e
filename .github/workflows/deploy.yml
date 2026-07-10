@@ -130,7 +130,7 @@ jobs:
           set net:max-retries 5
           set net:timeout 45
           set net:reconnect-interval-base 5
-          mkdir -p "$FTP_PATH"
+          -mkdir -p "$FTP_PATH"
           cd "$FTP_PATH"
           mirror -R --verbose=1 --parallel=4 --only-newer \
             --exclude-glob ".git*" \
@@ -141,7 +141,7 @@ jobs:
             --exclude-glob "*.map" \
             --exclude-glob "deploy-marker-*.js" \
             ./dist/ ./
-          mkdir -p assets
+          -mkdir -p assets
           put -O assets "dist/assets/$DEPLOY_MARKER"
           cls -l "assets/$DEPLOY_MARKER"
           bye
