@@ -94,38 +94,55 @@ jobs:
           echo "--- .htaccess present? ---"
           ls -la dist/.htaccess || echo "MISSING .htaccess"
 
-      # NOTE: continue-on-error is set so that non-fatal FTP errors
-      # (e.g. 550 "No such file or directory" when removing a stale folder
-      # whose RMD fails because it is not empty) do NOT abort the workflow.
-      # Real failures (auth, network, nothing uploaded) are caught by the
-      # Verify Deploy step below, which only passes if the new deploy-marker
-      # is actually live on smilz.net.
-      - name: Deploy via FTP (incremental)
+      # Upload with lftp instead of FTP-Deploy-Action. The action keeps a remote
+      # sync-state file and can fail on stale delete entries such as the old
+      # /***best-dentist-in-garia-park folder. lftp uploads changed files only
+      # and never processes that corrupted delete queue.
+      - name: Install lftp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+
+      - name: Deploy via FTP (lftp incremental upload)
         id: ftp_deploy
         continue-on-error: true
         timeout-minutes: 45  # increased from 12: first-run uploads all files, subsequent runs are fast
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_PATH }}
-          # Incremental sync: only files whose hash changed are uploaded.
-          # The state file lives on the server and is read on the next run.
-          # v2 intentionally avoids the old state file that contains a stale
-          # /***best-dentist-in-garia-park delete entry.
-          state-name: .ftp-deploy-sync-state-v2.json
-          dangerous-clean-slate: false
-          log-level: minimal
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/.DS_Store
-            **/prerender-report.json
-            **/*.map
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_PATH: ${{ secrets.FTP_PATH }}
+          DEPLOY_MARKER: deploy-marker-${{ github.sha }}.js
+        run: |
+          set -euo pipefail
+          : "${FTP_SERVER:?FTP_SERVER is required}"
+          : "${FTP_USERNAME:?FTP_USERNAME is required}"
+          : "${FTP_PASSWORD:?FTP_PASSWORD is required}"
+          : "${FTP_PORT:?FTP_PORT is required}"
+          : "${FTP_PATH:?FTP_PATH is required}"
+
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_SERVER" <<LFTP
+          set ftp:ssl-allow true
+          set ftp:ssl-force false
+          set ssl:verify-certificate no
+          set net:max-retries 5
+          set net:timeout 45
+          set net:reconnect-interval-base 5
+          mkdir -p "$FTP_PATH"
+          mirror -R --verbose=1 --parallel=4 --only-newer \
+            --exclude-glob ".git*" \
+            --exclude-glob ".git*/**" \
+            --exclude-glob "node_modules/**" \
+            --exclude-glob ".DS_Store" \
+            --exclude-glob "prerender-report.json" \
+            --exclude-glob "*.map" \
+            --exclude-glob "deploy-marker-*.js" \
+            ./dist/ "$FTP_PATH"
+          mkdir -p "$FTP_PATH/assets"
+          put -O "$FTP_PATH/assets" "dist/assets/$DEPLOY_MARKER"
+          bye
+          LFTP
 
       # Verify the new build is actually live by fetching the deploy marker
       # asset we just wrote into dist/assets/. If the FTP upload truly failed,
