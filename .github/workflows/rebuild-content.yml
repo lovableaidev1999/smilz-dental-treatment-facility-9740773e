@@ -48,30 +48,42 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Deploy via FTP (incremental)
-        timeout-minutes: 30
-        continue-on-error: true
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-          local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_PATH }}
-          # Reset the FTP action's remote sync state. The old state file contains
-          # a stale/corrupted directory entry (/***best-dentist-in-garia-park),
-          # so the action kept trying to remove a folder that Hostinger reports
-          # as missing. A new state file forces a clean inventory without using
-          # that bad delete queue.
-          state-name: .ftp-deploy-sync-state-rebuild-v2.json
-          dangerous-clean-slate: false
-          log-level: minimal
-          security: loose
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/.DS_Store
-            **/prerender-report.json
-            **/*.map
+      - name: Install lftp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+
+      - name: Deploy via FTP (lftp incremental upload)
+        timeout-minutes: 45
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_PATH: ${{ secrets.FTP_PATH }}
+        run: |
+          set -euo pipefail
+          : "${FTP_SERVER:?FTP_SERVER is required}"
+          : "${FTP_USERNAME:?FTP_USERNAME is required}"
+          : "${FTP_PASSWORD:?FTP_PASSWORD is required}"
+          : "${FTP_PORT:?FTP_PORT is required}"
+          : "${FTP_PATH:?FTP_PATH is required}"
+
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_SERVER" <<LFTP
+          set ftp:ssl-allow true
+          set ftp:ssl-force false
+          set ssl:verify-certificate no
+          set net:max-retries 5
+          set net:timeout 45
+          set net:reconnect-interval-base 5
+          mkdir -p "$FTP_PATH"
+          mirror -R --verbose=1 --parallel=4 --only-newer \
+            --exclude-glob ".git*" \
+            --exclude-glob ".git*/**" \
+            --exclude-glob "node_modules/**" \
+            --exclude-glob ".DS_Store" \
+            --exclude-glob "prerender-report.json" \
+            --exclude-glob "*.map" \
+            ./dist/ "$FTP_PATH"
+          bye
+          LFTP
