@@ -14,7 +14,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 60  # hard cap so a stuck run cannot hang for hours; concurrency also cancels older runs when a new commit lands
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
