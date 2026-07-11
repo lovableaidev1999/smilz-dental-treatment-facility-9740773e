@@ -232,6 +232,9 @@ jobs:
           put -O services "dist/$SERVICES_INDEX"
           cls -l "$SERVICES_INDEX"
           echo "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX"
+          put -O / "dist/$HOME_INDEX"
+          cls -l "$HOME_INDEX"
+          echo "__HOME_INDEX_CONFIRMED__ $HOME_INDEX"
           set cmd:fail-exit false
           mkdir -p assets
           set cmd:fail-exit true
