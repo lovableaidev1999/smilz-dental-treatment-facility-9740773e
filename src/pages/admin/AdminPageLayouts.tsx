@@ -73,6 +73,14 @@ const AdminPageLayouts = () => {
   const handleCreateNew = () => {
     if (!newTitle.trim()) return;
     const slug = newSlug.trim() || newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (CORE_PAGES.some(cp => cp.slug === slug)) {
+      toast({
+        title: 'Reserved slug',
+        description: `"${slug}" is a core page with a fixed design. Edit its content in Admin → Pages instead.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setPendingCreate({ slug, title: newTitle });
     setShowNew(false);
     setShowTemplatePicker(true);
