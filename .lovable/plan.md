@@ -1,37 +1,64 @@
 ## Goal
-Make the deploy workflow reliably upload `dist/services/index.html` before live sitemap validation, so `/services/` stops returning 403.
+Stop the recurring live sitemap failure for `https://***/services/` by proving whether `dist/services/index.html` exists in CI and forcing that exact file to be uploaded before live validation.
 
 ## Diagnosis
-The previous backfill is in `scripts/prerender.mjs`, but the workflow still fails on live `/services/`. That means either:
-- the workflow run did not include the changed prerender script, or
-- `lftp mirror --only-newer` is not uploading the newly backfilled `dist/services/index.html` because its timestamp/size does not appear newer than the remote state, or
-- the backfilled file is overwritten/omitted before upload.
+The validator is still getting `403` for `/services/`, which means Hostinger is serving `/services/` as an existing directory without an `index.html`. Since the workflow now has a route-index guard, one of these is happening:
 
-The strongest fix is to add an explicit verification/backfill step in `deploy.yml` after prerender and before FTP upload, independent of the prerender script.
+1. The GitHub workflow run is still using an older `deploy.yml` without the new guard.
+2. The guard creates `dist/services/index.html`, but FTP mirror is not replacing/uploading the remote file state correctly.
+3. The remote `/services/` directory exists but does not receive `index.html` before validation.
+4. Hostinger cache/propagation is serving the stale 403 briefly after upload.
 
 ## Plan
-1. **Add a CI filesystem guard after prerender**
-   - In `.github/workflows/deploy.yml`, add a step after `Prerender public pages` and before `Write deploy marker`.
-   - The step checks every `<loc>` in `dist/sitemap.xml`.
-   - For each site route, it verifies the corresponding `dist/<route>/index.html` exists.
-   - If missing, it creates the folder and copies `dist/index.html` there.
-   - It specifically logs whether `dist/services/index.html` exists.
 
-2. **Force lftp to upload HTML changes**
-   - Keep incremental upload, but change the upload command so HTML/index files are not skipped due to `--only-newer` timestamp edge cases.
-   - Preferred: remove `--only-newer` from `lftp mirror`, while keeping exclusions and parallel upload.
-   - This makes the deploy slower but much safer: changed/backfilled HTML files definitely reach Hostinger.
+### 1. Add hard proof before FTP upload
+Update `deploy.yml` so the route-index guard prints a clear, grep-friendly proof block:
 
-3. **Keep validator hint as-is**
-   - `scripts/validate-sitemap.mjs` already explains the 403 cause clearly.
-   - No further validator logic change is needed.
+```text
+[route-index-guard] PROOF dist/services/index.html exists
+[route-index-guard] size=...
+[route-index-guard] mtime=...
+[route-index-guard] sha256=...
+```
 
-4. **Optional cleanup**
-   - Keep the `scripts/prerender.mjs` backfill as an earlier safety net.
-   - The workflow guard becomes the final pre-upload safety net.
+If `dist/services/index.html` is missing, fail immediately before FTP instead of waiting for live validation.
+
+### 2. Force-upload the exact `/services/index.html` file after mirror
+After the `lftp mirror` command, add an explicit upload command:
+
+```text
+mkdir -p services
+put -O services dist/services/index.html
+cls -l services/index.html
+```
+
+This bypasses any mirror/timestamp/directory edge case and directly confirms the remote file exists in FTP output.
+
+### 3. Track the explicit services upload result
+Parse the FTP output for `services/index.html` and expose a workflow output such as:
+
+```text
+services_index_uploaded=true
+```
+
+If the mirror has warnings but the marker and services index were both listed, treat the upload as successful enough to proceed.
+
+### 4. Add a targeted `/services/` HTTP verification retry before full sitemap validation
+Before running the full live sitemap validator, add a small retry loop for only:
+
+```text
+https://smilz.net/services/?cb=<timestamp>
+```
+
+If `/services/` still returns `403` but FTP confirmed `services/index.html`, log it as Hostinger cache/propagation lag and wait longer before the full sitemap validation.
+
+### 5. Keep the full sitemap validator as the final gate
+Leave `node scripts/validate-sitemap.mjs dist/sitemap.xml --live` in place. It should only run after `/services/` has been specifically verified or given enough propagation time.
 
 ## Expected result
-On the next `Build & Deploy to Hostinger` run:
-- CI logs show `dist/services/index.html` exists before FTP.
-- FTP uploads that file.
-- `node scripts/validate-sitemap.mjs dist/sitemap.xml --live` returns 200 for `/services/` and passes.
+The next CI run will show exactly where the failure is:
+
+- If the new proof logs are missing, the workflow changes were not pushed/used.
+- If the proof logs exist but FTP does not list `services/index.html`, the FTP upload is the problem.
+- If FTP lists `services/index.html` but HTTP still returns 403 temporarily, it is Hostinger cache/propagation and the targeted retry absorbs it.
+- If `/services/` returns 200, the full sitemap validation should pass.

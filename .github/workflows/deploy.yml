@@ -72,6 +72,7 @@ jobs:
           node <<'NODE'
           const fs = require('fs');
           const path = require('path');
+          const crypto = require('crypto');
 
           const dist = path.resolve('dist');
           const sitemapPath = path.join(dist, 'sitemap.xml');
@@ -117,6 +118,15 @@ jobs:
             throw new Error('dist/services/index.html is still missing after route index guard');
           }
           console.log(`[route-index-guard] Confirmed ${path.relative(process.cwd(), servicesIndex)} exists`);
+          const servicesStat = fs.statSync(servicesIndex);
+          const servicesHash = crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(servicesIndex))
+            .digest('hex');
+          console.log('[route-index-guard] PROOF dist/services/index.html exists');
+          console.log(`[route-index-guard] size=${servicesStat.size}`);
+          console.log(`[route-index-guard] mtime=${servicesStat.mtime.toISOString()}`);
+          console.log(`[route-index-guard] sha256=${servicesHash}`);
           NODE
 
       # Write a per-run deploy marker so the verify step below can confirm
@@ -171,6 +181,7 @@ jobs:
           FTP_PORT: ${{ secrets.FTP_PORT }}
           FTP_PATH: ${{ secrets.FTP_PATH }}
           DEPLOY_MARKER: deploy-marker-${{ github.sha }}.js
+          SERVICES_INDEX: services/index.html
         run: |
           set -uo pipefail
           : "${FTP_SERVER:?FTP_SERVER is required}"
@@ -201,10 +212,17 @@ jobs:
             --exclude-glob "deploy-marker-*.js" \
             ./dist/ ./
           set cmd:fail-exit false
+          mkdir -p services
+          set cmd:fail-exit true
+          put -O services "dist/$SERVICES_INDEX"
+          cls -l "$SERVICES_INDEX"
+          echo "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX"
+          set cmd:fail-exit false
           mkdir -p assets
           set cmd:fail-exit true
           put -O assets "dist/assets/$DEPLOY_MARKER"
           cls -l "assets/$DEPLOY_MARKER"
+          echo "__DEPLOY_MARKER_CONFIRMED__ assets/$DEPLOY_MARKER"
           bye
           LFTP
           LFTP_EXIT=$?
@@ -213,7 +231,7 @@ jobs:
           # actually landed on the server — independent of the overall
           # lftp exit code, which can be non-zero due to unrelated benign
           # warnings (e.g. the "550 File exists" on mkdir).
-          if grep -q "$DEPLOY_MARKER" /tmp/lftp_output.log; then
+          if grep -q "__DEPLOY_MARKER_CONFIRMED__ assets/$DEPLOY_MARKER" /tmp/lftp_output.log; then
             echo "marker_uploaded=true" >> "$GITHUB_OUTPUT"
             echo "✅ Confirmed via FTP listing: $DEPLOY_MARKER is present on the server"
           else
@@ -221,7 +239,47 @@ jobs:
             echo "⚠️ Could not confirm $DEPLOY_MARKER in FTP output"
           fi
 
+          if grep -q "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX" /tmp/lftp_output.log; then
+            echo "services_index_uploaded=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Confirmed via FTP listing: $SERVICES_INDEX is present on the server"
+          else
+            echo "services_index_uploaded=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Could not confirm $SERVICES_INDEX in FTP output"
+          fi
+
           exit $LFTP_EXIT
+
+      # Target the one route that has been failing before running the full
+      # sitemap validator. If FTP directly confirmed services/index.html,
+      # allow extra Hostinger/LiteSpeed propagation time instead of failing
+      # immediately on a stale 403.
+      - name: Verify /services/ route
+        run: |
+          SERVICES_URL="https://smilz.net/services/"
+          SERVICES_INDEX_UPLOADED="${{ steps.ftp_deploy.outputs.services_index_uploaded }}"
+          echo "Services URL: $SERVICES_URL"
+          echo "FTP-confirmed services/index.html upload: $SERVICES_INDEX_UPLOADED"
+
+          for i in $(seq 1 24); do
+            STATUS=$(curl -L -o /tmp/services-route-body.html -w "%{http_code}" \
+              -H "Cache-Control: no-cache" \
+              -H "Pragma: no-cache" \
+              "$SERVICES_URL?cb=$(date +%s%N)" || echo "000")
+            echo "Attempt $i — /services/ HTTP status: $STATUS"
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+              echo "✅ /services/ is live with status $STATUS"
+              exit 0
+            fi
+            if [ "$STATUS" = "403" ] && [ "$SERVICES_INDEX_UPLOADED" = "true" ]; then
+              echo "   FTP confirmed services/index.html; waiting for Hostinger cache/propagation"
+            fi
+            sleep 15
+          done
+
+          echo "Last /services/ response preview:"
+          head -20 /tmp/services-route-body.html || true
+          echo "❌ /services/ did not return 2xx/3xx before full sitemap validation"
+          exit 1
 
       # Verify the new build is actually live by fetching the deploy marker
       # asset we just wrote into dist/assets/. Hostinger's edge/LiteSpeed
