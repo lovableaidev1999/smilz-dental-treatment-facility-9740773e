@@ -1,4 +1,5 @@
 name: Build & Deploy to Hostinger
+# redeploy: force fresh home upload after put-path fix (2026-07-11)
 
 on:
   push:
