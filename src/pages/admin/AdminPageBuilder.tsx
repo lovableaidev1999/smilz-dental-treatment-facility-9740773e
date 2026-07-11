@@ -547,6 +547,32 @@ const AdminPageBuilder = () => {
     );
   }
 
+  // Core pages are template-locked: the live site always renders the
+  // hardcoded React component and ignores any page_layouts row for these
+  // slugs (see FORCE_FALLBACK_SLUGS in SmartPage.tsx). Block the Visual
+  // Builder here to avoid confusion and route admins to the content editor.
+  if (CORE_LOCKED_SLUGS.has(effectiveSlug)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="max-w-md w-full rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-6 text-center">
+          <h2 className="text-lg font-semibold mb-2">This page has a fixed design</h2>
+          <p className="text-sm text-amber-800 mb-5">
+            "{effectiveSlug}" is a core page whose layout is controlled by the site's source code.
+            The Visual Builder is disabled for it so branding, responsiveness, and SEO stay consistent.
+            You can still edit its text, images, and buttons in the Content Editor.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={() => navigate('/admin/page-layouts')}>Back</Button>
+            <Button onClick={() => navigate(`/admin/pages?page=${encodeURIComponent(effectiveSlug)}`)}>
+              Edit Content
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
   // Extract _seo from layout_json and separate blocks
   let initialLayout = existingLayout?.layout_json || [];
   let extractedSeo: any = {};
