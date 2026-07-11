@@ -216,11 +216,13 @@ jobs:
           set cmd:fail-exit true
           put -O services "dist/$SERVICES_INDEX"
           cls -l "$SERVICES_INDEX"
+          echo "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX"
           set cmd:fail-exit false
           mkdir -p assets
           set cmd:fail-exit true
           put -O assets "dist/assets/$DEPLOY_MARKER"
           cls -l "assets/$DEPLOY_MARKER"
+          echo "__DEPLOY_MARKER_CONFIRMED__ assets/$DEPLOY_MARKER"
           bye
           LFTP
           LFTP_EXIT=$?
@@ -229,7 +231,7 @@ jobs:
           # actually landed on the server — independent of the overall
           # lftp exit code, which can be non-zero due to unrelated benign
           # warnings (e.g. the "550 File exists" on mkdir).
-          if grep -q "$DEPLOY_MARKER" /tmp/lftp_output.log; then
+          if grep -q "__DEPLOY_MARKER_CONFIRMED__ assets/$DEPLOY_MARKER" /tmp/lftp_output.log; then
             echo "marker_uploaded=true" >> "$GITHUB_OUTPUT"
             echo "✅ Confirmed via FTP listing: $DEPLOY_MARKER is present on the server"
           else
@@ -237,7 +239,7 @@ jobs:
             echo "⚠️ Could not confirm $DEPLOY_MARKER in FTP output"
           fi
 
-          if grep -q "$SERVICES_INDEX" /tmp/lftp_output.log; then
+          if grep -q "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX" /tmp/lftp_output.log; then
             echo "services_index_uploaded=true" >> "$GITHUB_OUTPUT"
             echo "✅ Confirmed via FTP listing: $SERVICES_INDEX is present on the server"
           else
