@@ -196,6 +196,7 @@ jobs:
           FTP_PATH: ${{ secrets.FTP_PATH }}
           DEPLOY_MARKER: deploy-marker-${{ github.sha }}.js
           SERVICES_INDEX: services/index.html
+          HOME_INDEX: index.html
         run: |
           set -uo pipefail
           : "${FTP_SERVER:?FTP_SERVER is required}"
