@@ -307,6 +307,59 @@ jobs:
           echo "❌ /services/ did not return 2xx/3xx before full sitemap validation"
           exit 1
 
+      # Verify the freshly uploaded home index.html is what Hostinger serves.
+      # Also verifies the www→non-www 301 canonical host redirect is live.
+      - name: Verify / (home) route
+        run: |
+          HOME_URL="https://smilz.net/"
+          HOME_UPLOADED="${{ steps.ftp_deploy.outputs.home_index_uploaded }}"
+          echo "Home URL: $HOME_URL"
+          echo "FTP-confirmed index.html upload: $HOME_UPLOADED"
+
+          for i in $(seq 1 24); do
+            STATUS=$(curl -L -o /tmp/home-route-body.html -w "%{http_code}" \
+              -H "Cache-Control: no-cache" \
+              -H "Pragma: no-cache" \
+              "$HOME_URL?cb=$(date +%s%N)" || echo "000")
+            echo "Attempt $i — / HTTP status: $STATUS"
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+              # Confirm the fresh hero markup (Home.tsx) is what's being served,
+              # not a stale prerendered snapshot. Any one of these hero-only
+              # strings is enough proof.
+              if grep -q -E "Bridging Gaps|Call Now|4\.8 Google Rating" /tmp/home-route-body.html; then
+                echo "✅ / is live with status $STATUS and fresh hero markup"
+                break
+              else
+                echo "   / returned $STATUS but hero markup looks stale; retrying"
+              fi
+            fi
+            sleep 15
+            if [ "$i" -eq 24 ]; then
+              echo "Last / response preview:"
+              head -40 /tmp/home-route-body.html || true
+              echo "❌ / did not serve fresh hero markup within retry window"
+              exit 1
+            fi
+          done
+
+          # Verify canonical www → non-www 301 is live (.htaccess rule).
+          WWW_STATUS=$(curl -o /dev/null -s -w "%{http_code} %{redirect_url}" "https://www.smilz.net/services/" || echo "000")
+          echo "www.smilz.net/services/ response: $WWW_STATUS"
+          case "$WWW_STATUS" in
+            301*|302*)
+              if echo "$WWW_STATUS" | grep -q "https://smilz.net/"; then
+                echo "✅ www → non-www redirect is live"
+              else
+                echo "⚠️  www responded with redirect but not to smilz.net apex"
+              fi
+              ;;
+            *)
+              echo "⚠️  www did not 301 (got: $WWW_STATUS) — .htaccess rule may not have propagated yet"
+              ;;
+          esac
+
+
+
       # Verify the new build is actually live by fetching the deploy marker
       # asset we just wrote into dist/assets/. Hostinger's edge/LiteSpeed
       # cache can briefly serve a stale 404 for a filename that didn't exist
