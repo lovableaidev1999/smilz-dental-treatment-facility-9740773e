@@ -57,7 +57,7 @@ jobs:
         run: node scripts/validate-sitemap.mjs dist/sitemap.xml
 
       - name: Prerender public pages
-        timeout-minutes: 90
+        timeout-minutes: 25
         run: node scripts/prerender.mjs
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
