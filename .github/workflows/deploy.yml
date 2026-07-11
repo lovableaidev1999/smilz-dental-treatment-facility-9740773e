@@ -14,7 +14,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # increased: 90min prerender + 45min FTP + ~15min build/install headroom
+    timeout-minutes: 60  # hard cap so a stuck run cannot hang for hours; concurrency also cancels older runs when a new commit lands
     steps:
       - uses: actions/checkout@v4
 
