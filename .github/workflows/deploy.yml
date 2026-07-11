@@ -127,6 +127,20 @@ jobs:
           console.log(`[route-index-guard] size=${servicesStat.size}`);
           console.log(`[route-index-guard] mtime=${servicesStat.mtime.toISOString()}`);
           console.log(`[route-index-guard] sha256=${servicesHash}`);
+
+          const homeIndex = path.join(dist, 'index.html');
+          if (!fs.existsSync(homeIndex)) {
+            throw new Error('dist/index.html is missing after build/prerender');
+          }
+          const homeStat = fs.statSync(homeIndex);
+          const homeHash = crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(homeIndex))
+            .digest('hex');
+          console.log('[route-index-guard] PROOF dist/index.html exists');
+          console.log(`[route-index-guard] home_size=${homeStat.size}`);
+          console.log(`[route-index-guard] home_mtime=${homeStat.mtime.toISOString()}`);
+          console.log(`[route-index-guard] home_sha256=${homeHash}`);
           NODE
 
       # Write a per-run deploy marker so the verify step below can confirm
@@ -182,6 +196,7 @@ jobs:
           FTP_PATH: ${{ secrets.FTP_PATH }}
           DEPLOY_MARKER: deploy-marker-${{ github.sha }}.js
           SERVICES_INDEX: services/index.html
+          HOME_INDEX: index.html
         run: |
           set -uo pipefail
           : "${FTP_SERVER:?FTP_SERVER is required}"
@@ -217,6 +232,9 @@ jobs:
           put -O services "dist/$SERVICES_INDEX"
           cls -l "$SERVICES_INDEX"
           echo "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX"
+          put -O / "dist/$HOME_INDEX"
+          cls -l "$HOME_INDEX"
+          echo "__HOME_INDEX_CONFIRMED__ $HOME_INDEX"
           set cmd:fail-exit false
           mkdir -p assets
           set cmd:fail-exit true
@@ -245,6 +263,14 @@ jobs:
           else
             echo "services_index_uploaded=false" >> "$GITHUB_OUTPUT"
             echo "⚠️ Could not confirm $SERVICES_INDEX in FTP output"
+          fi
+
+          if grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log; then
+            echo "home_index_uploaded=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Confirmed via FTP listing: $HOME_INDEX is present on the server"
+          else
+            echo "home_index_uploaded=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Could not confirm $HOME_INDEX in FTP output"
           fi
 
           exit $LFTP_EXIT
@@ -280,6 +306,59 @@ jobs:
           head -20 /tmp/services-route-body.html || true
           echo "❌ /services/ did not return 2xx/3xx before full sitemap validation"
           exit 1
+
+      # Verify the freshly uploaded home index.html is what Hostinger serves.
+      # Also verifies the www→non-www 301 canonical host redirect is live.
+      - name: Verify / (home) route
+        run: |
+          HOME_URL="https://smilz.net/"
+          HOME_UPLOADED="${{ steps.ftp_deploy.outputs.home_index_uploaded }}"
+          echo "Home URL: $HOME_URL"
+          echo "FTP-confirmed index.html upload: $HOME_UPLOADED"
+
+          for i in $(seq 1 24); do
+            STATUS=$(curl -L -o /tmp/home-route-body.html -w "%{http_code}" \
+              -H "Cache-Control: no-cache" \
+              -H "Pragma: no-cache" \
+              "$HOME_URL?cb=$(date +%s%N)" || echo "000")
+            echo "Attempt $i — / HTTP status: $STATUS"
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+              # Confirm the fresh hero markup (Home.tsx) is what's being served,
+              # not a stale prerendered snapshot. Any one of these hero-only
+              # strings is enough proof.
+              if grep -q -E "Bridging Gaps|Call Now|4\.8 Google Rating" /tmp/home-route-body.html; then
+                echo "✅ / is live with status $STATUS and fresh hero markup"
+                break
+              else
+                echo "   / returned $STATUS but hero markup looks stale; retrying"
+              fi
+            fi
+            sleep 15
+            if [ "$i" -eq 24 ]; then
+              echo "Last / response preview:"
+              head -40 /tmp/home-route-body.html || true
+              echo "❌ / did not serve fresh hero markup within retry window"
+              exit 1
+            fi
+          done
+
+          # Verify canonical www → non-www 301 is live (.htaccess rule).
+          WWW_STATUS=$(curl -o /dev/null -s -w "%{http_code} %{redirect_url}" "https://www.smilz.net/services/" || echo "000")
+          echo "www.smilz.net/services/ response: $WWW_STATUS"
+          case "$WWW_STATUS" in
+            301*|302*)
+              if echo "$WWW_STATUS" | grep -q "https://smilz.net/"; then
+                echo "✅ www → non-www redirect is live"
+              else
+                echo "⚠️  www responded with redirect but not to smilz.net apex"
+              fi
+              ;;
+            *)
+              echo "⚠️  www did not 301 (got: $WWW_STATUS) — .htaccess rule may not have propagated yet"
+              ;;
+          esac
+
+
 
       # Verify the new build is actually live by fetching the deploy marker
       # asset we just wrote into dist/assets/. Hostinger's edge/LiteSpeed

@@ -1,6 +1,11 @@
 RewriteEngine On
 RewriteBase /
 
+# ── Canonical host: force www.smilz.net → smilz.net (301) ──
+# Must be first so every subsequent rule sees the canonical host.
+RewriteCond %{HTTP_HOST} ^www\.smilz\.net$ [NC]
+RewriteRule ^(.*)$ https://smilz.net/$1 [R=301,L]
+
 # ── Disable directory indexes (prevents Hostinger placeholder from leaking) ──
 Options -Indexes
 DirectoryIndex index.html

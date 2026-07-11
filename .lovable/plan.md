@@ -1,64 +1,52 @@
-## Goal
-Stop the recurring live sitemap failure for `https://***/services/` by proving whether `dist/services/index.html` exists in CI and forcing that exact file to be uploaded before live validation.
 
-## Diagnosis
-The validator is still getting `403` for `/services/`, which means Hostinger is serving `/services/` as an existing directory without an `index.html`. Since the workflow now has a route-index guard, one of these is happening:
+## Problems
 
-1. The GitHub workflow run is still using an older `deploy.yml` without the new guard.
-2. The guard creates `dist/services/index.html`, but FTP mirror is not replacing/uploading the remote file state correctly.
-3. The remote `/services/` directory exists but does not receive `index.html` before validation.
-4. Hostinger cache/propagation is serving the stale 403 briefly after upload.
+1. **`https://www.smilz.net/services/`** renders an unstyled/broken page while `https://smilz.net/services` is correct. Root cause: no www → non-www 301 in `public/.htaccess`, so the `www` host serves an inconsistent variant (memory says canonical is `smilz.net` non-www, enforced via `.htaccess`).
+2. **`https://smilz.net/` home hero** shows an outdated centered layout ("Bridging Gaps… Spreading Smiles!" red text overlapping the H1, small centered title, no CTA buttons, no rating strip) — while the Lovable preview shows the correct hero (yellow eyebrow, big left-aligned H1, description, Book Appointment + Call Now buttons, "4.8 Google Rating / Since 1999 / Advanced Technology" row). Root cause: the hosted `dist/index.html` (and/or `html-site/` prerender for `/`) contains a stale prerendered snapshot of the old Home hero. Because `index.html` is served with `no-cache` but the prerender output is baked in at build time, the visitor sees the old markup until React hydrates — and if the JS bundle is cached against an older hash, hydration keeps the stale DOM. Home is a `FORCE_FALLBACK` slug, so `src/pages/Home.tsx` is the source of truth; the fix is a fresh full rebuild + re-prerender + FTP upload so the on-disk `index.html` matches current `Home.tsx`.
 
-## Plan
+## Fix
 
-### 1. Add hard proof before FTP upload
-Update `deploy.yml` so the route-index guard prints a clear, grep-friendly proof block:
+### Part A — canonical host redirect (fixes /services/ on www)
 
-```text
-[route-index-guard] PROOF dist/services/index.html exists
-[route-index-guard] size=...
-[route-index-guard] mtime=...
-[route-index-guard] sha256=...
+Insert at the top of `public/.htaccess`, right after `RewriteBase /` and before all other rules:
+
+```apache
+# ── Canonical host: force www.smilz.net → smilz.net (301) ──
+RewriteCond %{HTTP_HOST} ^www\.smilz\.net$ [NC]
+RewriteRule ^(.*)$ https://smilz.net/$1 [R=301,L]
 ```
 
-If `dist/services/index.html` is missing, fail immediately before FTP instead of waiting for live validation.
+- Uses `[R=301,L]` so any URL under `www.` normalizes to the canonical host before SPA fallback, prerender rules, or MIME handling runs.
+- No React changes needed — `src/lib/canonicalUrl.ts` already normalizes canonical tags to `https://smilz.net`.
 
-### 2. Force-upload the exact `/services/index.html` file after mirror
-After the `lftp mirror` command, add an explicit upload command:
+### Part B — refresh the hosted home hero (fixes stale `/` render)
 
-```text
-mkdir -p services
-put -O services dist/services/index.html
-cls -l services/index.html
-```
+The React source is already correct (`Home.tsx` renders the hero shown in the preview). We only need the hosted `index.html` and prerender output to match. Two changes:
 
-This bypasses any mirror/timestamp/directory edge case and directly confirms the remote file exists in FTP output.
+1. **Force prerender + full mirror upload for `/`** in `.github/workflows/deploy.yml`:
+   - After `npm run build`, run `node scripts/prerender.mjs` unconditionally (the workflow already does — verify it isn't gated on file changes).
+   - In the FTP step, add an explicit `put -O / dist/index.html` after the `lftp mirror` so the root `index.html` is guaranteed to overwrite the stale copy (same pattern already used for `services/index.html`).
+   - Add a proof block that logs `sha256` of `dist/index.html` before upload, so we can confirm which build reached Hostinger.
 
-### 3. Track the explicit services upload result
-Parse the FTP output for `services/index.html` and expose a workflow output such as:
+2. **Post-deploy home verification** (mirrors the `/services/` retry loop already added):
+   - Before running the sitemap validator, `curl -L https://smilz.net/?cb=<ts>` and `grep` for a distinctive string from the current hero (e.g. `"Bridging Gaps… Spreading Smiles!"` eyebrow class or the `Book Appointment` + `Call Now` CTA pair) to confirm the fresh HTML is live. Fail the deploy if not found.
 
-```text
-services_index_uploaded=true
-```
+No changes to `src/pages/Home.tsx` — the React version is already what the user wants. This is purely a deploy/asset-freshness issue.
 
-If the mirror has warnings but the marker and services index were both listed, treat the upload as successful enough to proceed.
+### Part C — bust the browser cache on the visitor side (optional but recommended)
 
-### 4. Add a targeted `/services/` HTTP verification retry before full sitemap validation
-Before running the full live sitemap validator, add a small retry loop for only:
+Because `.htaccess` sets `Cache-Control: no-cache, no-store, must-revalidate` on `.html`, the moment the new `index.html` reaches Hostinger every browser gets it. But the JS bundle is `max-age=31536000, immutable` and only cache-busts on hash change. Vite already emits hashed bundle filenames, so a fresh build produces new hashes — no extra config needed. Just make sure the CI runs `npm run build` fresh (no cached `dist/`) which the workflow already does.
 
-```text
-https://smilz.net/services/?cb=<timestamp>
-```
+## Verification after deploy
 
-If `/services/` still returns `403` but FTP confirmed `services/index.html`, log it as Hostinger cache/propagation lag and wait longer before the full sitemap validation.
+1. `curl -I https://www.smilz.net/services/` → `301` with `Location: https://smilz.net/services/`.
+2. `curl -I https://smilz.net/services/` → `200`, styled page.
+3. `curl -sL https://smilz.net/ | grep -i "Bridging Gaps"` → matches the new hero eyebrow (yellow), and `grep -i "Call Now"` matches the CTA.
+4. Home + Services load visually identical to the Lovable preview (screenshots 1 and 2 of the earlier upload set).
 
-### 5. Keep the full sitemap validator as the final gate
-Leave `node scripts/validate-sitemap.mjs dist/sitemap.xml --live` in place. It should only run after `/services/` has been specifically verified or given enough propagation time.
+## Files to change
 
-## Expected result
-The next CI run will show exactly where the failure is:
+- `public/.htaccess` — insert the www→non-www 301 block near the top.
+- `.github/workflows/deploy.yml` — add explicit `put -O / dist/index.html` upload + sha256 proof for the home page, and a post-deploy `curl` check for `/` that greps for a hero-specific string before running the sitemap validator.
 
-- If the new proof logs are missing, the workflow changes were not pushed/used.
-- If the proof logs exist but FTP does not list `services/index.html`, the FTP upload is the problem.
-- If FTP lists `services/index.html` but HTTP still returns 403 temporarily, it is Hostinger cache/propagation and the targeted retry absorbs it.
-- If `/services/` returns 200, the full sitemap validation should pass.
+Nothing changes in React source code (Home / Services already render correctly in the preview).
