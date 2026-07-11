@@ -232,9 +232,18 @@ jobs:
           put -O services "dist/$SERVICES_INDEX"
           cls -l "$SERVICES_INDEX"
           echo "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX"
-          put -O / "dist/$HOME_INDEX"
-          cls -l "$HOME_INDEX"
+          # FIX: '-O ./' uploads to the lftp cwd ($FTP_PATH = public_html).
+          # Previously '-O /' targeted the absolute FTP account root, which is
+          # ABOVE public_html — so index.html landed in the wrong directory and
+          # the cls listing below returned the stale file already in public_html.
+          put -O ./ "dist/$HOME_INDEX"
+          cls --size "$HOME_INDEX"
           echo "__HOME_INDEX_CONFIRMED__ $HOME_INDEX"
+          # Explicit .htaccess upload + confirmation (mirror also uploads it,
+          # but this guarantees the www→apex 301 lands on every run).
+          put -O ./ "dist/.htaccess"
+          cls -l ".htaccess"
+          echo "__HTACCESS_CONFIRMED__ .htaccess"
           set cmd:fail-exit false
           mkdir -p assets
           set cmd:fail-exit true
