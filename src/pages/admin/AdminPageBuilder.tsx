@@ -510,9 +510,14 @@ const BuilderInner = ({ layoutId, pageSlug, pageTitle: initialTitle, isPublished
   );
 };
 
+// Slugs whose live design is locked to a hardcoded React template.
+// Kept in sync with FORCE_FALLBACK_SLUGS in src/components/SmartPage.tsx.
+const CORE_LOCKED_SLUGS = new Set(['home', 'about', 'services', 'contact', 'gallery', 'blog']);
+
 // ─── Page wrapper ───────────────────────────────────────
 const AdminPageBuilder = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const pageSlug = searchParams.get('slug') || 'new-page';
   const pageTitleParam = searchParams.get('title') || 'New Page';
