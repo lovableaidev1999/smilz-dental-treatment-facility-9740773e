@@ -14,7 +14,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # increased: 90min prerender + 45min FTP + ~15min build/install headroom
+    timeout-minutes: 60  # hard cap so a stuck run cannot hang for hours; concurrency also cancels older runs when a new commit lands
     steps:
       - uses: actions/checkout@v4
 
@@ -57,7 +57,7 @@ jobs:
         run: node scripts/validate-sitemap.mjs dist/sitemap.xml
 
       - name: Prerender public pages
-        timeout-minutes: 90
+        timeout-minutes: 25
         run: node scripts/prerender.mjs
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -188,7 +188,7 @@ jobs:
       - name: Deploy via FTP (lftp incremental upload)
         id: ftp_deploy
         continue-on-error: true
-        timeout-minutes: 45  # increased from 12: first-run uploads all files, subsequent runs are fast
+        timeout-minutes: 20  # hard cap; incremental mirror should finish in minutes
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
