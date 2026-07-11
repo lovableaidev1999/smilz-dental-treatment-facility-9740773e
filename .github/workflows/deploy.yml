@@ -265,6 +265,14 @@ jobs:
             echo "⚠️ Could not confirm $SERVICES_INDEX in FTP output"
           fi
 
+          if grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log; then
+            echo "home_index_uploaded=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Confirmed via FTP listing: $HOME_INDEX is present on the server"
+          else
+            echo "home_index_uploaded=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Could not confirm $HOME_INDEX in FTP output"
+          fi
+
           exit $LFTP_EXIT
 
       # Target the one route that has been failing before running the full
