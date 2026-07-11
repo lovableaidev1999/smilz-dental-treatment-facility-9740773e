@@ -127,6 +127,20 @@ jobs:
           console.log(`[route-index-guard] size=${servicesStat.size}`);
           console.log(`[route-index-guard] mtime=${servicesStat.mtime.toISOString()}`);
           console.log(`[route-index-guard] sha256=${servicesHash}`);
+
+          const homeIndex = path.join(dist, 'index.html');
+          if (!fs.existsSync(homeIndex)) {
+            throw new Error('dist/index.html is missing after build/prerender');
+          }
+          const homeStat = fs.statSync(homeIndex);
+          const homeHash = crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(homeIndex))
+            .digest('hex');
+          console.log('[route-index-guard] PROOF dist/index.html exists');
+          console.log(`[route-index-guard] home_size=${homeStat.size}`);
+          console.log(`[route-index-guard] home_mtime=${homeStat.mtime.toISOString()}`);
+          console.log(`[route-index-guard] home_sha256=${homeHash}`);
           NODE
 
       # Write a per-run deploy marker so the verify step below can confirm
