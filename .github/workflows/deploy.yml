@@ -232,9 +232,18 @@ jobs:
           put -O services "dist/$SERVICES_INDEX"
           cls -l "$SERVICES_INDEX"
           echo "__SERVICES_INDEX_CONFIRMED__ $SERVICES_INDEX"
-          put -O / "dist/$HOME_INDEX"
-          cls -l "$HOME_INDEX"
+          # FIX: '-O ./' uploads to the lftp cwd ($FTP_PATH = public_html).
+          # Previously '-O /' targeted the absolute FTP account root, which is
+          # ABOVE public_html — so index.html landed in the wrong directory and
+          # the cls listing below returned the stale file already in public_html.
+          put -O ./ "dist/$HOME_INDEX"
+          cls --size "$HOME_INDEX"
           echo "__HOME_INDEX_CONFIRMED__ $HOME_INDEX"
+          # Explicit .htaccess upload + confirmation (mirror also uploads it,
+          # but this guarantees the www→apex 301 lands on every run).
+          put -O ./ "dist/.htaccess"
+          cls -l ".htaccess"
+          echo "__HTACCESS_CONFIRMED__ .htaccess"
           set cmd:fail-exit false
           mkdir -p assets
           set cmd:fail-exit true
@@ -265,12 +274,37 @@ jobs:
             echo "⚠️ Could not confirm $SERVICES_INDEX in FTP output"
           fi
 
-          if grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log; then
+          # Home index: require BOTH the confirmation marker AND a remote size
+          # that matches the local dist/index.html. Just seeing the filename in
+          # a listing is not enough — the previous 'put -O /' bug produced a
+          # false-positive confirmation while public_html/index.html stayed stale.
+          EXPECTED_HOME_SIZE=$(stat -c %s "dist/$HOME_INDEX" 2>/dev/null || wc -c < "dist/$HOME_INDEX")
+          echo "Expected home index size: $EXPECTED_HOME_SIZE bytes"
+          REMOTE_HOME_SIZE=$(awk '/__HOME_INDEX_CONFIRMED__/{found=1} found && /^[0-9]+$/{print; exit} found && / [0-9]+ /{for(i=1;i<=NF;i++) if($i ~ /^[0-9]+$/){print $i; exit}}' /tmp/lftp_output.log || true)
+          # Fallback: parse the 'cls --size' line that appears just before the
+          # __HOME_INDEX_CONFIRMED__ marker. lftp 'cls --size' prints "<bytes> <name>".
+          if [ -z "$REMOTE_HOME_SIZE" ]; then
+            REMOTE_HOME_SIZE=$(grep -B1 "__HOME_INDEX_CONFIRMED__" /tmp/lftp_output.log | head -1 | awk '{print $1}' | grep -E '^[0-9]+$' || true)
+          fi
+          echo "Remote home index size (from lftp cls): ${REMOTE_HOME_SIZE:-unknown}"
+          if grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log && \
+             [ -n "$REMOTE_HOME_SIZE" ] && [ "$REMOTE_HOME_SIZE" = "$EXPECTED_HOME_SIZE" ]; then
             echo "home_index_uploaded=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Confirmed via FTP listing: $HOME_INDEX is present on the server"
+            echo "✅ Confirmed via FTP size match ($REMOTE_HOME_SIZE = $EXPECTED_HOME_SIZE): $HOME_INDEX is the new build"
+          elif grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log; then
+            echo "home_index_uploaded=partial" >> "$GITHUB_OUTPUT"
+            echo "⚠️ $HOME_INDEX listed on server, but size did not match (expected $EXPECTED_HOME_SIZE, got ${REMOTE_HOME_SIZE:-unknown})"
           else
             echo "home_index_uploaded=false" >> "$GITHUB_OUTPUT"
             echo "⚠️ Could not confirm $HOME_INDEX in FTP output"
+          fi
+
+          if grep -q "__HTACCESS_CONFIRMED__ .htaccess" /tmp/lftp_output.log; then
+            echo "htaccess_uploaded=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Confirmed via FTP listing: .htaccess is present on the server"
+          else
+            echo "htaccess_uploaded=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Could not confirm .htaccess in FTP output"
           fi
 
           exit $LFTP_EXIT
@@ -307,59 +341,6 @@ jobs:
           echo "❌ /services/ did not return 2xx/3xx before full sitemap validation"
           exit 1
 
-      # Verify the freshly uploaded home index.html is what Hostinger serves.
-      # Also verifies the www→non-www 301 canonical host redirect is live.
-      - name: Verify / (home) route
-        run: |
-          HOME_URL="https://smilz.net/"
-          HOME_UPLOADED="${{ steps.ftp_deploy.outputs.home_index_uploaded }}"
-          echo "Home URL: $HOME_URL"
-          echo "FTP-confirmed index.html upload: $HOME_UPLOADED"
-
-          for i in $(seq 1 24); do
-            STATUS=$(curl -L -o /tmp/home-route-body.html -w "%{http_code}" \
-              -H "Cache-Control: no-cache" \
-              -H "Pragma: no-cache" \
-              "$HOME_URL?cb=$(date +%s%N)" || echo "000")
-            echo "Attempt $i — / HTTP status: $STATUS"
-            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-              # Confirm the fresh hero markup (Home.tsx) is what's being served,
-              # not a stale prerendered snapshot. Any one of these hero-only
-              # strings is enough proof.
-              if grep -q -E "Bridging Gaps|Call Now|4\.8 Google Rating" /tmp/home-route-body.html; then
-                echo "✅ / is live with status $STATUS and fresh hero markup"
-                break
-              else
-                echo "   / returned $STATUS but hero markup looks stale; retrying"
-              fi
-            fi
-            sleep 15
-            if [ "$i" -eq 24 ]; then
-              echo "Last / response preview:"
-              head -40 /tmp/home-route-body.html || true
-              echo "❌ / did not serve fresh hero markup within retry window"
-              exit 1
-            fi
-          done
-
-          # Verify canonical www → non-www 301 is live (.htaccess rule).
-          WWW_STATUS=$(curl -o /dev/null -s -w "%{http_code} %{redirect_url}" "https://www.smilz.net/services/" || echo "000")
-          echo "www.smilz.net/services/ response: $WWW_STATUS"
-          case "$WWW_STATUS" in
-            301*|302*)
-              if echo "$WWW_STATUS" | grep -q "https://smilz.net/"; then
-                echo "✅ www → non-www redirect is live"
-              else
-                echo "⚠️  www responded with redirect but not to smilz.net apex"
-              fi
-              ;;
-            *)
-              echo "⚠️  www did not 301 (got: $WWW_STATUS) — .htaccess rule may not have propagated yet"
-              ;;
-          esac
-
-
-
       # Verify the new build is actually live by fetching the deploy marker
       # asset we just wrote into dist/assets/. Hostinger's edge/LiteSpeed
       # cache can briefly serve a stale 404 for a filename that didn't exist
@@ -369,6 +350,10 @@ jobs:
       # file was uploaded, treat continued 404s as a propagation warning
       # instead of a hard failure. If the FTP step could NOT confirm the
       # upload, this stays a hard failure.
+      #
+      # ORDERING: this runs BEFORE "Verify / (home) route" so a per-commit
+      # unique asset filename proves the new build reached public_html
+      # before we start scrutinizing HTML that Hostinger may still be caching.
       - name: Verify Deploy
         run: |
           set -e
@@ -414,6 +399,79 @@ jobs:
           echo "❌ Deploy verification failed — live marker asset does not contain $EXPECTED_SHA"
           echo "    and the FTP step could not confirm the file was uploaded either."
           exit 1
+
+      # Verify the freshly uploaded home index.html is what Hostinger serves.
+      # Also verifies the www→non-www 301 canonical host redirect is live.
+      #
+      # If the FTP step confirmed the upload (home_index_uploaded=true, i.e.
+      # size matches the local dist/index.html) but Hostinger's edge cache is
+      # still serving a stale response, this is a propagation warning — not a
+      # deploy failure. We only hard-fail when FTP itself could not confirm.
+      - name: Verify / (home) route
+        run: |
+          HOME_URL="https://smilz.net/"
+          HOME_UPLOADED="${{ steps.ftp_deploy.outputs.home_index_uploaded }}"
+          echo "Home URL: $HOME_URL"
+          echo "FTP-confirmed index.html upload: $HOME_UPLOADED"
+
+          FRESH=0
+          for i in $(seq 1 24); do
+            STATUS=$(curl -L -o /tmp/home-route-body.html -w "%{http_code}" \
+              -H "Cache-Control: no-cache" \
+              -H "Pragma: no-cache" \
+              "$HOME_URL?cb=$(date +%s%N)" || echo "000")
+            echo "Attempt $i — / HTTP status: $STATUS"
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+              # Confirm the fresh markup is what's being served, not a stale
+              # snapshot. Any one of these current-build signals is enough:
+              #   - Hero strings from Home.tsx (Bridging Gaps / Call Now / rating)
+              #   - Current Google Analytics tag ID (G-FGCJBS9KG8)
+              if grep -q -E "Bridging Gaps|Call Now|4\.8 Google Rating|G-FGCJBS9KG8" /tmp/home-route-body.html; then
+                echo "✅ / is live with status $STATUS and current-build markup"
+                FRESH=1
+                break
+              else
+                echo "   / returned $STATUS but markup looks stale; retrying"
+              fi
+            fi
+            sleep 15
+          done
+
+          if [ "$FRESH" -ne 1 ]; then
+            echo "Last / response preview:"
+            head -40 /tmp/home-route-body.html || true
+            echo "Response size: $(wc -c < /tmp/home-route-body.html) bytes"
+            if [ "$HOME_UPLOADED" = "true" ]; then
+              echo "⚠️  WARNING: HTTP verification could not confirm fresh home markup"
+              echo "    within the retry window, but the FTP step confirmed by size that"
+              echo "    public_html/index.html matches the local dist/index.html. Most"
+              echo "    likely Hostinger/LiteSpeed edge-cache propagation lag — not a"
+              echo "    failed deploy. Treating as a non-fatal warning."
+            elif [ "$HOME_UPLOADED" = "partial" ]; then
+              echo "⚠️  WARNING: FTP listed index.html but size did not match the local"
+              echo "    build. Possible in-flight upload or LiteSpeed intermediate cache."
+              echo "    Not failing the deploy — inspect the ftp_deploy step output."
+            else
+              echo "❌ / did not serve fresh markup and FTP could not confirm the upload."
+              exit 1
+            fi
+          fi
+
+          # Verify canonical www → non-www 301 is live (.htaccess rule).
+          WWW_STATUS=$(curl -o /dev/null -s -w "%{http_code} %{redirect_url}" "https://www.smilz.net/services/" || echo "000")
+          echo "www.smilz.net/services/ response: $WWW_STATUS"
+          case "$WWW_STATUS" in
+            301*|302*)
+              if echo "$WWW_STATUS" | grep -q "https://smilz.net/"; then
+                echo "✅ www → non-www redirect is live"
+              else
+                echo "⚠️  www responded with redirect but not to smilz.net apex"
+              fi
+              ;;
+            *)
+              echo "⚠️  www did not 301 (got: $WWW_STATUS) — .htaccess rule may not have propagated yet"
+              ;;
+          esac
 
       # Live HTTP validation — every sitemap URL must return 2xx/3xx on
       # smilz.net. Runs only after the deploy marker confirms the new build

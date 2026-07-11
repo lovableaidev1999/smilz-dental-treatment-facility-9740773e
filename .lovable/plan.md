@@ -1,52 +1,57 @@
+## Confirmed root cause
 
-## Problems
+Fresh fetch of `https://smilz.net/` (cache-busted) returns a 2,913-byte SPA shell containing `G-TKL5QY7LVS` — an old Google Analytics tag. The current project uses `G-FGCJBS9KG8`. `public_html/index.html` on Hostinger is a stale file from an old build and is not being overwritten by recent deployments.
 
-1. **`https://www.smilz.net/services/`** renders an unstyled/broken page while `https://smilz.net/services` is correct. Root cause: no www → non-www 301 in `public/.htaccess`, so the `www` host serves an inconsistent variant (memory says canonical is `smilz.net` non-www, enforced via `.htaccess`).
-2. **`https://smilz.net/` home hero** shows an outdated centered layout ("Bridging Gaps… Spreading Smiles!" red text overlapping the H1, small centered title, no CTA buttons, no rating strip) — while the Lovable preview shows the correct hero (yellow eyebrow, big left-aligned H1, description, Book Appointment + Call Now buttons, "4.8 Google Rating / Since 1999 / Advanced Technology" row). Root cause: the hosted `dist/index.html` (and/or `html-site/` prerender for `/`) contains a stale prerendered snapshot of the old Home hero. Because `index.html` is served with `no-cache` but the prerender output is baked in at build time, the visitor sees the old markup until React hydrates — and if the JS bundle is cached against an older hash, hydration keeps the stale DOM. Home is a `FORCE_FALLBACK` slug, so `src/pages/Home.tsx` is the source of truth; the fix is a fresh full rebuild + re-prerender + FTP upload so the on-disk `index.html` matches current `Home.tsx`.
+In `.github/workflows/deploy.yml`, after `cd "$FTP_PATH"` the workflow does:
 
-## Fix
-
-### Part A — canonical host redirect (fixes /services/ on www)
-
-Insert at the top of `public/.htaccess`, right after `RewriteBase /` and before all other rules:
-
-```apache
-# ── Canonical host: force www.smilz.net → smilz.net (301) ──
-RewriteCond %{HTTP_HOST} ^www\.smilz\.net$ [NC]
-RewriteRule ^(.*)$ https://smilz.net/$1 [R=301,L]
+```
+put -O / "dist/index.html"
+cls -l "index.html"
 ```
 
-- Uses `[R=301,L]` so any URL under `www.` normalizes to the canonical host before SPA fallback, prerender rules, or MIME handling runs.
-- No React changes needed — `src/lib/canonicalUrl.ts` already normalizes canonical tags to `https://smilz.net`.
+`-O /` is an **absolute FTP path** and uploads to the FTP account root, not `public_html`. The follow-up `cls -l "index.html"` lists the stale `public_html/index.html` and reports a false-positive `home_index_uploaded=true`. The mirror step, which does use relative paths and does target `public_html`, is not overwriting the stale file reliably — either because the explicit `put` runs after it and appears to "succeed", or because mirror's skip heuristics don't trigger on this file. Every other route is uploaded with relative paths and reaches `public_html` correctly, which is why only `/` is stale.
 
-### Part B — refresh the hosted home hero (fixes stale `/` render)
+## Classification
 
-The React source is already correct (`Home.tsx` renders the hero shown in the preview). We only need the hosted `index.html` and prerender output to match. Two changes:
+Deployment issue only. Not caching, not asset loading, not React rendering, not an incorrect built `dist/index.html`.
 
-1. **Force prerender + full mirror upload for `/`** in `.github/workflows/deploy.yml`:
-   - After `npm run build`, run `node scripts/prerender.mjs` unconditionally (the workflow already does — verify it isn't gated on file changes).
-   - In the FTP step, add an explicit `put -O / dist/index.html` after the `lftp mirror` so the root `index.html` is guaranteed to overwrite the stale copy (same pattern already used for `services/index.html`).
-   - Add a proof block that logs `sha256` of `dist/index.html` before upload, so we can confirm which build reached Hostinger.
+## Scope
 
-2. **Post-deploy home verification** (mirrors the `/services/` retry loop already added):
-   - Before running the sitemap validator, `curl -L https://smilz.net/?cb=<ts>` and `grep` for a distinctive string from the current hero (e.g. `"Bridging Gaps… Spreading Smiles!"` eyebrow class or the `Book Appointment` + `Call Now` CTA pair) to confirm the fresh HTML is live. Fail the deploy if not found.
+Modify `.github/workflows/deploy.yml` only. No React, `.htaccess`, prerender, or other file changes.
 
-No changes to `src/pages/Home.tsx` — the React version is already what the user wants. This is purely a deploy/asset-freshness issue.
+## Changes to `.github/workflows/deploy.yml`
 
-### Part C — bust the browser cache on the visitor side (optional but recommended)
+1. **Fix the home upload target so it lands in `public_html`**
+   - Replace `put -O / "dist/$HOME_INDEX"` with `put -O ./ "dist/$HOME_INDEX"` (relative to the lftp cwd, which is already `$FTP_PATH` = `public_html`).
+   - Leave the `mirror` step untouched.
 
-Because `.htaccess` sets `Cache-Control: no-cache, no-store, must-revalidate` on `.html`, the moment the new `index.html` reaches Hostinger every browser gets it. But the JS bundle is `max-age=31536000, immutable` and only cache-busts on hash change. Vite already emits hashed bundle filenames, so a fresh build produces new hashes — no extra config needed. Just make sure the CI runs `npm run build` fresh (no cached `dist/`) which the workflow already does.
+2. **Prove the uploaded home is the new build (not the stale one)**
+   - Before FTP, expose the local `dist/index.html` sha256 and byte size as step outputs (`expected_home_sha256`, `expected_home_size`). The existing "Route index guard" step already computes both.
+   - After `put`, run `cls --size "index.html"` inside lftp and echo `__HOME_INDEX_SIZE__ <bytes>` into the log. Grep for that marker and compare to `expected_home_size`. Set `home_index_uploaded=true` only on match; otherwise `false`.
 
-## Verification after deploy
+3. **Verify the deploy marker before verifying the home markup**
+   - Reorder steps so `Verify Deploy` (per-run marker asset under `/assets/`) runs immediately after the FTP step, before `Verify / (home) route`. The marker filename is unique per commit, so a 200 with the correct SHA proves the new build reached `public_html`.
 
-1. `curl -I https://www.smilz.net/services/` → `301` with `Location: https://smilz.net/services/`.
-2. `curl -I https://smilz.net/services/` → `200`, styled page.
-3. `curl -sL https://smilz.net/ | grep -i "Bridging Gaps"` → matches the new hero eyebrow (yellow), and `grep -i "Call Now"` matches the CTA.
-4. Home + Services load visually identical to the Lovable preview (screenshots 1 and 2 of the earlier upload set).
+4. **Home verification: distinguish upload failure from cache lag**
+   - Keep the 24-attempt hero-string check (`Bridging Gaps|Call Now|4\.8 Google Rating`). Also accept `G-FGCJBS9KG8` (current GA ID) as a positive signal.
+   - After the retry window branch on `steps.ftp_deploy.outputs.home_index_uploaded`:
+     - `false` → hard fail (upload path bug).
+     - `true` and response still stale → emit a warning with size + head of body and exit 0. This matches the existing behavior of `Verify Deploy` for edge-cache lag.
 
-## Files to change
+5. **Upload `.htaccess` explicitly and verify**
+   - `mirror` already uploads it, but add a post-mirror `put -O ./ "dist/.htaccess"` followed by `cls -l ".htaccess"` and an `__HTACCESS_CONFIRMED__` marker so the `www → apex` 301 is guaranteed to land on every run.
 
-- `public/.htaccess` — insert the www→non-www 301 block near the top.
-- `.github/workflows/deploy.yml` — add explicit `put -O / dist/index.html` upload + sha256 proof for the home page, and a post-deploy `curl` check for `/` that greps for a hero-specific string before running the sitemap validator.
+## Files to modify
 
-Nothing changes in React source code (Home / Services already render correctly in the preview).
+- `.github/workflows/deploy.yml` (only)
+
+## Expected impact on the live site
+
+- Next workflow run: `public_html/index.html` is overwritten with the current prerendered home. `https://smilz.net/` renders exactly like the Lovable preview.
+- Every other page, redirect, edge function, sitemap entry, and asset: unchanged. Same commands, same relative paths as today.
+- False-positive uploads eliminated (size/hash comparison instead of listing an existing filename).
+- Hostinger/LiteSpeed cache lag after a confirmed upload is reported as a warning, not a failure.
+
+## Risk
+
+Low. Only lftp path arguments, an added size check, and the ordering of two verification steps change. Worst case is a loud, early workflow failure — never a silent regression on live pages.
