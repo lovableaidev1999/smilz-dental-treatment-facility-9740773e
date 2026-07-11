@@ -74,7 +74,7 @@ const Home = () => {
     switch (section.section_id) {
       case "hero":
         return (
-          <section key={section.id} className="relative min-h-[85vh] flex items-center overflow-hidden">
+          <section key={section.id} className="relative min-h-[420px] md:min-h-[480px] section-padding flex items-center overflow-hidden">
             <div className="absolute inset-0">
               <picture>
                 <source
