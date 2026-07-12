@@ -1,0 +1,134 @@
+name: Database Backup
+
+# Runs every Sunday at 00:00 IST (= Saturday 18:30 UTC).
+# Also manually triggerable from the GitHub Actions UI.
+on:
+  schedule:
+    - cron: '30 18 * * 6'
+  workflow_dispatch:
+
+jobs:
+  backup-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install PostgreSQL 17 Client
+        run: |
+          sudo apt-get install -y curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          /usr/lib/postgresql/17/bin/pg_dump --version
+
+      - name: Generate Dynamic File Name (IST date)
+        run: |
+          IST_DATE=$(TZ='Asia/Kolkata' date +'%Y_%m_%d')
+          IST_TS=$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S %Z')
+          echo "FILE_NAME=db_backup_${IST_DATE}.sql" >> $GITHUB_ENV
+          echo "IST_TS=${IST_TS}" >> $GITHUB_ENV
+          echo "RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> $GITHUB_ENV
+
+      - name: Create Database Dump
+        env:
+          PGSSLMODE: require
+        run: |
+          /usr/lib/postgresql/17/bin/pg_dump "${{ secrets.SUPABASE_DB_URL }}" \
+            --clean --if-exists --no-owner \
+            > "$FILE_NAME"
+          ls -lh "$FILE_NAME"
+          echo "FILE_SIZE=$(du -h "$FILE_NAME" | cut -f1)" >> $GITHUB_ENV
+
+      - name: Upload to Supabase Storage (bucket "backups")
+        run: |
+          HTTP_CODE=$(curl -s -o /tmp/upload_response.txt -w "%{http_code}" \
+            -X POST "${{ secrets.SUPABASE_URL }}/storage/v1/object/backups/$FILE_NAME" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "x-upsert: true" \
+            -F "file=@$FILE_NAME" \
+            -F "cacheControl=3600")
+          echo "Upload HTTP status: $HTTP_CODE"
+          cat /tmp/upload_response.txt
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Upload failed."
+            exit 1
+          fi
+
+      - name: Cleanup Old Backups (older than 30 days)
+        run: |
+          echo "Listing existing backups in 'backups' bucket..."
+          LIST_RESPONSE=$(curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/storage/v1/object/list/backups" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":1000,"sortBy":{"column":"created_at","order":"asc"}}')
+
+          # Calculate cutoff timestamp (30 days ago, in seconds since epoch)
+          CUTOFF=$(date -u -d '30 days ago' +%s)
+          echo "Cutoff (UTC, epoch): $CUTOFF ($(date -u -d "@$CUTOFF"))"
+
+          # Build list of files to delete: name starts with db_backup_ AND created_at older than cutoff AND not the file we just uploaded
+          FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | python3 -c "
+          import json, sys, datetime
+          data = json.load(sys.stdin)
+          cutoff = $CUTOFF
+          current = '$FILE_NAME'
+          to_delete = []
+          for obj in data:
+              name = obj.get('name', '')
+              created = obj.get('created_at')
+              if not name.startswith('db_backup_') or name == current or not created:
+                  continue
+              ts = datetime.datetime.fromisoformat(created.replace('Z', '+00:00')).timestamp()
+              if ts < cutoff:
+                  to_delete.append(name)
+          print(json.dumps(to_delete))
+          ")
+          echo "Files to delete: $FILES_TO_DELETE"
+
+          COUNT=$(echo "$FILES_TO_DELETE" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+          echo "DELETED_COUNT=$COUNT" >> $GITHUB_ENV
+
+          if [ "$COUNT" -gt 0 ]; then
+            DELETE_PAYLOAD=$(echo "$FILES_TO_DELETE" | python3 -c "import json,sys; print(json.dumps({'prefixes': json.load(sys.stdin)}))")
+            DEL_CODE=$(curl -s -o /tmp/delete_response.txt -w "%{http_code}" \
+              -X DELETE "${{ secrets.SUPABASE_URL }}/storage/v1/object/backups" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "$DELETE_PAYLOAD")
+            echo "Delete HTTP status: $DEL_CODE"
+            cat /tmp/delete_response.txt
+            # Don't fail the workflow if cleanup fails - the backup itself succeeded
+            if [ "$DEL_CODE" -lt 200 ] || [ "$DEL_CODE" -ge 300 ]; then
+              echo "⚠️ Cleanup failed but backup succeeded - continuing."
+            fi
+          else
+            echo "No old backups to delete."
+          fi
+
+      - name: Send Success Email
+        if: success()
+        run: |
+          curl -X POST "https://api.resend.com/emails" \
+            -H "Authorization: Bearer ${{ secrets.EMAIL_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"from\": \"${{ secrets.BACKUP_FROM_EMAIL }}\",
+              \"to\": [\"dr.d.dutta@gmail.com\"],
+              \"subject\": \"✅ Smilz WEBSITE DB Backup Successful — ${IST_TS}\",
+              \"html\": \"<h3>✅ Backup Complete</h3><p>Your Smilz WEBSITE database has been backed up.</p><ul><li><strong>File:</strong> ${FILE_NAME}</li><li><strong>Size:</strong> ${FILE_SIZE}</li><li><strong>Bucket:</strong> backups (Supabase Storage)</li><li><strong>Time (IST):</strong> ${IST_TS}</li><li><strong>Old backups cleaned up (>30 days):</strong> ${DELETED_COUNT}</li></ul><p><a href=\\\"${RUN_URL}\\\">View workflow run</a></p>\"
+            }"
+
+      - name: Send Failure Email
+        if: failure()
+        run: |
+          curl -X POST "https://api.resend.com/emails" \
+            -H "Authorization: Bearer ${{ secrets.EMAIL_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"from\": \"${{ secrets.BACKUP_FROM_EMAIL }}\",
+              \"to\": [\"dr.d.dutta@gmail.com\"],
+              \"subject\": \"❌ Smilz DB Backup FAILED — ${IST_TS}\",
+              \"html\": \"<h3>❌ Backup Failed</h3><p>The weekly Smilz database backup did <strong>not</strong> complete successfully.</p><p><strong>Time (IST):</strong> ${IST_TS}</p><p><a href=\\\"${RUN_URL}\\\">Open the failed run logs on GitHub Actions</a> to troubleshoot.</p>\"
+            }"
