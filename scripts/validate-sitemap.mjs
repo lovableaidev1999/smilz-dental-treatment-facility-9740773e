@@ -55,7 +55,10 @@ function findDirty(urls) {
   return bad;
 }
 
-async function checkOne(url) {
+const MAX_ATTEMPTS = 3;
+const RETRY_BASE_MS = 750;
+
+async function attemptFetch(url) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -73,6 +76,20 @@ async function checkOne(url) {
   } finally {
     clearTimeout(t);
   }
+}
+
+async function checkOne(url) {
+  // Retry transient network failures (status 0 / fetch failed / timeout / 5xx).
+  // A real 4xx from the server is returned immediately — no point retrying.
+  let last;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    last = await attemptFetch(url);
+    if (last.ok) return { ...last, attempts: attempt };
+    const transient = last.status === 0 || last.status >= 500;
+    if (!transient || attempt === MAX_ATTEMPTS) break;
+    await new Promise((r) => setTimeout(r, RETRY_BASE_MS * attempt));
+  }
+  return { ...last, attempts: MAX_ATTEMPTS };
 }
 
 async function runPool(items, worker, size) {
