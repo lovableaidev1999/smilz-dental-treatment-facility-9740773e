@@ -208,7 +208,8 @@ jobs:
           : "${FTP_PORT:?FTP_PORT is required}"
           : "${FTP_PATH:?FTP_PATH is required}"
 
-          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_SERVER" <<LFTP | tee /tmp/lftp_output.log
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_SERVER" <<LFTP 2>&1 | tee /tmp/lftp_output.log
+          debug 3
           set cmd:fail-exit true
           set ftp:ssl-allow true
           set ftp:ssl-force false
@@ -216,6 +217,7 @@ jobs:
           set net:max-retries 5
           set net:timeout 45
           set net:reconnect-interval-base 5
+          set xfer:clobber on
           set cmd:fail-exit false
           mkdir -p "$FTP_PATH"
           set cmd:fail-exit true
@@ -230,6 +232,11 @@ jobs:
             --exclude-glob "deploy-marker-*.js" \
             ./dist/ ./
           set cmd:fail-exit false
+          # Force-delete stale root files so `put` cannot silently no-op on a
+          # locked/permission-mismatched remote file. Ignore errors — the file
+          # may not exist yet on a first deploy.
+          rm -f "$HOME_INDEX"
+          rm -f ".htaccess"
           mkdir -p services
           set cmd:fail-exit true
           put -O services "dist/$SERVICES_INDEX"
@@ -240,6 +247,7 @@ jobs:
           # ABOVE public_html — so index.html landed in the wrong directory and
           # the cls listing below returned the stale file already in public_html.
           put -O ./ "dist/$HOME_INDEX"
+          chmod 644 "$HOME_INDEX"
           echo "__HOME_INDEX_SIZE_BEGIN__"
           cls --size "$HOME_INDEX"
           echo "__HOME_INDEX_SIZE_END__"
@@ -247,6 +255,7 @@ jobs:
           # Explicit .htaccess upload + confirmation (mirror also uploads it,
           # but this guarantees the www→apex 301 lands on every run).
           put -O ./ "dist/.htaccess"
+          chmod 644 ".htaccess"
           cls -l ".htaccess"
           echo "__HTACCESS_CONFIRMED__ .htaccess"
           set cmd:fail-exit false
