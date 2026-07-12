@@ -170,10 +170,14 @@ const Home = () => {
             <div className="container-narrow mx-auto">
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-                  <picture>
-                    <source srcSet="/images/doctor.webp" type="image/webp" />
-                    <img src={section.image_url || "/images/doctor.webp"} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1000} />
-                  </picture>
+                  {section.image_url ? (
+                    <img src={section.image_url} alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1000} />
+                  ) : (
+                    <picture>
+                      <source srcSet="/images/doctor.webp" type="image/webp" />
+                      <img src="/images/doctor.webp" alt={`${general?.doctor_name ?? "Dr. Dibyendu Dutta"} at ${general?.clinic_name ?? "Smilz"}`} className="rounded-2xl shadow-elevated w-full" loading="lazy" width={800} height={1000} />
+                    </picture>
+                  )}
                 </motion.div>
                 <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
                   <p className="text-accent font-semibold text-sm uppercase tracking-wider mb-2">About Us</p>
