@@ -240,7 +240,9 @@ jobs:
           # ABOVE public_html — so index.html landed in the wrong directory and
           # the cls listing below returned the stale file already in public_html.
           put -O ./ "dist/$HOME_INDEX"
+          echo "__HOME_INDEX_SIZE_BEGIN__"
           cls --size "$HOME_INDEX"
+          echo "__HOME_INDEX_SIZE_END__"
           echo "__HOME_INDEX_CONFIRMED__ $HOME_INDEX"
           # Explicit .htaccess upload + confirmation (mirror also uploads it,
           # but this guarantees the www→apex 301 lands on every run).
@@ -278,28 +280,27 @@ jobs:
           fi
 
           # Home index: require BOTH the confirmation marker AND a remote size
-          # that matches the local dist/index.html. Just seeing the filename in
-          # a listing is not enough — the previous 'put -O /' bug produced a
-          # false-positive confirmation while public_html/index.html stayed stale.
+          # that matches the local dist/index.html. Parse the line between the
+          # __HOME_INDEX_SIZE_BEGIN__ / _END__ delimiters — that's the exact
+          # `cls --size` output (format: "<bytes> <name>"). Prior parser was
+          # grabbing the UID column from the earlier `cls -l` line by mistake.
           EXPECTED_HOME_SIZE=$(stat -c %s "dist/$HOME_INDEX" 2>/dev/null || wc -c < "dist/$HOME_INDEX")
           echo "Expected home index size: $EXPECTED_HOME_SIZE bytes"
-          REMOTE_HOME_SIZE=$(awk '/__HOME_INDEX_CONFIRMED__/{found=1} found && /^[0-9]+$/{print; exit} found && / [0-9]+ /{for(i=1;i<=NF;i++) if($i ~ /^[0-9]+$/){print $i; exit}}' /tmp/lftp_output.log || true)
-          # Fallback: parse the 'cls --size' line that appears just before the
-          # __HOME_INDEX_CONFIRMED__ marker. lftp 'cls --size' prints "<bytes> <name>".
-          if [ -z "$REMOTE_HOME_SIZE" ]; then
-            REMOTE_HOME_SIZE=$(grep -B1 "__HOME_INDEX_CONFIRMED__" /tmp/lftp_output.log | head -1 | awk '{print $1}' | grep -E '^[0-9]+$' || true)
-          fi
-          echo "Remote home index size (from lftp cls): ${REMOTE_HOME_SIZE:-unknown}"
+          REMOTE_HOME_SIZE=$(awk '/__HOME_INDEX_SIZE_BEGIN__/{flag=1; next} /__HOME_INDEX_SIZE_END__/{flag=0} flag {print $1; exit}' /tmp/lftp_output.log | grep -E '^[0-9]+$' || true)
+          echo "Remote home index size (from lftp cls --size): ${REMOTE_HOME_SIZE:-unknown}"
           if grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log && \
              [ -n "$REMOTE_HOME_SIZE" ] && [ "$REMOTE_HOME_SIZE" = "$EXPECTED_HOME_SIZE" ]; then
             echo "home_index_uploaded=true" >> "$GITHUB_OUTPUT"
             echo "✅ Confirmed via FTP size match ($REMOTE_HOME_SIZE = $EXPECTED_HOME_SIZE): $HOME_INDEX is the new build"
-          elif grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log; then
-            echo "home_index_uploaded=partial" >> "$GITHUB_OUTPUT"
-            echo "⚠️ $HOME_INDEX listed on server, but size did not match (expected $EXPECTED_HOME_SIZE, got ${REMOTE_HOME_SIZE:-unknown})"
           else
             echo "home_index_uploaded=false" >> "$GITHUB_OUTPUT"
-            echo "⚠️ Could not confirm $HOME_INDEX in FTP output"
+            echo "❌ Home index upload NOT confirmed."
+            echo "    expected size: $EXPECTED_HOME_SIZE"
+            echo "    remote size:   ${REMOTE_HOME_SIZE:-unknown}"
+            echo "    confirmation marker present: $(grep -q "__HOME_INDEX_CONFIRMED__ $HOME_INDEX" /tmp/lftp_output.log && echo yes || echo no)"
+            echo "    --- lftp output tail ---"
+            tail -80 /tmp/lftp_output.log || true
+            exit 1
           fi
 
           if grep -q "__HTACCESS_CONFIRMED__ .htaccess" /tmp/lftp_output.log; then
