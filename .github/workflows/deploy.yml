@@ -4,6 +4,8 @@ name: Build & Deploy to Hostinger
 on:
   push:
     branches: [main]
+  # Manual trigger: run from GitHub Actions UI to redeploy without a code change.
+  workflow_dispatch:
 
 # Cancel any in-flight run for the same branch when a new commit lands.
 # Prevents two slow FTP deploys racing each other and hanging.
