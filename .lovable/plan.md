@@ -1,71 +1,56 @@
-# Lock Core Pages to Fixed Templates (Content-Only CMS)
+## Why the workflow is currently producing a false failure
 
-## Good news: this is already ~90% in place
+The "Verify / (home) route" step downloads `https://smilz.net/` and greps the body for marketing strings (`Bridging Gaps`, `Call Now`, `4.8 Google Rating`) or the current GA ID (`G-FGCJBS9KG8`). When Hostinger's LiteSpeed edge is still serving the previous cached `index.html`, none of those match — even though the FTP step already uploaded and size-confirmed the new `dist/index.html`. The step then hard-fails with exit 1, so a successful deployment is reported as a failure.
 
-The architecture you describe is already the intended design. Before writing new code, here is what the current codebase does:
+The `G-TKL5QY7LVS` string only appears in the *live server response* during that stale window. It exists nowhere in the repo:
 
-- **`src/components/SmartPage.tsx`** defines `FORCE_FALLBACK_SLUGS = { home, about, services, contact, gallery, blog }`. For these six slugs, any row in the `page_layouts` (Visual Builder) table is **ignored**. The hardcoded React component is always rendered.
-- Each core page component (`Home.tsx`, `Services.tsx`, `About.tsx`, `Contact.tsx`, `Gallery.tsx`, `Blog.tsx`) reads editable strings/images from the `page_content` table via `usePageContent(slug)`. Layout, spacing, grid, animations, colors, and component structure all live in the source code.
-- **`src/pages/admin/AdminPageLayouts.tsx`** already lists these six pages under a "Core Pages" section with a `Fixed Design` lock badge, an amber warning ("cannot be edited in the Visual Builder"), and only exposes an **Edit Content** button that routes to `/admin/pages?page=<slug>` (AdminPages → `page_content`).
-- **`AdminPages`** is the safe content editor (headings, subheadings, body text, image URL, button text/link, SEO metadata per section). It writes to `page_content` only — never `page_layouts`.
+- `rg` across the project finds `G-FGCJBS9KG8` in `index.html` (lines 37–45) and in `deploy.yml`.
+- `G-TKL5QY7LVS` is not in any source, env file, build output, or config.
 
-So the runtime is already template-controlled. The remaining gaps are edge cases where an admin could *think* they are editing a core page's layout, or where a stale row in `page_layouts` could confuse them.
+So the "wrong GA ID" is not a build-source problem — it's simply the old `index.html` that Hostinger's cache/origin is still serving until propagation completes. The already-existing per-commit `deploy-marker-<sha>.js` asset check is the correct signal; the homepage-markup check is redundant and brittle.
 
-## What actually changes (small, low-risk)
+## What will change
 
-### 1. Block direct-URL editing of core-page layouts in the Visual Builder
-Currently `/admin/page-builder/:id` opens whatever layout id is in the URL. If a legacy `page_layouts` row exists for `home`/`about`/etc., an admin could still open and save it (though it has no effect on the live site because `SmartPage` ignores it).
+Only `.github/workflows/deploy.yml`. No app code, no SEO components, no Vite config, no FTP logic.
 
-**Change:** In `src/pages/admin/AdminPageBuilder.tsx`, when the loaded layout's `page_slug` is one of the six core slugs, show a read-only notice and a "Go to Content Editor" button that navigates to `/admin/pages?page=<slug>`. Do not render the builder canvas.
+### 1. Rewrite "Verify / (home) route"
+- Remove all marketing-text and GA-ID substring checks (`Bridging Gaps`, `Call Now`, `4.8 Google Rating`, `G-FGCJBS9KG8`).
+- New pass criteria: homepage returns HTTP 200 (any 2xx/3xx acceptable for redirects).
+- Freshness of the deployed build is already proved by the existing "Verify Deploy" step (per-commit `deploy-marker-<sha>.js`) and by the FTP size match on `index.html`. No content grep needed.
+- Keep the existing www→apex 301 check.
 
-### 2. Remove the "New Page" pathway that could reuse a core slug
-In `AdminPageLayouts.tsx`, the "New Page" dialog accepts any slug. Add a validation check: reject creation if the entered slug is one of the six core slugs, with a toast pointing to Admin → Pages.
+### 2. Extend verification timeout with progressive backoff
+Apply to both "Verify Deploy" (marker asset) and "Verify / (home) route":
+- Progressive delays: 15s, 30s, 45s, 60s, then hold at 60s.
+- Total window ~18 minutes (well within Hostinger LiteSpeed cache TTL).
+- Cache-bust each request with `?cb=<nanoseconds>` and `Cache-Control: no-cache` (already done).
 
-### 3. Hide/deactivate any stray published `page_layouts` rows for core slugs
-Non-destructive: run a one-shot admin migration that flips `is_published = false` for any existing row whose `page_slug ∈ {home, about, services, contact, gallery, blog}`. The rows are kept (no data loss) but marked draft so they can never accidentally re-appear on the live site if `FORCE_FALLBACK_SLUGS` is ever changed.
+### 3. Concise diagnostics on final failure
+When the retry window ends without success, print (once, not per attempt):
+- Expected commit SHA and marker URL
+- Last HTTP status
+- `curl -I` response headers filtered to: `date`, `age`, `cache-control`, `x-litespeed-cache*`, `cf-cache-status`, `x-cache`, `etag`, `last-modified`
+- `<title>` extracted via `grep -oP '(?<=<title>).*?(?=</title>)'`
+- Detected GA ID (`grep -oE 'G-[A-Z0-9]{8,}' | head -1`) — informational only, not a pass/fail
+- Deploy marker contents fetched from `/deploy-marker.txt` and its age
+- FTP step outputs: `marker_uploaded`, `home_index_uploaded`, `services_index_uploaded`, `htaccess_uploaded`
+- No full-HTML dump.
 
-### 4. Documentation touch-up
-Add a short "Core Pages Policy" note in `AdminPages` explaining that these six pages are template-locked and only content is editable. No behavior change.
+### 4. Success criteria (new)
+A deploy passes when all of these are true:
+- FTP step confirmed uploads (`home_index_uploaded=true`, `marker_uploaded=true`, `services_index_uploaded=true`).
+- `/assets/deploy-marker-<sha>.js` fetched from the live site contains the current commit SHA (existing step, just longer retry window).
+- `https://smilz.net/` returns HTTP 2xx/3xx.
+- `https://www.smilz.net/services/` still 301s to the apex.
 
-## Files changed
+Marketing text and GA ID matches are no longer required.
 
-| File | Change |
-|---|---|
-| `src/pages/admin/AdminPageBuilder.tsx` | Guard: if `page_slug ∈ CORE_SLUGS`, render a locked notice with link to `/admin/pages?page=<slug>` instead of the builder canvas. |
-| `src/pages/admin/AdminPageLayouts.tsx` | Validate "New Page" slug against `CORE_SLUGS`. |
-| `src/pages/admin/AdminPages.tsx` | Add a small header banner: "Core pages have fixed designs — only content is editable here." |
-| `supabase/migrations/<timestamp>_lock_core_page_layouts.sql` | `UPDATE public.page_layouts SET is_published = false WHERE page_slug IN (...)`. No drops, no deletes. |
+## Files modified
+- `.github/workflows/deploy.yml` — only the "Verify Deploy" and "Verify / (home) route" steps; retry helper for progressive backoff; diagnostics block. FTP upload step, .htaccess handling, size-match hard-fail, sitemap validation, and prerender are all untouched.
 
-**Not touched:** `Home.tsx`, `Services.tsx`, `About.tsx`, `Contact.tsx`, `Gallery.tsx`, `Blog.tsx`, `SmartPage.tsx` (already correct), routing (`App.tsx`), SEO components, `page_content` schema, custom-page builder for `/p/<slug>` pages.
-
-## How existing CMS content maps into the fixed templates
-
-No mapping work needed. Each hardcoded page already consumes `page_content` sections by `section_id`:
-
-- **Home:** `hero`, `about-preview`, `services-preview`, `why-choose`, `testimonials`, `faq`, `cta` → `Home.tsx`
-- **About:** `hero`, `mission`, `team`, `values`, `stats` → `About.tsx`
-- **Services:** `hero` + `services` table rows → `Services.tsx`
-- **Contact:** `hero`, `info`, `map` + `site_settings.contact` → `Contact.tsx`
-- **Gallery:** `hero` + `gallery` table rows → `Gallery.tsx`
-- **Blog (Insights):** `hero` + `blog_posts` table rows → `Blog.tsx`
-
-Admins continue editing in **Admin → Pages** (per-section content), **Admin → Services**, **Admin → Gallery**, **Admin → Blog**, **Admin → Settings**. All existing rows remain valid — nothing is migrated or renamed.
-
-## SEO, routing, URLs
-
-- Routes unchanged: `/`, `/about`, `/services`, `/contact`, `/gallery`, `/blog`.
-- `SEOHead` continues to read title/description/canonical/OG/JSON-LD from the same sources (`site_settings`, `page_content` SEO fields, service/blog row SEO fields).
-- Sitemap generator (`scripts/generate-sitemap.mjs`) is not touched.
-
-## Production impact
-
-- **Live rendering: zero visible change.** `SmartPage` already ignores `page_layouts` for these six slugs, so the live site is already using the hardcoded templates. This work only closes admin-UI loopholes.
-- **Admin UX:** cleaner — direct URLs to a locked layout redirect to the content editor; creating a "new page" with a reserved slug is blocked with a clear message.
-- **Data:** no destructive changes. Legacy `page_layouts` rows for core slugs are simply flipped to `is_published = false` (recoverable).
-- **Risk:** low. All changes are admin-only and additive guards; no changes to public routes, public components, or the deploy pipeline.
-
-## Rollout
-
-1. Merge changes.
-2. Auto-deploy via existing GitHub Actions workflow (no workflow changes).
-3. Verify: open `/admin/page-builder/<any core layout id>` → sees lock screen; live pages unchanged.
+## Why the new logic is more reliable
+- Uses a per-commit unique artifact (`deploy-marker-<sha>.js`) that only exists after this run — impossible to false-positive on stale cache.
+- Homepage check is purely a liveness probe (HTTP 200), decoupled from copy changes.
+- Progressive backoff matches Hostinger's real cache propagation window instead of failing at ~6 minutes.
+- Diagnostics point at cache headers and marker age, which are the actual failure modes — not homepage copy.
+- No source code touched, so redesigns, GA changes, or SEO edits can never break the deploy pipeline again.

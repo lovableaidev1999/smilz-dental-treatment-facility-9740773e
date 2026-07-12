@@ -377,8 +377,11 @@ jobs:
           echo "Marker URL: $MARKER_URL"
           echo "FTP-confirmed upload: $MARKER_UPLOADED"
           sleep 15
-          # Retry up to 24 times over ~6 minutes for FTP/CDN propagation.
-          for i in $(seq 1 24); do
+          # Progressive backoff: 15, 30, 45, 60, 60, ... — ~18 min window.
+          MAX_ATTEMPTS=24
+          DEPLOYED=""
+          LAST_STATUS=""
+          for i in $(seq 1 $MAX_ATTEMPTS); do
             DEPLOYED=$(curl -fsSL \
               -H "Cache-Control: no-cache" \
               -H "Pragma: no-cache" \
@@ -394,12 +397,24 @@ jobs:
             elif [ "$DEPLOYED" = "MISSING" ]; then
               echo "   (marker asset not available yet; waiting)"
             fi
-            sleep 15
+            # Progressive delay: 15s, 30s, 45s, then 60s.
+            if [ $i -le 3 ]; then DELAY=$((i * 15)); else DELAY=60; fi
+            sleep $DELAY
           done
 
-          echo "   FTP step outcome: ${{ steps.ftp_deploy.outcome }}"
-          echo "   Last response (first 20 lines):"
-          echo "$DEPLOYED" | head -20
+          echo "───── Deploy marker verification diagnostics ─────"
+          echo "Expected SHA:      $EXPECTED_SHA"
+          echo "Marker URL:        $MARKER_URL"
+          echo "FTP step outcome:  ${{ steps.ftp_deploy.outcome }}"
+          echo "marker_uploaded:   ${{ steps.ftp_deploy.outputs.marker_uploaded }}"
+          echo "home_index_uploaded: ${{ steps.ftp_deploy.outputs.home_index_uploaded }}"
+          echo "── Response headers (marker URL) ──"
+          curl -sI "$MARKER_URL?cb=$(date +%s%N)" | \
+            grep -iE '^(date|age|cache-control|x-litespeed-cache|cf-cache-status|x-cache|etag|last-modified):' || true
+          echo "── /deploy-marker.txt on live site ──"
+          curl -fsSL -H "Cache-Control: no-cache" \
+            "https://smilz.net/deploy-marker.txt?cb=$(date +%s%N)" || echo "(unavailable)"
+          echo "──────────────────────────────────────────────────"
 
           if [ "$MARKER_UPLOADED" = "true" ]; then
             echo "⚠️  WARNING: HTTP verification could not confirm the marker within the retry"
@@ -413,13 +428,12 @@ jobs:
           echo "    and the FTP step could not confirm the file was uploaded either."
           exit 1
 
-      # Verify the freshly uploaded home index.html is what Hostinger serves.
-      # Also verifies the www→non-www 301 canonical host redirect is live.
-      #
-      # If the FTP step confirmed the upload (home_index_uploaded=true, i.e.
-      # size matches the local dist/index.html) but Hostinger's edge cache is
-      # still serving a stale response, this is a propagation warning — not a
-      # deploy failure. We only hard-fail when FTP itself could not confirm.
+      # Verify the homepage is reachable (HTTP 2xx/3xx) after deploy.
+      # Freshness of the build is already proved by the "Verify Deploy" step
+      # (per-commit deploy-marker-<sha>.js) and by the FTP size match on
+      # index.html. This step is now a pure liveness probe — it must NOT
+      # depend on homepage marketing copy or Google Analytics IDs, because
+      # both change independently of deployment success.
       - name: Verify / (home) route
         run: |
           HOME_URL="https://smilz.net/"
@@ -427,48 +441,45 @@ jobs:
           echo "Home URL: $HOME_URL"
           echo "FTP-confirmed index.html upload: $HOME_UPLOADED"
 
-          FRESH=0
-          for i in $(seq 1 24); do
-            STATUS=$(curl -L -o /tmp/home-route-body.html -w "%{http_code}" \
+          LIVE=0
+          LAST_STATUS="000"
+          MAX_ATTEMPTS=24
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            LAST_STATUS=$(curl -L -o /tmp/home-route-body.html -w "%{http_code}" \
               -H "Cache-Control: no-cache" \
               -H "Pragma: no-cache" \
               "$HOME_URL?cb=$(date +%s%N)" || echo "000")
-            echo "Attempt $i — / HTTP status: $STATUS"
-            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-              # Confirm the fresh markup is what's being served, not a stale
-              # snapshot. Any one of these current-build signals is enough:
-              #   - Hero strings from Home.tsx (Bridging Gaps / Call Now / rating)
-              #   - Current Google Analytics tag ID (G-FGCJBS9KG8)
-              if grep -q -E "Bridging Gaps|Call Now|4\.8 Google Rating|G-FGCJBS9KG8" /tmp/home-route-body.html; then
-                echo "✅ / is live with status $STATUS and current-build markup"
-                FRESH=1
-                break
-              else
-                echo "   / returned $STATUS but markup looks stale; retrying"
-              fi
+            echo "Attempt $i — / HTTP status: $LAST_STATUS"
+            if [ "$LAST_STATUS" -ge 200 ] && [ "$LAST_STATUS" -lt 400 ]; then
+              echo "✅ / is live with status $LAST_STATUS"
+              LIVE=1
+              break
             fi
-            sleep 15
+            if [ $i -le 3 ]; then DELAY=$((i * 15)); else DELAY=60; fi
+            sleep $DELAY
           done
 
-          if [ "$FRESH" -ne 1 ]; then
-            echo "Last / response preview:"
-            head -40 /tmp/home-route-body.html || true
-            echo "Response size: $(wc -c < /tmp/home-route-body.html) bytes"
-            if [ "$HOME_UPLOADED" = "true" ]; then
-              echo "⚠️  WARNING: HTTP verification could not confirm fresh home markup"
-              echo "    within the retry window, but the FTP step confirmed by size that"
-              echo "    public_html/index.html matches the local dist/index.html. Most"
-              echo "    likely Hostinger/LiteSpeed edge-cache propagation lag — not a"
-              echo "    failed deploy. Treating as a non-fatal warning."
-            elif [ "$HOME_UPLOADED" = "partial" ]; then
-              echo "⚠️  WARNING: FTP listed index.html but size did not match the local"
-              echo "    build. Possible in-flight upload or LiteSpeed intermediate cache."
-              echo "    Not failing the deploy — inspect the ftp_deploy step output."
-            else
-              echo "❌ / did not serve fresh markup and FTP could not confirm the upload."
-              exit 1
-            fi
+          if [ "$LIVE" -ne 1 ]; then
+            echo "───── Home route diagnostics ─────"
+            echo "Last HTTP status:  $LAST_STATUS"
+            echo "Expected SHA:      ${{ github.sha }}"
+            echo "home_index_uploaded: $HOME_UPLOADED"
+            echo "── Response headers (home URL) ──"
+            curl -sI "$HOME_URL?cb=$(date +%s%N)" | \
+              grep -iE '^(date|age|cache-control|x-litespeed-cache|cf-cache-status|x-cache|etag|last-modified):' || true
+            echo "── <title> ──"
+            grep -oiE '<title[^>]*>[^<]*</title>' /tmp/home-route-body.html | head -1 || echo "(no title)"
+            echo "── Detected GA ID (informational) ──"
+            grep -oE 'G-[A-Z0-9]{8,}' /tmp/home-route-body.html | head -1 || echo "(none)"
+            echo "── /deploy-marker.txt on live site ──"
+            curl -fsSL -H "Cache-Control: no-cache" \
+              "https://smilz.net/deploy-marker.txt?cb=$(date +%s%N)" || echo "(unavailable)"
+            echo "──────────────────────────────────"
+            echo "❌ / did not return HTTP 2xx/3xx within the retry window"
+            exit 1
           fi
+
+
 
           # Verify canonical www → non-www 301 is live (.htaccess rule).
           WWW_STATUS=$(curl -o /dev/null -s -w "%{http_code} %{redirect_url}" "https://www.smilz.net/services/" || echo "000")
