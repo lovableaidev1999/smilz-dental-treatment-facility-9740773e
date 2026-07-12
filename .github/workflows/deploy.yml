@@ -240,7 +240,9 @@ jobs:
           # ABOVE public_html — so index.html landed in the wrong directory and
           # the cls listing below returned the stale file already in public_html.
           put -O ./ "dist/$HOME_INDEX"
+          echo "__HOME_INDEX_SIZE_BEGIN__"
           cls --size "$HOME_INDEX"
+          echo "__HOME_INDEX_SIZE_END__"
           echo "__HOME_INDEX_CONFIRMED__ $HOME_INDEX"
           # Explicit .htaccess upload + confirmation (mirror also uploads it,
           # but this guarantees the www→apex 301 lands on every run).
