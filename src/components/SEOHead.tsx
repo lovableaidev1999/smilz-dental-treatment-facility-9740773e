@@ -296,11 +296,13 @@ const SEOHead = ({
       <meta name="geo.placename" content="Kolkata" />
       <meta name="geo.position" content={`${coords?.lat ?? 22.4625};${coords?.lng ?? 88.3942}`} />
       <meta name="ICBM" content={`${coords?.lat ?? 22.4625}, ${coords?.lng ?? 88.3942}`} />
+      <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
       <script type="application/ld+json">{JSON.stringify(localBusinessSchema)}</script>
       {breadcrumbSchema && <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>}
       {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
       {articleSchema && <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>}
       {serviceSchema && <script type="application/ld+json">{JSON.stringify(serviceSchema)}</script>}
+      {dentalServiceSchema && <script type="application/ld+json">{JSON.stringify(dentalServiceSchema)}</script>}
       {customJsonLd?.map((block, i) => (
         <script key={`custom-ld-${i}`} type="application/ld+json">{JSON.stringify(block)}</script>
       ))}
