@@ -38,6 +38,8 @@ const BracesAlignersKolkata = lazy(() => import("@/pages/seo/BracesAlignersKolka
 const DentalImplantsKolkataService = lazy(() => import("@/pages/seo/DentalImplantsKolkataService"));
 const ClearAlignersGaria = lazy(() => import("@/pages/seo/ClearAlignersGaria"));
 const PainlessRootCanal = lazy(() => import("@/pages/seo/PainlessRootCanal"));
+const GariaHub = lazy(() => import("@/pages/seo/GariaHub"));
+const SouthKolkataHub = lazy(() => import("@/pages/seo/SouthKolkataHub"));
 
 // Lazy-loaded admin pages
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
