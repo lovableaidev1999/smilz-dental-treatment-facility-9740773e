@@ -193,7 +193,7 @@ function ServiceCard({ item }: { item: ServiceItem }) {
       {item.image ? (
         <img
           src={resolveResponsiveImage(item.image, 48)}
-          alt={item.title}
+          alt={`${item.title} — dental treatment at Smilz Dental Clinic, Garia, South Kolkata`}
           className="h-12 w-12 object-contain mb-4 rounded"
           loading="lazy"
           decoding="async"
