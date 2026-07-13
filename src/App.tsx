@@ -35,6 +35,9 @@ const DentalClinicGariaKolkata = lazy(() => import("@/pages/seo/DentalClinicGari
 const RootCanalKolkata = lazy(() => import("@/pages/seo/RootCanalKolkata"));
 const DentalImplantsKolkata = lazy(() => import("@/pages/seo/DentalImplantsKolkata"));
 const BracesAlignersKolkata = lazy(() => import("@/pages/seo/BracesAlignersKolkata"));
+const DentalImplantsKolkataService = lazy(() => import("@/pages/seo/DentalImplantsKolkataService"));
+const ClearAlignersGaria = lazy(() => import("@/pages/seo/ClearAlignersGaria"));
+const PainlessRootCanal = lazy(() => import("@/pages/seo/PainlessRootCanal"));
 
 // Lazy-loaded admin pages
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -184,6 +187,10 @@ const App = () => (
                 <Route element={<Layout />}>
                   <Route path="/" element={<SmartPage slug="home" fallback={Home} />} />
                   <Route path="/services" element={<SmartPage slug="services" fallback={ServicesPage} />} />
+                  {/* Dedicated location-service landing pages — MUST be before /services/:serviceId */}
+                  <Route path="/services/dental-implants-kolkata" element={<DentalImplantsKolkataService />} />
+                  <Route path="/services/clear-aligners-garia" element={<ClearAlignersGaria />} />
+                  <Route path="/services/painless-root-canal" element={<PainlessRootCanal />} />
                   <Route path="/services/:serviceId" element={<ServiceDetailSmart />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<SmartPage slug="contact" fallback={Contact} />} />
