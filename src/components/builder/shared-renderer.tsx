@@ -475,7 +475,7 @@ export const renderNodeContent = (node: LayoutNode, index: number, opts: RenderO
         <figure key={key} className={`w-full ${rClasses}`} style={baseStyles}>
           <img
             src={node.props.src}
-            alt={node.props.alt || ''}
+            alt={node.props.alt || 'Dental treatment at Smilz Dental Clinic in Garia, South Kolkata'}
             className="w-full h-auto"
             style={{ borderRadius: node.props.borderRadius, objectFit: node.props.objectFit || 'contain' }}
             loading="lazy"
