@@ -225,7 +225,10 @@ const SEOHead = ({
     ...(article.section && { articleSection: article.section }),
   } : null;
 
-  // MedicalBusiness Service schema for service detail pages
+  // Service page schemas — emit BOTH:
+  //  • MedicalProcedure (for procedural rich results)
+  //  • DentalService (schema.org Health extension type Google recognizes for
+  //    dental service landing pages; improves service-specific rich results)
   const serviceSchema = service ? {
     "@context": "https://schema.org",
     "@type": "MedicalProcedure",
@@ -233,13 +236,25 @@ const SEOHead = ({
     description: service.description,
     url: service.url,
     ...(service.image && { image: service.image }),
-    provider: {
-      "@type": "Dentist",
-      "@id": `${website}/#dentist`,
-      name: clinicName,
-    },
+    provider: { "@id": `${website}/#dentist` },
     howPerformed: "In-office procedure",
     status: "https://schema.org/ActiveActionStatus",
+  } : null;
+
+  const dentalServiceSchema = service ? {
+    "@context": "https://schema.org",
+    "@type": "DentalService",
+    name: service.name,
+    description: service.description,
+    url: service.url,
+    ...(service.image && { image: service.image }),
+    provider: { "@id": `${website}/#dentist` },
+    areaServed: [
+      { "@type": "Place", name: "Garia, Kolkata" },
+      { "@type": "Place", name: "South Kolkata" },
+      { "@type": "Place", name: "Kolkata" },
+    ],
+    audience: { "@type": "PeopleAudience", name: "Dental patients" },
   } : null;
 
   return (
