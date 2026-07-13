@@ -65,9 +65,44 @@ const SEOHead = ({
   ].filter(Boolean);
 
   const heroImage = ogImage || "https://smilz.net/og-image.jpg";
+
+  // Organization node — sitewide brand identity. Referenced by Article
+  // publisher and by the Dentist LocalBusiness (parentOrganization).
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${website}/#organization`,
+    name: clinicName,
+    url: website,
+    logo: {
+      "@type": "ImageObject",
+      url: `${website}/og-image.jpg`,
+      width: 1200,
+      height: 630,
+    },
+    image: [heroImage],
+    email: contact?.email ?? "dr.d.dutta@gmail.com",
+    telephone: `+91${contact?.phone ?? "8961775554"}`,
+    foundingDate: (general?.year_established ?? 1999).toString(),
+    founder: {
+      "@type": "Person",
+      name: general?.doctor_name ?? "Dr. Dibyendu Dutta",
+      jobTitle: "Dentist",
+    },
+    ...(sameAs.length > 0 && { sameAs }),
+    contactPoint: [{
+      "@type": "ContactPoint",
+      telephone: `+91${contact?.phone ?? "8961775554"}`,
+      contactType: "customer service",
+      areaServed: "IN",
+      availableLanguage: ["English", "Hindi", "Bengali"],
+    }],
+  };
+
   const localBusinessSchema = {
     "@context": "https://schema.org",
-    "@type": "Dentist",
+    "@type": ["Dentist", "LocalBusiness", "MedicalBusiness"],
+    parentOrganization: { "@id": `${website}/#organization` },
     "@id": `${website}/#dentist`,
     name: clinicName,
     // Array form — recommended by Google's LocalBusiness rich-result rules.
@@ -190,7 +225,10 @@ const SEOHead = ({
     ...(article.section && { articleSection: article.section }),
   } : null;
 
-  // MedicalBusiness Service schema for service detail pages
+  // Service page schemas — emit BOTH:
+  //  • MedicalProcedure (for procedural rich results)
+  //  • DentalService (schema.org Health extension type Google recognizes for
+  //    dental service landing pages; improves service-specific rich results)
   const serviceSchema = service ? {
     "@context": "https://schema.org",
     "@type": "MedicalProcedure",
@@ -198,13 +236,25 @@ const SEOHead = ({
     description: service.description,
     url: service.url,
     ...(service.image && { image: service.image }),
-    provider: {
-      "@type": "Dentist",
-      "@id": `${website}/#dentist`,
-      name: clinicName,
-    },
+    provider: { "@id": `${website}/#dentist` },
     howPerformed: "In-office procedure",
     status: "https://schema.org/ActiveActionStatus",
+  } : null;
+
+  const dentalServiceSchema = service ? {
+    "@context": "https://schema.org",
+    "@type": "DentalService",
+    name: service.name,
+    description: service.description,
+    url: service.url,
+    ...(service.image && { image: service.image }),
+    provider: { "@id": `${website}/#dentist` },
+    areaServed: [
+      { "@type": "Place", name: "Garia, Kolkata" },
+      { "@type": "Place", name: "South Kolkata" },
+      { "@type": "Place", name: "Kolkata" },
+    ],
+    audience: { "@type": "PeopleAudience", name: "Dental patients" },
   } : null;
 
   return (
@@ -246,11 +296,13 @@ const SEOHead = ({
       <meta name="geo.placename" content="Kolkata" />
       <meta name="geo.position" content={`${coords?.lat ?? 22.4625};${coords?.lng ?? 88.3942}`} />
       <meta name="ICBM" content={`${coords?.lat ?? 22.4625}, ${coords?.lng ?? 88.3942}`} />
+      <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
       <script type="application/ld+json">{JSON.stringify(localBusinessSchema)}</script>
       {breadcrumbSchema && <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>}
       {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
       {articleSchema && <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>}
       {serviceSchema && <script type="application/ld+json">{JSON.stringify(serviceSchema)}</script>}
+      {dentalServiceSchema && <script type="application/ld+json">{JSON.stringify(dentalServiceSchema)}</script>}
       {customJsonLd?.map((block, i) => (
         <script key={`custom-ld-${i}`} type="application/ld+json">{JSON.stringify(block)}</script>
       ))}
