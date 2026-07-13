@@ -148,7 +148,7 @@ const About = () => {
                   {section.image_url && (
                     <img
                       src={section.image_url}
-                      alt={section.heading || "Smilz Dental Clinic"}
+                      alt={`${section.heading || "Smilz Dental Clinic"} — trusted dentist in Garia, South Kolkata`}
                       className="rounded-2xl shadow-elevated w-full"
                       loading="lazy"
                       width={800}

@@ -24,7 +24,7 @@ const ServiceHero = ({ title, shortDesc, imageUrl, contact }: ServiceHeroProps) 
           <>
             <img
               src={resolvedImage as string}
-              alt={title}
+              alt={`${title} at Smilz Dental Clinic — advanced dental care near Garia metro, South Kolkata`}
               className="w-full h-full object-cover"
               style={{ objectPosition: "center 30%" }}
               width={1600}

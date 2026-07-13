@@ -97,7 +97,7 @@ const renderNode = (node: JSONContent, index: number): React.ReactNode => {
         <figure key={key} className="my-6">
           <img
             src={src}
-            alt={alt || "Dental care image"}
+            alt={alt || caption || "Dental treatment illustration — Smilz Dental Clinic, Garia, South Kolkata"}
             className="w-full rounded-2xl shadow-card"
             loading="lazy"
             width={800}

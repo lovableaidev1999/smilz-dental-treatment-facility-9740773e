@@ -89,7 +89,7 @@ export const GenericSection = ({
           >
             <img
               src={resolveResponsiveImage(section.image_url!, 800)}
-              alt={section.section_title || section.heading || "Section image"}
+              alt={`${section.section_title || section.heading || "Smilz Dental Clinic"} — dental care in Garia, South Kolkata`}
               className="rounded-2xl shadow-elevated w-full h-auto"
               loading="lazy"
               decoding="async"
