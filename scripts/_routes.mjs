@@ -24,6 +24,9 @@ const STATIC_ROUTES = [
   { path: "/services/dental-implants-kolkata/", type: "seo",     priority: "0.9", changefreq: "monthly" },
   { path: "/services/clear-aligners-garia/",    type: "seo",     priority: "0.9", changefreq: "monthly" },
   { path: "/services/painless-root-canal/",     type: "seo",     priority: "0.9", changefreq: "monthly" },
+  // Location hub pages
+  { path: "/locations/garia/",                  type: "seo",     priority: "0.9", changefreq: "monthly" },
+  { path: "/locations/south-kolkata/",          type: "seo",     priority: "0.9", changefreq: "monthly" },
 ];
 
 // Routes never to prerender or include in sitemap
