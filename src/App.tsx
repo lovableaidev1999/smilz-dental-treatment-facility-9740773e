@@ -38,6 +38,8 @@ const BracesAlignersKolkata = lazy(() => import("@/pages/seo/BracesAlignersKolka
 const DentalImplantsKolkataService = lazy(() => import("@/pages/seo/DentalImplantsKolkataService"));
 const ClearAlignersGaria = lazy(() => import("@/pages/seo/ClearAlignersGaria"));
 const PainlessRootCanal = lazy(() => import("@/pages/seo/PainlessRootCanal"));
+const GariaHub = lazy(() => import("@/pages/seo/GariaHub"));
+const SouthKolkataHub = lazy(() => import("@/pages/seo/SouthKolkataHub"));
 
 // Lazy-loaded admin pages
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -207,6 +209,10 @@ const App = () => (
                   <Route path="/root-canal-treatment-kolkata" element={<RootCanalKolkata />} />
                   <Route path="/dental-implants-kolkata" element={<DentalImplantsKolkata />} />
                   <Route path="/braces-aligners-kolkata" element={<BracesAlignersKolkata />} />
+
+                  {/* Location hub pages */}
+                  <Route path="/locations/garia" element={<GariaHub />} />
+                  <Route path="/locations/south-kolkata" element={<SouthKolkataHub />} />
 
                   {/* Catch-all root-level builder pages (e.g. location landings).
                       Must be LAST among Layout-wrapped routes so it cannot shadow real ones.
