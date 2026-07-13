@@ -64,12 +64,14 @@ const SEOHead = ({
     links?.youtube,
   ].filter(Boolean);
 
+  const heroImage = ogImage || "https://smilz.net/og-image.jpg";
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "Dentist",
     "@id": `${website}/#dentist`,
     name: clinicName,
-    image: ogImage || "https://smilz.net/og-image.jpg",
+    // Array form — recommended by Google's LocalBusiness rich-result rules.
+    image: [heroImage],
     url: website,
     telephone: `+91${contact?.phone ?? "8961775554"}`,
     email: contact?.email ?? "dr.d.dutta@gmail.com",
@@ -133,7 +135,13 @@ const SEOHead = ({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: breadcrumbs.map((item, i) => ({
-      "@type": "ListItem", position: i + 1, name: item.name, item: item.url,
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      // Normalize every breadcrumb URL so the ListItem `item` matches the
+      // page's canonical form (forces https://smilz.net, trailing slash).
+      // Fixes Google Rich Results "URL mismatch" warnings.
+      item: normalizeCanonicalUrl(item.url),
     })),
   } : null;
 
@@ -146,13 +154,22 @@ const SEOHead = ({
     })),
   } : null;
 
-  // Article schema for blog posts
+  // Article schema for blog posts.
+  // Uses ImageObject with dimensions and a fully-specified publisher.logo
+  // so Google's Rich Results test raises no "missing recommended field"
+  // warnings when featured_image is empty on legacy posts.
+  const articleImage = ogImage || `${website}/og-image.jpg`;
   const articleSchema = type === "article" && article ? {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: title,
     description,
-    image: ogImage,
+    image: {
+      "@type": "ImageObject",
+      url: articleImage,
+      width: 1200,
+      height: 630,
+    },
     author: {
       "@type": "Person",
       name: article.author || general?.doctor_name || "Dr. Dibyendu Dutta",
@@ -160,7 +177,12 @@ const SEOHead = ({
     publisher: {
       "@type": "Organization",
       name: clinicName,
-      logo: { "@type": "ImageObject", url: `${website}/og-image.jpg` },
+      logo: {
+        "@type": "ImageObject",
+        url: `${website}/og-image.jpg`,
+        width: 1200,
+        height: 630,
+      },
     },
     datePublished: article.publishedTime,
     dateModified: article.modifiedTime || article.publishedTime,
