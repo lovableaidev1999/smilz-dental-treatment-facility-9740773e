@@ -78,7 +78,7 @@ const PageHero = ({
           <>
             <img
               src={imageUrl as string}
-              alt={imageAlt ?? title}
+              alt={imageAlt ?? `${title} — Smilz Dental Clinic, Garia, South Kolkata`}
               className="w-full h-full object-cover"
               style={{ objectPosition: "center 30%" }}
               width={1600}
