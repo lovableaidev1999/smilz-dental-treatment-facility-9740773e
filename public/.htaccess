@@ -6,6 +6,16 @@ RewriteBase /
 RewriteCond %{HTTP_HOST} ^www\.smilz\.net$ [NC]
 RewriteRule ^(.*)$ https://smilz.net/$1 [R=301,L]
 
+# ── Canonical trailing slash: force /path → /path/ (301) ─────────────
+# Matches the canonical form used by our sitemap, prerender output
+# (dist/<slug>/index.html) and <link rel="canonical"> tags. Ensures
+# /about and /about/ resolve to a single indexable URL.
+# Skips real files (extensions) and requests that already end with /.
+RewriteCond %{REQUEST_URI} !\.[a-zA-Z0-9]{2,5}$
+RewriteCond %{REQUEST_URI} !/$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.+[^/])$ /$1/ [R=301,L]
+
 # ── Disable directory indexes (prevents Hostinger placeholder from leaking) ──
 Options -Indexes
 DirectoryIndex index.html
