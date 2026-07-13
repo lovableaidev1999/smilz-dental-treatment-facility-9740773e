@@ -65,9 +65,44 @@ const SEOHead = ({
   ].filter(Boolean);
 
   const heroImage = ogImage || "https://smilz.net/og-image.jpg";
+
+  // Organization node — sitewide brand identity. Referenced by Article
+  // publisher and by the Dentist LocalBusiness (parentOrganization).
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${website}/#organization`,
+    name: clinicName,
+    url: website,
+    logo: {
+      "@type": "ImageObject",
+      url: `${website}/og-image.jpg`,
+      width: 1200,
+      height: 630,
+    },
+    image: [heroImage],
+    email: contact?.email ?? "dr.d.dutta@gmail.com",
+    telephone: `+91${contact?.phone ?? "8961775554"}`,
+    foundingDate: (general?.year_established ?? 1999).toString(),
+    founder: {
+      "@type": "Person",
+      name: general?.doctor_name ?? "Dr. Dibyendu Dutta",
+      jobTitle: "Dentist",
+    },
+    ...(sameAs.length > 0 && { sameAs }),
+    contactPoint: [{
+      "@type": "ContactPoint",
+      telephone: `+91${contact?.phone ?? "8961775554"}`,
+      contactType: "customer service",
+      areaServed: "IN",
+      availableLanguage: ["English", "Hindi", "Bengali"],
+    }],
+  };
+
   const localBusinessSchema = {
     "@context": "https://schema.org",
-    "@type": "Dentist",
+    "@type": ["Dentist", "LocalBusiness", "MedicalBusiness"],
+    parentOrganization: { "@id": `${website}/#organization` },
     "@id": `${website}/#dentist`,
     name: clinicName,
     // Array form — recommended by Google's LocalBusiness rich-result rules.
