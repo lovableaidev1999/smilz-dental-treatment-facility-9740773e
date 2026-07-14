@@ -61,15 +61,32 @@ const Gallery = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {(galleryItems ?? []).map((item, i) => (
-                <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-card rounded-2xl overflow-hidden shadow-card group">
+                <motion.button
+                  type="button"
+                  key={item.id}
+                  onClick={() => setLightboxIndex(i)}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="text-left bg-card rounded-2xl overflow-hidden shadow-card group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-zoom-in"
+                  aria-label={`View ${item.caption || item.alt} in slideshow`}
+                >
                   <div className="overflow-hidden"><img src={item.src} alt={item.alt} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width={800} height={600} /></div>
                   <div className="p-5"><p className="text-sm text-foreground font-medium">{item.caption}</p></div>
-                </motion.div>
+                </motion.button>
               ))}
             </div>
           )}
         </div>
       </section>
+
+      <GalleryLightbox
+        images={(galleryItems ?? []).map((g) => ({ src: g.src, alt: g.alt, caption: g.caption }))}
+        startIndex={lightboxIndex ?? 0}
+        open={lightboxIndex !== null}
+        onClose={() => setLightboxIndex(null)}
+      />
     </>
   );
 };
