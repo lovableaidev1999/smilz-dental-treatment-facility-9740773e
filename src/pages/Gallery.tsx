@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -6,9 +7,11 @@ import { useGallery } from "@/integrations/supabase/hooks";
 import { GenericSection } from "@/components/DynamicSections";
 import StickyCtaBar from "@/components/StickyCtaBar";
 import PageHero from "@/components/PageHero";
+import GalleryLightbox from "@/components/GalleryLightbox";
 import type { PageSection } from "@/hooks/usePageContent";
 
 const Gallery = () => {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { data: galleryItems, isLoading } = useGallery();
   const { data: settings } = useSiteSettings();
   const { sections, getSection } = usePageContent("gallery");
